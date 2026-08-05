@@ -1,0 +1,1942 @@
+<!DOCTYPE html>
+<!--
+  eiyou map
+  無断使用・無断転載を禁じます。
+  All rights reserved. Unauthorized use or reproduction is prohibited.
+-->
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="eiyou map">
+<meta name="theme-color" content="#e8503f">
+<title>eiyou map</title>
+<style>
+  :root{font-family:-apple-system,"Hiragino Maru Gothic ProN","Hiragino Sans",system-ui,sans-serif;}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;height:100%;background:#f2f0ec;overscroll-behavior:none;touch-action:manipulation;}
+  body{display:flex;justify-content:center;}
+  #app{width:100%;max-width:560px;height:100%;min-height:100dvh;background:#fff;display:flex;flex-direction:column;
+       border-left:1px solid #ddd8ce;border-right:1px solid #ddd8ce;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);}
+  .toggle{display:flex;margin:10px 12px 8px;background:#f2f0ec;border-radius:11px;padding:3px;}
+  .toggle button{flex:1;border:0;background:transparent;font:inherit;font-size:13px;font-weight:600;color:#9a9284;padding:8px 0;border-radius:9px;cursor:pointer;transition:background .18s,color .18s;}
+  .toggle button.on{background:#8a8172;color:#fff;box-shadow:0 1px 3px rgba(0,0,0,.12);}
+  #ibtn{position:absolute;left:10px;bottom:10px;z-index:8;width:26px;height:26px;border-radius:50%;border:1.5px solid #ddd8ce;
+        background:#fff;color:#9a9284;font:italic 600 14px/1 Georgia,serif;cursor:pointer;box-shadow:0 1px 4px rgba(60,50,30,.1);}
+  #ibtn.on{background:#e8503f;border-color:#e8503f;color:#fff;}
+  #info{display:none;position:absolute;left:10px;bottom:42px;z-index:8;background:#fff;border:1px solid #ddd8ce;border-radius:12px;
+        padding:10px 12px;box-shadow:0 6px 18px rgba(60,50,30,.14);max-width:calc(100% - 20px);}
+  #info.open{display:block;}
+  #srcbtn{margin-top:8px;width:100%;border:1px solid #ddd8ce;background:#f2f0ec;color:#9a9284;font:inherit;font-size:12px;
+          padding:7px 0;border-radius:9px;cursor:pointer;}
+  #srcmodal{display:none;position:fixed;inset:0;z-index:50;background:rgba(50,42,30,.42);align-items:center;justify-content:center;padding:18px;}
+  #srcmodal.open{display:flex;}
+  #srcbox{background:#fff;border-radius:16px;max-width:460px;width:100%;max-height:82vh;overflow-y:auto;box-shadow:0 12px 40px rgba(40,32,20,.3);}
+  #srchead{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 8px;position:sticky;top:0;background:#fff;}
+  #srchead b{font-size:15px;color:#3a3226;letter-spacing:1px;}
+  #srcsub b{font-size:15px;color:#3a3226;letter-spacing:1px;}
+  #srcx{border:0;background:#f2f0ec;color:#9a9284;width:26px;height:26px;border-radius:50%;font-size:15px;cursor:pointer;line-height:1;}
+  #srclist{padding:0 16px 4px;}
+  #srclist a{display:block;text-decoration:none;border-bottom:1px solid #f2f0ec;padding:11px 0;}
+  #srclist a:last-child{border-bottom:0;}
+  #srclist .t{font-size:13.5px;font-weight:600;color:#c8452f;line-height:1.45;}
+  #srclist .o{font-size:11.5px;color:#9a9284;margin-top:2px;}
+  #srclist .n{font-size:12px;color:#5c5344;margin-top:4px;line-height:1.6;}
+  #srcnote{margin:4px 16px 18px;padding:10px 12px;background:#f2f0ec;border-radius:10px;font-size:11.5px;color:#6e6656;line-height:1.7;}
+  #howto{margin:2px 16px 14px;}
+  #howto h4{font-size:13px;color:#3a3226;letter-spacing:.5px;margin:16px 0 7px;padding-bottom:5px;border-bottom:1px solid #f2f0ec;}
+  #howto h4:first-child{margin-top:6px;}
+  #howto p{font-size:12px;color:#5c5344;line-height:1.75;margin:0 0 8px;}
+  #howto .fig{background:#f2f0ec;border-radius:12px;padding:12px 10px 8px;margin:8px 0 10px;}
+  #howto .fig svg{position:static;width:100%;height:auto;display:block;}
+  #howto .cap{font-size:10.5px;color:#9a9284;text-align:center;margin-top:5px;line-height:1.5;}
+  #howto .target{background:#f2f0ec;border-radius:10px;padding:9px 11px;font-size:11.5px;color:#6e6656;line-height:1.7;margin:2px 0 4px;}
+  #howto .target b{color:#3a3226;}
+  .legsize,.leghue{display:flex;flex-direction:column;gap:5px;padding:0 0 6px;}
+  .leghue{padding:6px 0 0;border-top:1px solid #f2f0ec;}
+  .legsize b,.leghue b{font-size:10px;color:#9a9284;font-weight:600;}
+  .legsize .sz,.leghue .hue{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:#6e6656;}
+  .legsize .sz::before{content:"";border-radius:50%;background:#c9bfa6;flex:none;}
+  .legsize .sz-l::before{width:14px;height:14px;} .legsize .sz-m::before{width:10px;height:10px;} .legsize .sz-s::before{width:7px;height:7px;}
+  .leghue .hue::before{content:"";width:11px;height:11px;border-radius:50%;background:var(--c);flex:none;}
+  .legbadge{display:flex;flex-direction:column;gap:5px;padding:6px 0 0;border-top:1px solid #f2f0ec;}
+  .legbadge b{font-size:10px;color:#9a9284;font-weight:600;}
+  .legbadge .bdg{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:#6e6656;}
+  .legbadge .bdg::before{content:"";width:9px;height:9px;border-radius:50%;flex:none;border:1.3px solid #fff;box-shadow:0 0 0 0.5px rgba(0,0,0,.15);}
+  .legbadge .bdg-w::before{background:#3d8bd6;} .legbadge .bdg-f::before{background:#e0972a;}
+  #wrap{flex:1;min-height:0;position:relative;touch-action:none;overscroll-behavior:none;}
+  #ver{position:absolute;right:8px;bottom:8px;z-index:8;font-size:10px;color:#b3ada1;letter-spacing:.03em;pointer-events:none;user-select:none;}
+  svg{position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:block;z-index:1;}
+  svg text{pointer-events:none;}
+  #trailrow{display:flex;align-items:center;gap:6px;border-top:1px solid #f2f0ec;padding:6px 8px 6px 10px;min-height:40px;}
+  #trail{flex:1;display:flex;align-items:center;gap:4px;overflow-x:auto;white-space:nowrap;scrollbar-width:none;}
+  #trail::-webkit-scrollbar{display:none;}
+  #trail .crumb{font-size:12px;color:#9a9284;padding:3px 8px;border-radius:8px;background:#f2f0ec;cursor:pointer;flex:none;}
+  #trail .crumb.cur{background:#8a8172;color:#fff;font-weight:600;}
+  #trail .sep{color:#cdc3ad;font-size:11px;flex:none;}
+  .navb{border:0;background:#f2f0ec;color:#9a9284;width:32px;height:32px;border-radius:50%;font-size:14px;cursor:pointer;flex:none;line-height:1;}
+  #rs{font-size:21px;padding-bottom:2px;}
+  .navb:disabled{opacity:.35;}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="toggle">
+    <button id="tb-eff" onclick="tapTab('eff')">はたらきから</button>
+    <button id="tb-nut" class="on" onclick="tapTab('nut')">栄養素から</button>
+    <button id="tb-food" onclick="tapTab('food')">食材から</button>
+  </div>
+  <div id="wrap"><svg id="nsvg" viewBox="0 0 560 1000" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg"></svg>
+  <div id="ver"></div>
+  <div id="searchwrap" style="display:none;position:absolute;left:0;right:0;top:0;margin:8px 12px 0;z-index:15;">
+    <input id="q" type="search" placeholder="食材を検索（ぶた・豚・レバー…）" autocomplete="off" autocorrect="off" autocapitalize="off"
+      oninput="onSearch(this.value)" onfocus="showHist()" onblur="hideHist()"
+      style="width:100%;border:2px solid #ddd8ce;background:#f2f0ec;border-radius:11px;padding:9px 34px 9px 12px;font:inherit;font-size:16px;color:#3a3226;outline:none;-webkit-appearance:none;box-shadow:0 2px 10px rgba(60,50,30,.08);">
+    <button id="qclear" onclick="clearSearch()" style="display:none;position:absolute;right:6px;top:19px;transform:translateY(-50%);border:0;background:#ddd8ce;color:#fff;width:20px;height:20px;border-radius:50%;font-size:13px;line-height:20px;padding:0;cursor:pointer;">×</button>
+    <div id="qcount" style="font-size:11px;color:#9a9284;padding:4px 2px 0;"></div>
+    <div id="qhist" style="display:none;position:absolute;left:0;right:0;top:44px;z-index:20;background:#fff;border:1px solid #ddd8ce;border-radius:11px;box-shadow:0 6px 18px rgba(60,50,30,.13);overflow:hidden;"></div>
+  </div>
+    <button id="ibtn" onpointerdown="event.stopPropagation();toggleInfo(event)" aria-label="凡例">i</button>
+    <div id="info">
+      <div class="legsize">
+        <b>大きさ</b>
+        <span class="sz sz-l">三大栄養素</span>
+        <span class="sz sz-m">不足しやすい</span>
+        <span class="sz sz-s">その他</span>
+      </div>
+      <div class="leghue">
+        <b>色</b>
+        <span class="hue" style="--c:#d9d3f2">ビタミンB群・C</span>
+        <span class="hue" style="--c:#f6dfae">脂溶性・ためこみ注意</span>
+        <span class="hue" style="--c:#d6ecc7">植物性ミネラル・繊維</span>
+        <span class="hue" style="--c:#ecd6c6">たんぱく質・微量金属</span>
+        <span class="hue" style="--c:#dfe6ee">骨のミネラル</span>
+        <span class="hue" style="--c:#f7cec7">摂りすぎ注意</span>
+      </div>
+      <div class="legbadge">
+        <b>バッジ</b>
+        <span class="bdg bdg-w">水溶性（余ると排出）</span>
+        <span class="bdg bdg-f">脂溶性（体にたまる）</span>
+      </div>
+      <button id="srcbtn" onclick="openSrc(event)">出典とご注意</button>
+    </div>
+    <div id="srcmodal" onclick="closeSrc(event)">
+      <div id="srcbox" onclick="event.stopPropagation()">
+        <div id="srchead"><b>この図鑑について</b><button onclick="closeSrc(event)" id="srcx">×</button></div>
+        <div id="howto">
+          <h4>世界はひとつ</h4>
+          <p>栄養素・食材・はたらきは、別々の画面ではなく、ひとつの平面に重なった3枚のレイヤーです。上のトグルは、どのレイヤーを手前に出すかを切り替えているだけ。タップすると、関係するものが放射状に寄ってきます。</p>
+          <div class="fig">
+            <svg viewBox="0 0 300 128" xmlns="http://www.w3.org/2000/svg">
+              <g transform="translate(150,64)">
+                <g transform="translate(-52,-24)" opacity=".5"><polygon points="0,-34 29,-17 29,17 0,34 -29,17 -29,-17" fill="#e3e8f2" stroke="#6b7fb5" stroke-width="1.5"/><text x="0" y="4" font-size="9" fill="#5c5344" text-anchor="middle">はたらき</text></g>
+                <g transform="translate(0,0)" opacity=".7"><polygon points="0,-34 29,-17 29,17 0,34 -29,17 -29,-17" fill="#cfe6f5"/><text x="0" y="4" font-size="9" fill="#5c5344" text-anchor="middle">栄養素</text></g>
+                <g transform="translate(52,24)"><polygon points="0,-34 29,-17 29,17 0,34 -29,17 -29,-17" fill="#f0d9c4"/><text x="0" y="4" font-size="9" fill="#5c5344" text-anchor="middle">食材</text></g>
+              </g>
+            </svg>
+            <div class="cap">3枚のレイヤーが同じ座標に重なる</div>
+          </div>
+
+          <h4>食材の「近い／遠い」の決め方</h4>
+          <p>その食材を一食ぶん食べたら、一日の目安量のどれくらいを満たせるか。「一食の目安量 ÷ 一日の目安量」で割合を出し、3段階に分けています。</p>
+          <div class="fig">
+            <svg viewBox="0 0 300 150" xmlns="http://www.w3.org/2000/svg">
+              <text x="10" y="18" font-size="10.5" fill="#5c5344">一食あたりの量</text>
+              <text x="290" y="18" font-size="10.5" fill="#5c5344" text-anchor="end">一日の目安量</text>
+              <line x1="10" y1="26" x2="290" y2="26" stroke="#e6ddc9" stroke-width="1"/>
+              <text x="150" y="45" font-size="12" fill="#8a7f68" text-anchor="middle">÷ ＝ 割合（%）</text>
+              <g transform="translate(0,62)">
+                <rect x="10" y="0" width="90" height="30" rx="7" fill="#f0d9c4"/><text x="55" y="14" font-size="10" fill="#3a3226" text-anchor="middle" font-weight="600">近い</text><text x="55" y="25" font-size="8.5" fill="#6e6656" text-anchor="middle">30%以上</text>
+                <rect x="105" y="0" width="90" height="30" rx="7" fill="#ece3cf"/><text x="150" y="14" font-size="10" fill="#3a3226" text-anchor="middle" font-weight="600">中くらい</text><text x="150" y="25" font-size="8.5" fill="#6e6656" text-anchor="middle">12〜30%</text>
+                <rect x="200" y="0" width="90" height="30" rx="7" fill="#efe9dc"/><text x="245" y="14" font-size="10" fill="#3a3226" text-anchor="middle" font-weight="600">遠い</text><text x="245" y="25" font-size="8.5" fill="#6e6656" text-anchor="middle">12%未満</text>
+              </g>
+              <g transform="translate(0,110)">
+                <text x="10" y="10" font-size="9.5" fill="#a89c78">例：牛乳のカルシウム</text>
+                <text x="10" y="26" font-size="9.5" fill="#6e6656">200g で 220mg ÷ 650mg ＝ 34% → 近い</text>
+              </g>
+            </svg>
+            <div class="cap">割合が大きいほど「近い」。線ではなく面の色で表す</div>
+          </div>
+
+          <h4>だれの一日を基準にしているか</h4>
+          <p>一日の目安量は人によって違います。この図鑑は、いまは次の人を基準に固定しています。</p>
+          <div class="target"><b>30〜49歳・女性</b>（月経あり／身体活動レベル ふつう）<br>「日本人の食事摂取基準（2025年版）」の推奨量・目標量を使用</div>
+          <p>栄養素ごとに基準の性格は違います（鉄は推奨量、塩分は「とりすぎ」の目標量、脂質はエネルギー比からの換算など）。含有量は「日本食品標準成分表（八訂）増補2023年」から。<b>輪郭が点線の食材は、含有量をまだ成分表と照合できていません</b>（位置＝どれだけとれるか、が変わる可能性があります）。</p>
+        </div>
+        <div id="srcsub" style="padding:14px 16px 4px;"><b>出典</b></div>
+        <div id="srclist"></div>
+        <p id="srcnote"></p>
+      </div>
+    </div>
+  </div>
+  <div id="trailrow">
+    <div id="trail"></div>
+    <button class="navb" id="rs" onclick="resetAll()" title="最初の状態に戻す">⟲</button>
+    <button class="navb" id="bk" onclick="navBack()" disabled>◀</button>
+    <button class="navb" id="fw" onclick="navFwd()" disabled>▶</button>
+  </div>
+</div>
+<script>
+/*
+  eiyou map
+  無断使用・無断転載を禁じます。
+  All rights reserved. Unauthorized use or reproduction is prohibited.
+*/
+const REL={excrete:{c:"#2fa36b",t:"排出を促す"},metabolize:{c:"#4a5fd0",t:"エネルギーに変える"},absorb:{c:"#e8811f",t:"吸収を助ける"},absorb_nonheme:{c:"#e8811f",t:"非ヘム鉄の吸収を助ける"},buffer:{c:"#17a2a2",t:"吸収をゆるやかに"},compete:{c:"#d64545",t:"邪魔し合う"},synergy:{c:"#9b59b6",t:"協働する"}};
+const NUT={
+ na:["塩分","#f7cec7"],fat:["脂質","#f8d9a0"],sugar:["糖質","#cfe6f5"],alc:["アルコール","#f0d8e4"],
+ protein:["たんぱく質","#f0d9c4"],b6:["ビタミンB6","#d9d3f2"],zn:["亜鉛","#e0e0d2"],fe:["鉄","#ecd6c6"],vc:["ビタミンC","#ddd6f0"],
+ ve:["ビタミンE","#e9edc2"],va:["ビタミンA","#f6dfae"],vd:["ビタミンD","#ffe9b0"],ca:["カルシウム","#dfe6ee"],folate:["葉酸","#d6ecc7"],
+ b12:["ビタミンB12","#e7d9f0"],mg:["マグネシウム","#d3ead0"],k:["カリウム","#cdeadb"],fiber:["食物繊維","#e0ead0"],b1:["ビタミンB1","#e2ddf3"],b2:["ビタミンB2","#ded9f5"],cu:["銅","#e8d3c0"],p:["リン","#e0dfe8"],vk:["ビタミンK","#d9e8cf"],se:["セレン","#e4ddd2"],niacin:["ナイアシン","#e6dcf0"],panto:["パントテン酸","#e9dced"]};
+const E=[["k","na","excrete"],["mg","na","excrete"],["b1","sugar","metabolize"],["b2","fat","metabolize"],["b6","protein","metabolize"],["b1","alc","metabolize"],["vc","fe","absorb_nonheme"],["vd","ca","absorb"],["protein","fe","absorb"],["zn","va","absorb"],["ca","fe","compete"],["zn","fe","compete"],["ca","zn","compete"],["fiber","sugar","buffer"],["fiber","fat","buffer"],["folate","b12","synergy"],["vc","ve","synergy"],
+ ["cu","fe","synergy"],["cu","zn","compete"],["p","ca","compete"],
+ ["vk","ca","synergy"],["vk","vd","synergy"],["se","ve","synergy"],
+ ["niacin","sugar","metabolize"],["niacin","fat","metabolize"],["panto","fat","metabolize"]];
+const FOODS=[
+["alc","日本酒",1],
+["alc","焼酎",1],
+["alc","ワイン",1],
+["alc","ビール",1],
+["alc","梅酒",1],
+["b1","ハム",2],
+["b1","豚もも",1],
+["b1","玄米",1],
+["b1","豚ひき肉",1],
+["b1","豚ロース",1],
+["b1","豚ばら",1],
+["b1","大豆",1],
+["b1","うなぎ",1],
+["b1","さば",2],
+["b1","枝豆",2],
+["b1","鮭",2],
+["b1","白米",2],
+["b1","まぐろ",2],
+["b1","さつまいも",2],
+["b1","かつお",3],
+["b1","ブロッコリー",3],
+["b1","じゃがいも",3],
+["b1","ベーコン",3],
+["b12","チーズ",2],
+["b12","あさり",1],
+["b12","牡蠣",1],
+["b12","いわし",1],
+["b12","さんま",1],
+["b12","豚レバー",1],
+["b12","さば",1],
+["b12","かつお",1],
+["b12","ほたて",1],
+["b12","鮭",1],
+["b12","まぐろ",1],
+["b12","いか",1],
+["b12","ぶり",1],
+["b12","うなぎ",1],
+["b12","たら",2],
+["b12","たこ",2],
+["b12","牛乳",2],
+["b12","卵",2],
+["b12","豚ひき肉",2],
+["b12","豚ばら",3],
+["b2","チョコレート",3],
+["b2","豚レバー",1],
+["b2","うなぎ",1],
+["b2","牛乳",2],
+["b2","アーモンド",2],
+["b2","さば",2],
+["b2","納豆",2],
+["b2","さんま",2],
+["b2","豚ひき肉",2],
+["b2","卵",2],
+["b2","鮭",2],
+["b2","豚もも",2],
+["b2","ヨーグルト",3],
+["b2","かつお",3],
+["b2","ブロッコリー",3],
+["b2","アボカド",3],
+["b2","ほうれん草",3],
+["b2","大豆",3],
+["b2","豚ロース",3],
+["b2","鶏もも",3],
+["b6","日本酒",3],
+["b6","ビール",2],
+["b6","玄米",1],
+["b6","かつお",1],
+["b6","鮭",1],
+["b6","まぐろ",1],
+["b6","さば",1],
+["b6","鶏むね",1],
+["b6","さんま",1],
+["b6","バナナ",1],
+["b6","ささみ",1],
+["b6","豚ひき肉",2],
+["b6","大豆",2],
+["b6","豚ロース",2],
+["b6","さつまいも",2],
+["b6","豚もも",2],
+["b6","アボカド",2],
+["b6","じゃがいも",2],
+["b6","鶏もも",2],
+["b6","豚ばら",2],
+["b6","ブロッコリー",2],
+["b6","白米",2],
+["b6","赤ピーマン",2],
+["ca","チョコレート",3],
+["ca","低脂肪乳",1],
+["ca","厚揚げ",1],
+["ca","スキムミルク",1],
+["ca","牛乳",1],
+["ca","モロヘイヤ",2],
+["ca","木綿豆腐",2],
+["ca","チーズ",2],
+["ca","ヨーグルト",2],
+["ca","小松菜",2],
+["ca","絹ごし豆腐",2],
+["ca","水菜",2],
+["ca","うなぎ",2],
+["ca","油揚げ",2],
+["ca","大豆",2],
+["ca","ひじき",2],
+["ca","わかめ",2],
+["ca","ごま",3],
+["ca","アーモンド",3],
+["ca","いわし",3],
+["ca","昆布",3],
+["ca","チンゲンサイ",3],
+["ca","春菊",3],
+["cu","中華めん",2],
+["cu","味噌",3],
+["cu","チョコレート",2],
+["cu","豚レバー",1],
+["cu","牡蠣",1],
+["cu","大豆",1],
+["cu","玄米",1],
+["cu","白米",1],
+["cu","アーモンド",1],
+["cu","納豆",1],
+["cu","枝豆",2],
+["cu","えび",2],
+["cu","アボカド",2],
+["cu","さつまいも",2],
+["cu","ごぼう",2],
+["cu","オートミール",2],
+["cu","さば",2],
+["cu","さんま",2],
+["cu","ごま",2],
+["cu","キウイ",2],
+["cu","かつお",2],
+["cu","里芋",2],
+["cu","じゃがいも",2],
+["cu","バナナ",2],
+["cu","ほうれん草",3],
+["fat","豚ばら",1,"sat"],
+["fat","さんま",1,"unsat"],
+["fat","うなぎ",2,"unsat"],
+["fat","豚ロース",2,"sat"],
+["fat","ぶり",2,"unsat"],
+["fat","豚ひき肉",2,"sat"],
+["fat","アーモンド",2,"unsat"],
+["fat","さば",2,"unsat"],
+["fat","ソーセージ",2,"sat"],
+["fat","アボカド",2,"unsat"],
+["fat","鶏もも",2,"sat"],
+["fat","くるみ",2,"unsat"],
+["fat","オリーブ油",2,"unsat"],
+["fat","大豆",2,"unsat"],
+["fat","マヨネーズ",2,"unsat"],
+["fat","生クリーム",2,"sat"],
+["fat","チョコレート",2,"sat"],
+["fat","豚もも",2,"sat"],
+["fat","バター",2,"sat"],
+["fat","ベーコン",2,"sat"],
+["fat","牛乳",2,"sat"],
+["fat","ピーナッツ",2,"unsat"],
+["fat","カシューナッツ",2,"unsat"],
+["fat","えごま油",3,"unsat"],
+["fat","亜麻仁油",3,"unsat"],
+["fat","牛脂",3,"sat"],
+["fat","ドレッシング",3,"unsat"],
+["fe","豚レバー",1,"heme"],
+["fe","大豆",1,"nonheme"],
+["fe","玄米",1,"nonheme"],
+["fe","厚揚げ",2,"nonheme"],
+["fe","木綿豆腐",2,"nonheme"],
+["fe","レンズ豆",2,"nonheme"],
+["fe","小松菜",2,"nonheme"],
+["fe","いわし",2,"heme"],
+["fe","まぐろ",2,"heme"],
+["fe","オートミール",2,"nonheme"],
+["fe","あさり",2,"heme"],
+["fe","かつお",2,"heme"],
+["fe","納豆",2,"nonheme"],
+["fe","ほうれん草",2,"nonheme"],
+["fe","枝豆",2,"nonheme"],
+["fe","牛もも",2,"heme"],
+["fe","牡蠣",2,"heme"],
+["fe","白米",3,"nonheme"],
+["fe","さんま",3,"heme"],
+["fe","きなこ",3,"nonheme"],
+["fe","シリアル",3,"nonheme"],
+["fe","のり",3,"nonheme"],
+["fiber","中華めん",1],
+["fiber","パン",2],
+["fiber","大豆",1],
+["fiber","じゃがいも",1],
+["fiber","ひよこ豆",1],
+["fiber","レンズ豆",2],
+["fiber","玄米",2],
+["fiber","ひじき",2],
+["fiber","アボカド",2],
+["fiber","オートミール",2],
+["fiber","ごぼう",2],
+["fiber","わかめ",2],
+["fiber","ブロッコリー",2],
+["fiber","納豆",2],
+["fiber","とうもろこし",2],
+["fiber","アーモンド",2],
+["fiber","キウイ",2],
+["fiber","枝豆",2],
+["fiber","かぼちゃ",2],
+["fiber","さつまいも",2],
+["fiber","切り干し大根",3],
+["fiber","ブルーベリー",3],
+["fiber","ほうれん草",3],
+["fiber","えのき",3],
+["fiber","きなこ",3],
+["fiber","梨",3],
+["fiber","まいたけ",3],
+["fiber","めかぶ",3],
+["fiber","昆布",3],
+["fiber","なす",3],
+["fiber","しめじ",3],
+["fiber","しいたけ",3],
+["fiber","りんご",3],
+["fiber","くるみ",3],
+["fiber","もずく",3],
+["fiber","セロリ",3],
+["folate","ビール",3],
+["folate","枝豆",1],
+["folate","モロヘイヤ",1],
+["folate","ほうれん草",1],
+["folate","ブロッコリー",1],
+["folate","大豆",1],
+["folate","アスパラガス",1],
+["folate","小松菜",1],
+["folate","いちご",1],
+["folate","水菜",2],
+["folate","ズッキーニ",2],
+["folate","かぼちゃ",2],
+["folate","キャベツ",2],
+["folate","アボカド",2],
+["folate","のり",2],
+["folate","ひよこ豆",2],
+["folate","納豆",2],
+["folate","さつまいも",2],
+["folate","オレンジ",2],
+["folate","わかめ",2],
+["folate","ごぼう",2],
+["folate","玄米",2],
+["folate","キウイ",2],
+["folate","赤ピーマン",2],
+["folate","もやし",2],
+["folate","レタス",2],
+["folate","バナナ",3],
+["folate","卵",3],
+["folate","レンズ豆",3],
+["k","中華めん",2],
+["k","大豆",1],
+["k","わかめ",2],
+["k","ひじき",2],
+["k","ほうれん草",2],
+["k","さつまいも",2],
+["k","アボカド",2],
+["k","じゃがいも",2],
+["k","里芋",2],
+["k","豆乳",2],
+["k","バナナ",2],
+["k","まぐろ",2],
+["k","小松菜",2],
+["k","切り干し大根",2],
+["k","玄米",2],
+["k","かつお",2],
+["k","かぼちゃ",2],
+["k","トマト",2],
+["k","昆布",3],
+["k","キウイ",3],
+["k","牛乳",3],
+["k","納豆",3],
+["k","枝豆",3],
+["k","とうもろこし",3],
+["k","梨",3],
+["k","鮭",3],
+["k","豚もも",3],
+["k","ブロッコリー",3],
+["k","鶏むね",3],
+["k","さば",3],
+["k","大根",3],
+["k","白菜",3],
+["k","グレープフルーツ",3],
+["k","セロリ",3],
+["k","なす",3],
+["k","ぶどう",3],
+["k","りんご",3],
+["k","玉ねぎ",3],
+["k","きゅうり",3],
+["k","レタス",3],
+["k","めかぶ",3],
+["mg","玄米",1],
+["mg","大豆",1],
+["mg","わかめ",1],
+["mg","木綿豆腐",2],
+["mg","アーモンド",2],
+["mg","絹ごし豆腐",2],
+["mg","ひじき",2],
+["mg","豆乳",2],
+["mg","ほうれん草",2],
+["mg","納豆",2],
+["mg","あさり",2],
+["mg","オートミール",2],
+["mg","牡蠣",2],
+["mg","カシューナッツ",2],
+["mg","白米",3],
+["mg","かつお",3],
+["mg","ごぼう",3],
+["mg","バナナ",3],
+["mg","枝豆",3],
+["mg","めかぶ",3],
+["mg","まぐろ",3],
+["mg","昆布",3],
+["mg","きなこ",3],
+["mg","くるみ",3],
+["mg","もずく",3],
+["na","中華めん",2],
+["na","梅干し",2],
+["na","味噌",1],
+["na","わかめ",2],
+["na","ソース",2],
+["na","あさり",2],
+["na","醤油",2],
+["na","ソーセージ",3],
+["na","牡蠣",3],
+["na","パン",3],
+["na","ドレッシング",3],
+["na","ハム",3],
+["na","ケチャップ",3],
+["niacin","中華めん",2],
+["niacin","ビール",2],
+["niacin","ハム",2],
+["niacin","パン",2],
+["niacin","かつお",1],
+["niacin","まぐろ",1],
+["niacin","さば",1],
+["niacin","玄米",1],
+["niacin","鶏むね",1],
+["niacin","ぶり",1],
+["niacin","ささみ",1],
+["niacin","ツナ缶",1],
+["niacin","いわし",1],
+["niacin","豚ロース",1],
+["niacin","さんま",1],
+["niacin","鮭",1],
+["niacin","豚もも",1],
+["niacin","豚ひき肉",1],
+["niacin","豚レバー",1],
+["niacin","鶏もも",1],
+["niacin","豚ばら",1],
+["niacin","大豆",1],
+["niacin","うなぎ",1],
+["niacin","ピーナッツ",1],
+["niacin","白米",1],
+["niacin","えのき",1],
+["niacin","しめじ",2],
+["niacin","納豆",2],
+["niacin","枝豆",2],
+["niacin","アーモンド",2],
+["niacin","オートミール",2],
+["niacin","じゃがいも",2],
+["niacin","牛乳",2],
+["niacin","アボカド",2],
+["niacin","卵",2],
+["niacin","牡蠣",2],
+["niacin","わかめ",3],
+["niacin","ブロッコリー",3],
+["p","中華めん",3],
+["p","玄米",1],
+["p","大豆",1],
+["p","まぐろ",2],
+["p","かつお",2],
+["p","うなぎ",2],
+["p","鮭",2],
+["p","牛乳",2],
+["p","さば",2],
+["p","鶏むね",2],
+["p","豚もも",2],
+["p","オートミール",2],
+["p","チーズ",2],
+["p","豚ロース",2],
+["p","さんま",2],
+["p","ささみ",2],
+["p","白米",2],
+["p","鶏もも",2],
+["p","アーモンド",2],
+["p","豚ばら",2],
+["p","豚ひき肉",2],
+["p","納豆",3],
+["p","卵",3],
+["p","枝豆",3],
+["panto","中華めん",2],
+["panto","豚レバー",1],
+["panto","玄米",1],
+["panto","うなぎ",1],
+["panto","納豆",1],
+["panto","鶏むね",2],
+["panto","ささみ",2],
+["panto","牛乳",2],
+["panto","アボカド",2],
+["panto","鮭",2],
+["panto","白米",2],
+["panto","豚ひき肉",2],
+["panto","さつまいも",2],
+["panto","ブロッコリー",2],
+["panto","豚ロース",2],
+["panto","大豆",2],
+["panto","豚もも",2],
+["panto","鶏もも",2],
+["panto","さんま",3],
+["panto","卵",3],
+["panto","かつお",3],
+["panto","さば",3],
+["panto","オートミール",3],
+["panto","豚ばら",3],
+["panto","じゃがいも",3],
+["protein","中華めん",2,"plant"],
+["protein","パン",3,"plant"],
+["protein","かつお",1,"animal"],
+["protein","牛もも",1,"animal"],
+["protein","まぐろ",1,"animal"],
+["protein","鮭",1,"animal"],
+["protein","ぶり",1,"animal"],
+["protein","鶏むね",1,"animal"],
+["protein","大豆",1,"plant"],
+["protein","さば",1,"animal"],
+["protein","豚もも",1,"animal"],
+["protein","豚ロース",1,"animal"],
+["protein","いわし",1,"animal"],
+["protein","さんま",2,"animal"],
+["protein","ささみ",2,"animal"],
+["protein","いか",2,"animal"],
+["protein","豚ひき肉",2,"animal"],
+["protein","たら",2,"animal"],
+["protein","うなぎ",2,"animal"],
+["protein","鶏もも",2,"animal"],
+["protein","えび",2,"animal"],
+["protein","豚ばら",2,"animal"],
+["protein","ツナ缶",2,"animal"],
+["protein","厚揚げ",2,"plant"],
+["protein","木綿豆腐",2,"plant"],
+["fat","木綿豆腐",2,"unsat"],
+["protein","玄米",2,"plant"],
+["protein","たこ",2,"animal"],
+["protein","白米",2,"plant"],
+["protein","ほたて",2,"animal"],
+["protein","絹ごし豆腐",2,"plant"],
+["protein","低脂肪乳",2,"animal"],
+["protein","納豆",2,"plant"],
+["protein","豆乳",2,"plant"],
+["protein","油揚げ",2,"plant"],
+["protein","スキムミルク",2,"animal"],
+["protein","牛乳",2,"animal"],
+["protein","卵",2,"animal"],
+["protein","枝豆",3,"plant"],
+["protein","レンズ豆",3,"plant"],
+["protein","オートミール",3,"plant"],
+["protein","アーモンド",3,"plant"],
+["protein","ソーセージ",3,"animal"],
+["protein","ひよこ豆",3,"plant"],
+["protein","きなこ",3,"plant"],
+["protein","ヨーグルト",3,"animal"],
+["se","中華めん",1],
+["se","チーズ",3],
+["se","ハム",2],
+["se","パン",1],
+["se","まぐろ",1],
+["se","さば",1],
+["se","うなぎ",1],
+["se","いわし",1],
+["se","かつお",1],
+["se","いか",1],
+["se","牡蠣",1],
+["se","さんま",1],
+["se","鮭",1],
+["se","豚ロース",1],
+["se","豚ひき肉",1],
+["se","あさり",1],
+["se","鶏むね",1],
+["se","鶏もも",1],
+["se","ささみ",1],
+["se","卵",1],
+["se","豚ばら",1],
+["se","オートミール",2],
+["se","納豆",2],
+["se","しらす干し",2],
+["se","牛乳",2],
+["se","玄米",2],
+["se","白米",2],
+["se","ベーコン",2],
+["se","大豆",3],
+["sugar","中華めん",2],
+["sugar","白米",1],
+["sugar","玄米",1],
+["sugar","そうめん",2],
+["sugar","シリアル",2],
+["sugar","さつまいも",3],
+["sugar","パン",3],
+["sugar","もち",3],
+["sugar","清涼飲料",3],
+["sugar","はちみつ",3],
+["sugar","砂糖",3],
+["sugar","ケチャップ",3],
+["sugar","ソース",3],
+["sugar","みりん",3],
+["va","豚レバー",1],
+["va","うなぎ",1],
+["va","モロヘイヤ",1],
+["va","にんじん",1],
+["va","ほうれん草",1],
+["va","小松菜",2],
+["va","卵",2],
+["va","牛乳",3],
+["va","のり",3],
+["va","トマト",3],
+["va","柿",3],
+["va","ピーマン",3],
+["vc","柿",1],
+["vc","赤ピーマン",1],
+["vc","ブロッコリー",1],
+["vc","オレンジ",1],
+["vc","キウイ",1],
+["vc","グレープフルーツ",1],
+["vc","いちご",1],
+["vc","みかん",1],
+["vc","キャベツ",1],
+["vc","さつまいも",2],
+["vc","ズッキーニ",2],
+["vc","じゃがいも",2],
+["vc","水菜",2],
+["vc","小松菜",2],
+["vc","ほうれん草",2],
+["vc","ピーマン",2],
+["vc","トマト",2],
+["vc","白菜",2],
+["vc","バナナ",2],
+["vc","枝豆",2],
+["vc","かぼちゃ",2],
+["vc","大根",2],
+["vc","もやし",3],
+["vc","ブルーベリー",3],
+["vd","いわし",1],
+["vd","鮭",1],
+["vd","うなぎ",1],
+["vd","さんま",1],
+["vd","ぶり",1],
+["vd","まぐろ",1],
+["vd","さば",1],
+["vd","かつお",1],
+["vd","まいたけ",2],
+["vd","卵",2],
+["vd","しらす干し",2],
+["vd","しいたけ",3],
+["ve","アーモンド",1],
+["ve","うなぎ",1],
+["ve","アボカド",1],
+["ve","赤ピーマン",1],
+["ve","玄米",1],
+["ve","ブロッコリー",1],
+["ve","マヨネーズ",2],
+["ve","ピーナッツ",2],
+["ve","さつまいも",2],
+["ve","ほうれん草",2],
+["ve","かぼちゃ",2],
+["ve","さんま",2],
+["ve","キウイ",2],
+["ve","大豆",2],
+["ve","さば",2],
+["ve","鮭",2],
+["ve","牡蠣",2],
+["ve","オリーブ油",2],
+["ve","卵",3],
+["ve","小松菜",3],
+["vk","モロヘイヤ",1],
+["vk","納豆",1],
+["vk","ほうれん草",1],
+["vk","小松菜",1],
+["vk","ブロッコリー",1],
+["vk","わかめ",1],
+["vk","キャベツ",1],
+["vk","水菜",1],
+["vk","ひじき",1],
+["vk","アスパラガス",2],
+["vk","鶏もも",2],
+["vk","かぼちゃ",2],
+["vk","ズッキーニ",2],
+["vk","鶏むね",2],
+["vk","枝豆",3],
+["vk","のり",3],
+["zn","牡蠣",1],
+["zn","牛もも",1],
+["zn","豚レバー",1],
+["b1","そば",1],
+["b6","そば",2],
+["cu","そば",1],
+["fe","そば",2],
+["fiber","そば",2],
+["mg","そば",2],
+["na","そば",2],
+["niacin","そば",1],
+["p","そば",2],
+["panto","そば",2],
+["protein","そば",2,"plant"],
+["se","そば",1],
+["zn","そば",2],
+["sugar","そば",2],
+["cu","うどん",2],
+["fiber","うどん",3],
+["na","うどん",1],
+["niacin","うどん",2],
+["protein","うどん",2,"plant"],
+["se","うどん",1],
+["sugar","うどん",2],
+["b1","パスタ",2],
+["cu","パスタ",1],
+["fe","パスタ",2],
+["fiber","パスタ",2],
+["mg","パスタ",2],
+["niacin","パスタ",1],
+["p","パスタ",2],
+["panto","パスタ",3],
+["protein","パスタ",2,"plant"],
+["se","パスタ",1],
+["zn","パスタ",2],
+["sugar","パスタ",2],
+["zn","玄米",1],
+["zn","豚ひき肉",2],
+["zn","白米",2],
+["zn","ほたて",2],
+["zn","豚もも",2],
+["zn","大豆",2],
+["zn","豚ばら",2],
+["zn","豚ロース",2],
+["zn","鶏もも",2],
+["zn","うなぎ",2],
+["zn","たこ",2],
+["zn","アーモンド",3],
+["zn","さば",3],
+["zn","納豆",3],
+["zn","オートミール",3],
+["zn","カシューナッツ",3],
+["zn","牛乳",3],
+["se","ぶり",1],
+["folate","豚レバー",1],
+["se","豚レバー",1],
+["se","たら",1],
+["se","牛もも",1],
+["niacin","牛もも",1],
+["ve","モロヘイヤ",1],
+["se","えび",1],
+["se","たこ",1],
+["se","そうめん",1],
+["niacin","いか",1],
+["b12","のり",1],
+["na","そうめん",1],
+["cu","カシューナッツ",1],
+["folate","とうもろこし",1],
+["vk","白菜",1],
+["vc","モロヘイヤ",1],
+["cu","木綿豆腐",1],
+["cu","絹ごし豆腐",1],
+["cu","豆乳",1],
+["niacin","えび",1],
+["ve","いわし",1],
+["cu","いか",1],
+["cu","厚揚げ",1],
+["b6","いわし",1],
+["cu","たこ",1],
+["cu","レンズ豆",1],
+["b2","低脂肪乳",1],
+["b12","牛もも",1],
+["niacin","たら",2],
+["cu","モロヘイヤ",2],
+["ve","いか",2],
+["b6","ぶり",2],
+["b6","牛もも",2],
+["ve","ぶり",2],
+["b2","スキムミルク",2],
+["b2","いわし",2],
+["cu","くるみ",2],
+["se","ソーセージ",2],
+["folate","白菜",2],
+["p","いか",2],
+["p","スキムミルク",2],
+["b2","ぶり",2],
+["se","低脂肪乳",2],
+["se","木綿豆腐",2],
+["b6","豚レバー",2],
+["niacin","木綿豆腐",2],
+["p","牛もも",2],
+["niacin","厚揚げ",2],
+["niacin","とうもろこし",2],
+["folate","豆乳",2],
+["niacin","豆乳",2],
+["vd","ツナ缶",2],
+["vd","あじ",1],
+["p","いわし",2],
+["p","たら",2],
+["cu","いわし",2],
+["fe","豆乳",2,"nonheme"],
+["p","低脂肪乳",2],
+["niacin","まいたけ",2],
+["ve","トマト",2],
+["panto","モロヘイヤ",2],
+["folate","ほたて",2],
+["se","スキムミルク",2],
+["p","豚レバー",2],
+["panto","牛もも",2],
+["b2","モロヘイヤ",2],
+["panto","低脂肪乳",2],
+["cu","ひよこ豆",2],
+["niacin","たこ",2],
+["protein","豚レバー",2,"animal"],
+["b1","ぶり",2],
+["b12","低脂肪乳",2],
+["niacin","絹ごし豆腐",2],
+["fat","厚揚げ",2,"unsat"],
+["fiber","モロヘイヤ",2],
+["b12","ツナ缶",2],
+["b1","豚レバー",2],
+["p","厚揚げ",2],
+["niacin","ソーセージ",2],
+["b1","絹ごし豆腐",2],
+["panto","いわし",2],
+["fat","油揚げ",2,"unsat"],
+["b12","えび",2],
+["b12","鶏レバー",1],
+["b12","あじ",1],
+["b12","ちくわ",3],
+["mg","厚揚げ",2],
+["b6","モロヘイヤ",2],
+["b2","牛もも",2],
+["fat","牛もも",2,"sat"],
+["vk","厚揚げ",2],
+["fe","絹ごし豆腐",2,"nonheme"],
+["cu","梨",2],
+["niacin","ほたて",2],
+["ve","えび",2],
+["ve","ブルーベリー",2],
+["niacin","低脂肪乳",2],
+["panto","スキムミルク",2],
+["b1","とうもろこし",2],
+["p","木綿豆腐",2],
+["p","えび",2],
+["niacin","そうめん",2],
+["panto","ぶり",2],
+["se","カシューナッツ",2],
+["zn","いわし",2],
+["b1","ソーセージ",2],
+["cu","きなこ",2],
+["p","ほたて",2],
+["cu","まいたけ",2],
+["zn","レンズ豆",2],
+["folate","えのき",2],
+["mg","油揚げ",2],
+["niacin","油揚げ",2],
+["b6","ツナ缶",2],
+["zn","いか",2],
+["niacin","スキムミルク",2],
+["b1","木綿豆腐",2],
+["ve","水菜",2],
+["ve","アスパラガス",2],
+["cu","ピーナッツ",2],
+["k","低脂肪乳",2],
+["b2","ほたて",2],
+["b2","鶏レバー",1],
+["niacin","ベーコン",2],
+["cu","とうもろこし",2],
+["ve","ひよこ豆",2],
+["folate","大根",2],
+["b6","いか",2],
+["panto","えのき",2],
+["p","ツナ缶",2],
+["vc","ベーコン",2],
+["zn","厚揚げ",2],
+["k","スキムミルク",2],
+["folate","トマト",2],
+["va","かぼちゃ",2],
+["vk","油揚げ",2],
+["ve","厚揚げ",2],
+["b1","えのき",2],
+["vk","めかぶ",2],
+["protein","そうめん",2,"plant"],
+["protein","鶏レバー",2],
+["protein","あじ",1],
+["protein","ちくわ",3],
+["fiber","柿",2],
+["p","油揚げ",2],
+["k","牛もも",2],
+["va","みかん",2],
+["va","鶏レバー",1],
+["va","チンゲンサイ",2],
+["va","にら",2],
+["va","春菊",1],
+["p","ぶり",2],
+["fat","いわし",2,"unsat"],
+["na","シリアル",2],
+["na","ちくわ",2],
+["p","絹ごし豆腐",2],
+["mg","とうもろこし",2],
+["mg","いか",2],
+["fe","ほたて",2,"heme"],
+["p","ヨーグルト",2],
+["p","とうもろこし",2],
+["zn","とうもろこし",2],
+["mg","ほたて",2],
+["k","モロヘイヤ",2],
+["p","豆乳",2],
+["p","たこ",2],
+["se","ヨーグルト",2],
+["b1","モロヘイヤ",2],
+["vc","ソーセージ",2],
+["cu","そうめん",2],
+["p","レンズ豆",3],
+["k","ぶり",3],
+["folate","厚揚げ",3],
+["b6","とうもろこし",3],
+["b1","グレープフルーツ",3],
+["panto","グレープフルーツ",3],
+["panto","とうもろこし",3],
+["mg","たこ",3],
+["cu","牛もも",3],
+["vk","きゅうり",3],
+["vk","チンゲンサイ",1],
+["vk","オクラ",2],
+["vk","にら",1],
+["vk","春菊",1],
+["zn","木綿豆腐",3],
+["zn","ひよこ豆",3],
+["panto","豆乳",3],
+["panto","鶏レバー",1],
+["panto","れんこん",3],
+["panto","なめこ",3],
+["folate","柿",3],
+["cu","ほたて",3],
+["b1","レンズ豆",3],
+["cu","オレンジ",3],
+["cu","鶏レバー",2],
+["cu","オクラ",3],
+["folate","まいたけ",3],
+["k","たら",3],
+["k","あじ",3],
+["k","春菊",3],
+["k","れんこん",3],
+["ve","たら",3],
+["ve","オクラ",3],
+["ve","にら",2],
+["ve","春菊",2],
+["ve","桃",3],
+["mg","ピーナッツ",3],
+["mg","オクラ",3],
+["b1","オレンジ",3],
+["b1","鶏レバー",2],
+["b1","あじ",3],
+["vc","豚レバー",3],
+["vc","鶏レバー",3],
+["vc","チンゲンサイ",2],
+["vc","春菊",3],
+["vc","かぶ",3],
+["vc","れんこん",2],
+["vc","ちくわ",2],
+["zn","低脂肪乳",3],
+["zn","鶏レバー",2],
+["zn","あじ",3],
+["fe","水菜",3,"nonheme"],
+["fe","鶏レバー",1],
+["p","ソーセージ",3],
+["p","鶏レバー",2],
+["p","あじ",2],
+["se","ひよこ豆",3],
+["se","鶏レバー",1],
+["se","あじ",1],
+["se","ちくわ",1],
+["b6","かぼちゃ",3],
+["niacin","しいたけ",3],
+["b6","豆乳",3],
+["fiber","豆乳",3],
+["fiber","オクラ",2],
+["fiber","春菊",3],
+["b6","トマト",3],
+["b6","鶏レバー",2],
+["b6","あじ",2],
+["b6","にんにく",3],
+["niacin","トマト",3],
+["niacin","鶏レバー",1],
+["niacin","あじ",1],
+["niacin","エリンギ",2],
+["niacin","なめこ",2],
+["niacin","ちくわ",3],
+["folate","みかん",3],
+["folate","鶏レバー",1],
+["folate","チンゲンサイ",2],
+["folate","オクラ",2],
+["folate","にら",2],
+["folate","春菊",1],
+["folate","かぶ",3],
+["folate","エリンギ",3],
+["folate","なめこ",3]];
+const WATER={b1:1,b2:1,b6:1,b12:1,vc:1,folate:1,niacin:1,panto:1},FATS={va:1,vd:1,ve:1,vk:1};
+const CATEMOJI={"魚介":"🐟","肉・卵":"🍖","乳製品":"🥛","豆・大豆":"🫘","緑黄色野菜":"🥦","その他の野菜":"🥔","きのこ":"🍄","海藻":"🌿","果物":"🍓","穀類":"🍚","種実・油":"🥜","調味・加工":"🍫","酒":"🍶"};
+const CATPOS={"穀類":[86,180],"肉・卵":[280,180],"魚介":[474,180],"豆・大豆":[181,340],"緑黄色野菜":[389,340],"その他の野菜":[86,500],"きのこ":[280,500],"海藻":[474,500],"乳製品":[181,660],"果物":[389,660],"種実・油":[86,820],"調味・加工":[280,820],"酒":[474,820]};
+const CATLIST={
+ "魚介":["鮭","かつお","まぐろ","あさり","うなぎ","さんま","牡蠣","さば","いわし","ぶり","たら","えび","ほたて","いか","たこ","ツナ缶","しらす干し","あじ"],
+ "肉・卵":["鶏むね","ハム","ベーコン","卵","牛脂","牛もも","鶏もも","ソーセージ","豚ロース","豚ばら","豚もも","豚ひき肉","豚レバー","ささみ","鶏レバー"],
+ "乳製品":["牛乳","チーズ","バター","生クリーム","ヨーグルト","低脂肪乳","スキムミルク"],
+ "豆・大豆":["大豆","納豆","枝豆","絹ごし豆腐","木綿豆腐","厚揚げ","油揚げ","豆乳","きなこ","ひよこ豆","レンズ豆"],
+ "緑黄色野菜":["ほうれん草","小松菜","赤ピーマン","ブロッコリー","にんじん","かぼちゃ","トマト","ピーマン","アスパラガス","モロヘイヤ","水菜","チンゲンサイ","オクラ","にら","春菊"],
+ "その他の野菜":["ごぼう","里芋","じゃがいも","さつまいも","切り干し大根","キャベツ","玉ねぎ","大根","きゅうり","白菜","なす","レタス","もやし","とうもろこし","セロリ","ズッキーニ","かぶ","れんこん","にんにく"],
+ "きのこ":["しいたけ","まいたけ","えのき","しめじ","エリンギ","なめこ"],
+ "海藻":["わかめ","ひじき","のり","昆布","もずく","めかぶ"],
+ "果物":["バナナ","アボカド","キウイ","いちご","りんご","みかん","オレンジ","ぶどう","柿","梨","ブルーベリー","グレープフルーツ","桃"],
+ "穀類":["玄米","白米","パン","オートミール","中華めん","うどん","そば","パスタ","もち","シリアル","そうめん"],
+ "種実・油":["アーモンド","ごま","オリーブ油","マヨネーズ","くるみ","カシューナッツ","ピーナッツ","えごま油","亜麻仁油"],
+ "調味・加工":["味噌","醤油","チョコレート","清涼飲料","梅干し","ケチャップ","ソース","ドレッシング","はちみつ","砂糖","みりん","ちくわ"],
+ "酒":["ビール","日本酒","ワイン","焼酎","梅酒"]};
+// 検索エイリアス：総称語で検索したとき、下の実在食材を全部ヒット扱いにする（総称ノード自体は廃止済み）
+const ALIAS={
+ "きのこ":["しいたけ","まいたけ","えのき","しめじ"],
+ "ナッツ":["アーモンド","くるみ","カシューナッツ","ピーナッツ"],
+ "青魚":["さば","いわし","さんま","ぶり"],
+ "豆":["大豆","納豆","枝豆","豆乳","きなこ","ひよこ豆","レンズ豆","絹ごし豆腐","木綿豆腐","厚揚げ","油揚げ"],
+ "いも":["じゃがいも","さつまいも","里芋"],
+ "麺":["中華めん","うどん","そば","パスタ","そうめん"],
+ "植物油":["オリーブ油","えごま油","亜麻仁油"],
+ "小魚":["しらす干し"]};
+const YOMI={"鮭":"さけ しゃけ サーモン","かつお":"かつお 鰹","まぐろ":"まぐろ 鮪 ツナ","あさり":"あさり 浅蜊 貝","うなぎ":"うなぎ 鰻","さんま":"さんま 秋刀魚","牡蠣":"かき カキ 牡蠣 貝","さば":"さば 鯖","鶏むね":"とりむね とり 鶏 チキン むね むね肉","豚レバー":"ぶた 豚 れば レバー 肝 きも","ハム":"はむ","ベーコン":"べーこん","卵":"たまご 玉子 エッグ","牛脂":"ぎゅうし ヘット 脂 あぶら 牛","牛乳":"ぎゅうにゅう ミルク 乳","チーズ":"ちーず","バター":"ばたー","生クリーム":"なまくりーむ クリーム","大豆":"だいず 豆 まめ","納豆":"なっとう 豆 まめ","枝豆":"えだまめ 豆 まめ","ほうれん草":"ほうれんそう ホウレンソウ 菜","小松菜":"こまつな 菜","赤ピーマン":"あかぴーまん ピーマン パプリカ","ブロッコリー":"ぶろっこりー","にんじん":"にんじん 人参 ニンジン","かぼちゃ":"かぼちゃ 南瓜","ごぼう":"ごぼう 牛蒡","里芋":"さといも いも 芋","じゃがいも":"じゃがいも いも 芋 ポテト","さつまいも":"さつまいも いも 芋","切り干し大根":"きりぼしだいこん だいこん 大根","わかめ":"わかめ 若布 海藻","ひじき":"ひじき 海藻","バナナ":"ばなな","アボカド":"あぼかど","キウイ":"きうい","いちご":"いちご 苺 ストロベリー","玄米":"げんまい こめ 米 ごはん ご飯","白米":"はくまい こめ 米 ごはん ご飯 ライス","パン":"ぱん ブレッド 食パン","オートミール":"おーとみーる オーツ","中華めん":"ちゅうかめん らーめん ラーメン 中華そば 麺","アーモンド":"あーもんど ナッツ","ごま":"ごま 胡麻","オリーブ油":"おりーぶゆ おりーぶ あぶら 油","マヨネーズ":"まよねーず まよ","味噌":"みそ 味噌 みそしる 味噌汁","醤油":"しょうゆ しょう油","チョコレート":"ちょこれーと ちょこ","清涼飲料":"せいりょういんりょう ジュース 炭酸 ソーダ","梅干し":"うめぼし うめ 梅","ビール":"びーる","日本酒":"にほんしゅ さけ 酒 清酒","ワイン":"わいん","焼酎":"しょうちゅう","梅酒":"うめしゅ うめ 梅 酒","いわし":"いわし 鰯","ぶり":"ぶり 鰤","たら":"たら 鱈 タラ","えび":"えび 海老 エビ","ほたて":"ほたて 帆立 貝","いか":"いか 烏賊 イカ","たこ":"たこ 蛸 タコ","ツナ缶":"つな ツナ 缶詰","牛もも":"ぎゅうもも 牛 牛肉 もも","鶏もも":"とりもも とり 鶏 チキン もも もも肉","ソーセージ":"そーせーじ ウインナー","ヨーグルト":"よーぐると","低脂肪乳":"ていしぼうにゅう 低脂肪 牛乳 ミルク","スキムミルク":"すきむみるく 脱脂粉乳","絹ごし豆腐":"きぬごしどうふ きぬ 豆腐 とうふ 豆","木綿豆腐":"もめんどうふ もめん 豆腐 とうふ 豆","厚揚げ":"あつあげ 揚げ 豆腐 豆","油揚げ":"あぶらあげ 揚げ 豆","豆乳":"とうにゅう 豆 乳","きなこ":"きなこ 黄粉 豆","ひよこ豆":"ひよこまめ 豆","レンズ豆":"れんずまめ 豆","トマト":"とまと トマト","ピーマン":"ぴーまん ピーマン","アスパラガス":"あすぱらがす アスパラ","モロヘイヤ":"もろへいや","水菜":"みずな 菜","キャベツ":"きゃべつ キャベツ 甘藍","玉ねぎ":"たまねぎ 玉葱 タマネギ","大根":"だいこん 大根","きゅうり":"きゅうり 胡瓜 キュウリ","白菜":"はくさい 白菜 菜","なす":"なす 茄子 ナス","レタス":"れたす レタス 菜","もやし":"もやし","とうもろこし":"とうもろこし コーン","セロリ":"せろり セロリ","しいたけ":"しいたけ 椎茸","まいたけ":"まいたけ 舞茸","えのき":"えのき","しめじ":"しめじ","のり":"のり 海苔","昆布":"こんぶ 昆布","もずく":"もずく","めかぶ":"めかぶ","りんご":"りんご 林檎 アップル","みかん":"みかん 蜜柑 ミカン","オレンジ":"おれんじ オレンジ","ぶどう":"ぶどう 葡萄 グレープ","柿":"かき 柿","梨":"なし 梨","ブルーベリー":"ぶるーべりー","グレープフルーツ":"ぐれーぷふるーつ","うどん":"うどん 饂飩 麺","そば":"そば 蕎麦 麺","パスタ":"ぱすた スパゲッティ 麺","もち":"もち 餅","シリアル":"しりある コーンフレーク","そうめん":"そうめん 素麺 麺","くるみ":"くるみ 胡桃 ナッツ","カシューナッツ":"かしゅーなっつ ナッツ","ピーナッツ":"ぴーなっつ 落花生 ナッツ","えごま油":"えごまゆ 油","亜麻仁油":"あまにゆ 油","ケチャップ":"けちゃっぷ","ソース":"そーす","ドレッシング":"どれっしんぐ","はちみつ":"はちみつ 蜂蜜","砂糖":"さとう 砂糖 シュガー","みりん":"みりん 味醂","豚ロース":"ぶたろーす ぶた 豚 ポーク ロース","豚ばら":"ぶたばら ぶた 豚 ポーク ばら バラ","豚もも":"ぶたもも ぶた 豚 ポーク もも","豚ひき肉":"ぶたひきにく ぶた 豚 ひき肉 ミンチ","ささみ":"ささみ ササミ 鶏 とり チキン","しらす干し":"しらすぼし しらす シラス じゃこ ちりめん","ズッキーニ":"ずっきーに ズッキーニ","鶏レバー":"とりればー とり 鶏 れば レバー 肝 きも","あじ":"あじ 鯵 アジ","チンゲンサイ":"ちんげんさい チンゲン菜 菜","オクラ":"おくら オクラ","にら":"にら 韮 ニラ 菜","春菊":"しゅんぎく 菊菜 菜","かぶ":"かぶ 蕪 カブ","れんこん":"れんこん 蓮根 レンコン","エリンギ":"えりんぎ エリンギ きのこ","なめこ":"なめこ きのこ","ちくわ":"ちくわ 竹輪 練り物","桃":"もも 桃 ピーチ","にんにく":"にんにく ニンニク ガーリック"};
+const EFFECTS={bone:["骨と歯をつくる","#e3e8f2","#6b7fb5"],blood:["血をつくる","#f4d8d4","#c05a4e"],energy:["エネルギーをつくる","#f8e4bd","#c9902f"],
+ muscle:["筋肉とからだをつくる","#f0dcc4","#b5763c"],skin:["肌・髪・粘膜を守る","#f6dde3","#c2637f"],immune:["免疫を保つ","#dbe9e1","#4e9070"],
+ gut:["腸を整える","#e1ead0","#7a9b46"],bp:["血圧とむくみに関わる","#d6e8e6","#3f9490"],anti:["酸化から守る","#e8e3f2","#7b6bb0"],
+ nerve:["神経とこころを整える","#dde1ee","#5f6bab"],gluc:["血糖のゆるやかさに関わる","#d8e6f0","#4a86ab"]};
+const EPOS={"anti":[110,226],"immune":[110,422],"bone":[110,618],"energy":[110,814],"skin":[280,324],"muscle":[280,520],"gut":[280,716],"blood":[450,226],"nerve":[450,422],"bp":[450,618],"gluc":[450,814]};
+const EFF=[["ca","bone","main"],["vd","bone","main"],["mg","bone","sub"],["protein","bone","sub"],
+ ["fe","blood","main"],["b12","blood","main"],["folate","blood","main"],["protein","blood","sub"],["vc","blood","sub"],
+ ["sugar","energy","main"],["fat","energy","main"],["b1","energy","main"],["b2","energy","main"],["mg","energy","sub"],
+ ["protein","muscle","main"],["b6","muscle","main"],["zn","muscle","sub"],["mg","muscle","sub"],
+ ["va","skin","main"],["b2","skin","main"],["zn","skin","main"],["vc","skin","main"],["protein","skin","sub"],
+ ["vd","immune","main"],["zn","immune","main"],["va","immune","sub"],["vc","immune","sub"],["protein","immune","sub"],
+ ["fiber","gut","main"],["mg","gut","sub"],
+ ["k","bp","main"],["mg","bp","main"],["ca","bp","sub"],["fiber","bp","sub"],
+ ["vc","anti","main"],["ve","anti","main"],["va","anti","sub"],["zn","anti","sub"],
+ ["mg","nerve","main"],["b6","nerve","main"],["b12","nerve","main"],["folate","nerve","main"],["ca","nerve","sub"],
+ ["fiber","gluc","main"],["mg","gluc","sub"],
+ ["cu","blood","sub"],["p","bone","main"],["vk","bone","main"],["se","anti","main"],
+ ["niacin","energy","main"],["panto","energy","main"]];
+const BLOCK=[["na","bp"],["sugar","gluc"],["alc","nerve"],["alc","blood"]];
+const NPOS={"na":[399,192],"k":[458,89],"mg":[340,89],"fat":[340,295],"fiber":[221,295],"niacin":[280,398],"b2":[458,295],"panto":[399,398],"sugar":[162,398],"b1":[102,295],"alc":[162,192],"fe":[280,604],"ca":[340,706],"zn":[399,604],"vc":[221,706],"protein":[162,604],"cu":[340,501],"vd":[280,809],"vk":[399,809],"p":[458,706],"va":[518,604],"ve":[162,809],"b6":[43,604],"se":[221,912],"folate":[102,89],"b12":[221,89]};
+
+const GRP={heme:{t:"ヘム鉄",c:"#c0392b"},nonheme:{t:"非ヘム鉄",c:"#3fa35f"},sat:{t:"飽和脂肪酸",c:"#c2701c"},unsat:{t:"不飽和脂肪酸",c:"#2f8f8f"},animal:{t:"動物性",c:"#e8843a"},plant:{t:"植物性",c:"#2f7fd1"}};
+
+// ===== 出典 =====
+const SOURCES=[
+ {t:"日本食品標準成分表（八訂）増補2023年",o:"文部科学省",n:"食材にどの栄養素がどれだけ含まれるか（可食部100gあたりの標準成分値）。本アプリの「近い／遠い」の目安に使用。",u:"https://www.mext.go.jp/a_menu/syokuhinseibun/index.htm"},
+ {t:"食品成分データベース",o:"文部科学省",n:"上記成分表を検索できるデータベース（試験公開）。",u:"https://fooddb.mext.go.jp/"},
+ {t:"日本人の食事摂取基準（2025年版）",o:"厚生労働省",n:"「とりすぎ」「不足」の基準。使用期間は令和7年度〜令和11年度。各栄養素の吸収・代謝の記述も参照。",u:"https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/kenkou_iryou/kenkou/eiyou/syokuji_kijyun.html"},
+ {t:"同 策定検討会報告書（2025年版）",o:"厚生労働省",n:"栄養素どうしの関係（吸収を助ける・妨げる等）の根拠を確認する一次資料。",u:"https://www.mhlw.go.jp/stf/newpage_44138.html"},
+ {t:"「健康食品」の安全性・有効性情報（HFNet）",o:"医薬基盤・健康・栄養研究所",n:"素材ごとの安全性・有効性、医薬品との相互作用。※データの無断転用・引用は禁止。参照のみ。",u:"https://hfnet.nibn.go.jp/"},
+ {t:"eJIM（統合医療情報発信サイト）",o:"厚生労働省",n:"サプリメント・健康食品まわりの解説。",u:"https://www.ejim.mhlw.go.jp/"}
+];
+const LEVELSRC="食材の遠近は「一食あたりの量 ÷ 一日の目安量」で算出。含有量は「日本食品標準成分表（八訂）増補2023年」、一日の目安量は「日本人の食事摂取基準（2025年版）」の30〜49歳女性（月経あり・身体活動レベルふつう）の値です。輪郭が点線の食材は含有量が成分表と未照合。また一食の目安量（いわし80gなど）はどの食材も暫定で、出典はまだありません。";
+const DISCLAIMER="この図鑑は栄養素どうしの関係を眺めるためのものです。病気の診断・治療・予防を目的としたものではありません。体調や持病について判断が必要なときは、医師や管理栄養士に相談してください。";
+
+// ===== 世界はひとつ。栄養素の region と 食材の region が同じ座標平面にある =====
+const FOFF=0;   // レイヤー方式：栄養素と食材は同じ面に重なる
+const FOODNAMES=[...new Set(FOODS.map(f=>f[1]))];
+const FCOLOR="#d9d3c7";   // v0.720：食材は暖かめの無彩寄りグレー（ベージュ#ded3bbとグレー#d4d4d4の中間）
+const PT=12;
+let nodes={},edges=[],catLabels=[],groupLabels=[];
+const APPVER="v0.727";   // ← 書き出しごとに更新（第3位+1／新機能で第1位+1）
+let ADJREL={},FOODOF={},NUTOF={},EFFOF={},NUTEFF={},BLKOF={},BLKBY={};
+let NOW=0,active=null,relList=[],relAssign={},relRad={};
+let SEARCH="",matched={},matchN=0,FRONT="nut",switchBoost=0,stage=0,foodHidden=0;
+// 三段階表示：栄養素タップで近い順に段階的に開く。stage0=近12件 / stage1=近24件 / stage2=全部。
+// 数値（距離＝量）は変えず、一度に見せる件数だけを絞って被りを減らす（v0.702）。
+const FOODSTG=[12,24];   // 各段で見せる食材数（近い順）。最終段は全部
+const MOREID="__more__";   // 「＋n」ノードのID
+let running=false,lastInteract=0,IDLE_MS=10000,asleep=false,EFRAME=0,_lastDraw=0;
+
+function mkWob(o){o.seed=Math.random()*6.28;o.pa=[];o.am=[];for(let i=0;i<PT;i++){o.pa.push(Math.random()*6.28);o.am.push(0.06+Math.random()*0.06);}}
+function mkNode(id,name,col,x,y,base,kind){const rr=Math.random();const oe=rr<0.14?"sleep":(rr<0.28?"dead":"open");const n={id,name,col,kind,hx:x,hy:y,x,y,px:x,py:y,base,r:base,op:1,ph:Math.random()*6.28,pd:{x:0,y:0.3},jig:0,mAng:0,mSpd:0,eyeBase:oe,origEye:oe,sleepDelay:Math.random()*5000,_eslot:(Math.random()*6)|0,_bslot:(Math.random()*6)|0,_pr0:base,moveHappy:Math.random()<0.6,nextBlink:1000+Math.random()*5000,blinkEnd:0,surpriseEnd:0,happyEnd:0,wasMoving:false};mkWob(n);return n;}
+
+// 栄養素サイズ三段階。大=三大栄養素／中=日本人に不足しがち／小=その他
+const NUTBIG={protein:1,fat:1,sugar:1},NUTMID={fe:1,ca:1,fiber:1,folate:1,vd:1,mg:1,va:1};
+function buildWorld(){
+  nodes={};edges=[];catLabels=[];ADJREL={};FOODOF={};NUTOF={};EFFOF={};NUTEFF={};BLKOF={};BLKBY={};
+  Object.keys(NUT).forEach(id=>{const p=NPOS[id];
+    nodes[id]=mkNode(id,NUT[id][0],NUT[id][1],p[0],p[1],NUTBIG[id]?40:(NUTMID[id]?28:19),"nut");
+    nodes[id].badge=WATER[id]?"w":(FATS[id]?"f":null);});
+  Object.keys(CATPOS).forEach(cat=>{const C=CATPOS[cat];const list=(CATLIST[cat]||[]).filter(n=>FOODNAMES.indexOf(n)>=0);let maxr=0;
+    list.forEach((nm,i)=>{const ang=i*2.399,rad=i===0?0:22+Math.sqrt(i)*13;maxr=Math.max(maxr,rad);
+      nodes[nm]=mkNode(nm,nm,FCOLOR,C[0]+Math.cos(ang)*rad,C[1]+Math.sin(ang)*rad,17,"food");nodes[nm].cat=cat;});
+    catLabels.push({name:cat,x:C[0],y:C[1]-maxr-6});});
+  Object.keys(EFFECTS).forEach(id=>{const p=EPOS[id];nodes[id]=mkNode(id,EFFECTS[id][0],EFFECTS[id][1],p[0],p[1],28,"eff");nodes[id].line=EFFECTS[id][2];});
+  // 「＋n」ノード：隠れている食材を出すためのボタン。顔は描かない。
+  nodes[MOREID]=mkNode(MOREID,"",FCOLOR,-9999,-9999,12,"more");nodes[MOREID].op=0;
+  Object.values(nodes).forEach(n=>{n.ox=n.hx;n.oy=n.hy;
+    const fr=(n.kind===FRONT);n.op=fr?1:0;n.r=n.base;});
+  E.forEach(e=>{edges.push({a:e[0],b:e[1],type:e[2],kind:"rel"});
+    (ADJREL[e[0]]=ADJREL[e[0]]||[]).push(e[1]);(ADJREL[e[1]]=ADJREL[e[1]]||[]).push(e[0]);});
+  EFF.forEach(([nid,eid,role])=>{edges.push({a:nid,b:eid,kind:"eff",role});
+    (EFFOF[nid]=EFFOF[nid]||[]).push({id:eid,role});(NUTEFF[eid]=NUTEFF[eid]||[]).push({id:nid,role});});
+  BLOCK.forEach(([nid,eid])=>{edges.push({a:nid,b:eid,kind:"block"});
+    (BLKOF[nid]=BLKOF[nid]||[]).push(eid);(BLKBY[eid]=BLKBY[eid]||[]).push(nid);});
+  FOODS.forEach(([pid,name,lv,tag])=>{edges.push({a:pid,b:name,type:"contains",kind:"has"});
+    (FOODOF[pid]=FOODOF[pid]||[]).push({id:name,lv,tag:tag||null});
+    (NUTOF[name]=NUTOF[name]||[]).push({id:pid,lv,tag:tag||null});});
+  buildDOM();
+}
+function buildDOM(){let s=`<g id="view"><rect x="-4000" y="-4000" width="12000" height="12000" fill="transparent"/>`;
+  edges.forEach((e,i)=>{s+=`<path id="e${i}" fill="none" stroke-linecap="round" opacity="0"/>`;
+    if(e.kind!=="has")s+=`<path id="ah${i}" opacity="0"/><path id="ah${i}b" opacity="0"/>`;});
+  // --- 背面ラベル層：選択外ノードの文字。ノードの下に沈める ---
+  s+=`<g id="labels-bg" style="paint-order:stroke" stroke="#fff" stroke-width="3.2" stroke-linejoin="round">`;
+  Object.values(nodes).forEach(n=>s+=`<text id="nl_${n.id}" font-weight="500" fill="#3a3226" text-anchor="middle" opacity="0"></text>`);
+  s+=`</g>`;
+  // --- カテゴリ弧文字：普段は最前、選択中だけこの層ごとノードの下へ移す（catAnchorとの間で行き来） ---
+  s+=`<g id="catanchor-bg"></g>`;
+  // --- ノード層 ---
+  s+=`<g id="nodelayer">`;
+  Object.values(nodes).forEach(n=>s+=`<g id="g_${n.id}" style="cursor:pointer"><path id="nb_${n.id}"/><path id="gr_${n.id}" fill="none" opacity="0"/><g id="eyes_${n.id}"></g><circle id="sol_${n.id}" opacity="0"/></g>`);
+  s+=`</g>`;
+  // --- 前面ラベル層：選択中ノードの文字・エッジラベル・グループラベル。ノードの上 ---
+  s+=`<g id="labels-fg" style="paint-order:stroke" stroke="#fff" stroke-width="3.2" stroke-linejoin="round">`;
+  Object.values(nodes).forEach(n=>s+=`<text id="nlf_${n.id}" font-weight="500" fill="#3a3226" text-anchor="middle" opacity="0"></text>`);
+  edges.forEach((e,i)=>s+=`<text id="el${i}" font-size="10" font-weight="600" text-anchor="middle" opacity="0"></text>`);
+  for(let i=0;i<6;i++)s+=`<text id="gl${i}" font-size="10.5" font-weight="800" text-anchor="middle" opacity="0"></text>`;
+  s+=`</g>`;
+  // --- カテゴリ弧文字の定位置（最前）。ここに置いておき、選択時だけ catanchor-bg へ移す ---
+  s+=`<g id="catanchor-fg"><g id="catlabels" style="paint-order:stroke" stroke="#fff" stroke-width="3.2" stroke-linejoin="round">`;
+  catLabels.forEach((c,i)=>{const txt=[...(c.name+(CATEMOJI[c.name]||""))];const R=118,step=19/R,span=(txt.length-1)*step;
+    const acx=c.x,acy=c.y+R,a0=-Math.PI/2-span/2,a1=-Math.PI/2+span/2;
+    const px=a=>[(acx+Math.cos(a)*R).toFixed(1),(acy+Math.sin(a)*R).toFixed(1)];
+    const p0=px(a0-step*0.75),p1=px(a1+step*0.75);
+    let g=`<g id="cl${i}"><path d="M ${p0[0]} ${p0[1]} A ${R} ${R} 0 0 1 ${p1[0]} ${p1[1]}" fill="none" stroke="#3a3226" stroke-width="1.1" stroke-linecap="round" opacity="0.55"/>`;
+    txt.forEach((ch,k)=>{const a=a0+k*step,q=px(a);g+=`<text x="${q[0]}" y="${(parseFloat(q[1])-7).toFixed(1)}" font-size="13" font-weight="700" fill="#6b6152" text-anchor="middle">${ch}</text>`;});
+    s+=g+`</g>`;});
+  s+=`</g></g>`;
+  s+=`</g></g>`;document.getElementById("nsvg").innerHTML=s;}
+// カテゴリ弧文字の前後を切り替える。選択中は背面(catanchor-bg)、通常は前面(catanchor-fg)へ。
+// 選択/解除の瞬間だけ呼ぶ（毎フレームではない）。
+let _catBack=null;
+function setCatBack(back){if(_catBack===back)return;_catBack=back;
+  const cl=document.getElementById("catlabels");if(!cl)return;
+  const dst=document.getElementById(back?"catanchor-bg":"catanchor-fg");
+  if(dst)dst.appendChild(cl);}
+
+// ===== 選択：世界は作り直さない。周りの要素が寄ってくるだけ =====
+const RING=[4,92,196];          // レベルごとの距離（旧・3段階）。割合%が無い食材の予備として残す
+const RO=lv=>RING[lv-1];
+// ===== 距離＝一食でとれる量（一日の目安に対する割合%）=====
+// 3段階に丸めず、割合%から連続的に決める。近い＝一食で多くとれる。
+// 出典: 日本食品標準成分表（八訂）増補2023年 ／ 日本人の食事摂取基準（2025年版）
+const PCT={"alc|日本酒":[111.0,1],"alc|焼酎":[92.0,1],"alc|ワイン":[56.0,1],"alc|ビール":[65.0,1],"alc|梅酒":[31.0,1],"b1|豚もも":[80.0,1],"b1|玄米":[67.8,1],"b1|豚ひき肉":[61.1,1],"b1|豚ロース":[61.1,1],"b1|豚ばら":[45.6,1],"b1|大豆":[38.9,1],"b1|うなぎ":[33.3,1],"b1|さば":[18.9,1],"b1|枝豆":[16.7,1],"b1|鮭":[13.3,1],"b1|白米":[13.3,1],"b1|まぐろ":[13.3,1],"b1|さつまいも":[12.2,1],"b1|かつお":[11.1,1],"b1|ブロッコリー":[11.1,1],"b1|じゃがいも":[10.0,1],"b1|ベーコン":[10.0,1],"b12|あさり":[520.0,1],"b12|牡蠣":[345.0,1],"b12|いわし":[320.0,1],"b12|さんま":[320.0,1],"b12|豚レバー":[312.0,1],"b12|さば":[260.0,1],"b12|かつお":[168.0,1],"b12|ほたて":[165.0,1],"b12|鮭":[118.0,1],"b12|まぐろ":[116.0,1],"b12|いか":[98.0,1],"b12|ぶり":[76.0,1],"b12|うなぎ":[70.0,1],"b12|たら":[26.0,1],"b12|たこ":[19.5,1],"b12|牛乳":[15.0,1],"b12|卵":[13.8,1],"b12|豚ひき肉":[12.0,1],"b12|豚ばら":[10.0,1],"b2|豚レバー":[150.0,1],"b2|うなぎ":[31.7,1],"b2|牛乳":[25.0,1],"b2|アーモンド":[21.7,1],"b2|さば":[20.8,1],"b2|納豆":[20.8,1],"b2|さんま":[18.3,1],"b2|豚ひき肉":[15.0,1],"b2|卵":[15.0,1],"b2|鮭":[14.2,1],"b2|豚もも":[14.2,1],"b2|ヨーグルト":[11.7,1],"b2|かつお":[11.7,1],"b2|ブロッコリー":[11.7,1],"b2|アボカド":[11.7,1],"b2|ほうれん草":[11.7,1],"b2|大豆":[10.8,1],"b2|豚ロース":[10.0,1],"b2|鶏もも":[10.0,1],"b6|玄米":[56.7,1],"b6|かつお":[50.8,1],"b6|鮭":[42.5,1],"b6|まぐろ":[42.5,1],"b6|さば":[39.2,1],"b6|鶏むね":[38.3,1],"b6|さんま":[35.8,1],"b6|バナナ":[31.7,1],"b6|ささみ":[30.8,1],"b6|豚ひき肉":[24.2,1],"b6|大豆":[21.7,1],"b6|豚ロース":[21.7,1],"b6|さつまいも":[21.7,1],"b6|豚もも":[20.8,1],"b6|アボカド":[16.7,1],"b6|じゃがいも":[16.7,1],"b6|鶏もも":[16.7,1],"b6|豚ばら":[15.0,1],"b6|ブロッコリー":[15.0,1],"b6|白米":[15.0,1],"b6|赤ピーマン":[15.0,1],"ca|低脂肪乳":[40.0,1],"ca|厚揚げ":[36.9,1],"ca|スキムミルク":[33.8,1],"ca|牛乳":[33.8,1],"ca|モロヘイヤ":[24.0,1],"ca|木綿豆腐":[21.5,1],"ca|チーズ":[19.0,1],"ca|ヨーグルト":[18.5,1],"ca|小松菜":[18.3,1],"ca|絹ごし豆腐":[17.3,1],"ca|水菜":[16.2,1],"ca|うなぎ":[16.0,1],"ca|油揚げ":[14.3,1],"ca|大豆":[13.8,1],"ca|ひじき":[12.3,1],"ca|わかめ":[12.0,1],"ca|ごま":[11.1,1],"ca|アーモンド":[10.0,1],"ca|いわし":[9.1,1],"ca|昆布":[6.0,1],"cu|豚レバー":[71.0,1],"cu|牡蠣":[88.6,1],"cu|大豆":[77.1,1],"cu|玄米":[58.6,1],"cu|白米":[47.1,1],"cu|アーモンド":[42.9,1],"cu|納豆":[38.6,1],"cu|枝豆":[28.6,1],"cu|えび":[28.3,1],"cu|アボカド":[24.3,1],"cu|さつまいも":[24.3,1],"cu|ごぼう":[18.6,1],"cu|オートミール":[15.7,1],"cu|さば":[14.3,1],"cu|さんま":[14.3,1],"cu|ごま":[14.3,1],"cu|キウイ":[14.3,1],"cu|かつお":[12.9,1],"cu|里芋":[12.9,1],"cu|じゃがいも":[12.9,1],"cu|バナナ":[12.9,1],"cu|ほうれん草":[11.4,1],"fat|豚ばら":[49.7,1],"fat|さんま":[35.9,1],"fat|うなぎ":[27.1,1],"fat|豚ロース":[26.9,1],"fat|ぶり":[24.7,1],"fat|豚ひき肉":[24.1,1],"fat|アーモンド":[23.7,1],"fat|さば":[23.6,1],"fat|ソーセージ":[22.5,1],"fat|アボカド":[21.5,1],"fat|鶏もも":[19.9,1],"fat|くるみ":[18.1,1],"fat|オリーブ油":[17.5,1],"fat|大豆":[17.3,1],"fat|マヨネーズ":[16.0,1],"fat|生クリーム":[15.1,1],"fat|チョコレート":[18.0,1],"fat|豚もも":[14.3,1],"fat|バター":[14.0,1],"fat|ベーコン":[13.7,1],"fat|牛乳":[13.3,1],"fat|ピーナッツ":[13.1,1],"fat|カシューナッツ":[12.5,1],"fat|えごま油":[8.8,1],"fat|亜麻仁油":[8.8,1],"fat|牛脂":[8.8,1],"fat|ドレッシング":[3.8,1],"fe|豚レバー":[62.0,1],"fe|大豆":[32.4,1],"fe|玄米":[30.0,1],"fe|厚揚げ":[24.8,1],"fe|木綿豆腐":[21.4,1],"fe|レンズ豆":[20.5,1],"fe|小松菜":[18.7,1],"fe|いわし":[16.0,1],"fe|まぐろ":[15.2,1],"fe|オートミール":[14.9,1],"fe|あさり":[14.5,1],"fe|かつお":[14.5,1],"fe|納豆":[14.2,1],"fe|ほうれん草":[13.3,1],"fe|枝豆":[12.9,1],"fe|牛もも":[12.4,1],"fe|牡蠣":[12.0,1],"fe|白米":[11.4,1],"fe|さんま":[10.7,1],"fe|きなこ":[7.6,1],"fe|シリアル":[3.4,1],"fe|のり":[3.1,1],"fiber|大豆":[59.7,1],"fiber|じゃがいも":[49.4,1],"fiber|ひよこ豆":[32.2,1],"fiber|レンズ豆":[26.1,1],"fiber|玄米":[25.0,1],"fiber|ひじき":[23.0,1],"fiber|アボカド":[21.8,1],"fiber|オートミール":[20.9,1],"fiber|ごぼう":[19.0,1],"fiber|わかめ":[18.2,1],"fiber|ブロッコリー":[17.0,1],"fiber|納豆":[16.8,1],"fiber|とうもろこし":[16.7,1],"fiber|アーモンド":[15.3,1],"fiber|キウイ":[14.4,1],"fiber|枝豆":[13.9,1],"fiber|かぼちゃ":[12.4,1],"fiber|さつまいも":[12.2,1],"fiber|切り干し大根":[11.8,1],"fiber|ブルーベリー":[11.0,1],"fiber|ほうれん草":[10.9,1],"fiber|えのき":[10.8,1],"fiber|きなこ":[10.1,1],"fiber|梨":[10.0,1],"fiber|まいたけ":[9.7,1],"fiber|めかぶ":[9.4,1],"fiber|昆布":[8.9,1],"fiber|なす":[8.6,1],"fiber|しめじ":[8.3,1],"fiber|しいたけ":[8.2,1],"fiber|りんご":[7.8,1],"fiber|くるみ":[6.2,1],"fiber|もずく":[3.9,1],"fiber|セロリ":[3.3,1],"folate|枝豆":[66.7,1],"folate|モロヘイヤ":[62.5,1],"folate|ほうれん草":[61.3,1],"folate|ブロッコリー":[55.0,1],"folate|大豆":[54.2,1],"folate|アスパラガス":[47.5,1],"folate|小松菜":[32.1,1],"folate|いちご":[30.0,1],"folate|水菜":[29.2,1],"folate|かぼちゃ":[26.7,1],"folate|キャベツ":[26.0,1],"folate|アボカド":[24.2,1],"folate|のり":[23.8,1],"folate|ひよこ豆":[22.9,1],"folate|納豆":[22.5,1],"folate|さつまいも":[20.4,1],"folate|オレンジ":[18.4,1],"folate|わかめ":[18.3,1],"folate|ごぼう":[17.0,1],"folate|玄米":[16.9,1],"folate|キウイ":[15.4,1],"folate|赤ピーマン":[14.2,1],"folate|もやし":[13.7,1],"folate|レタス":[12.2,1],"folate|バナナ":[10.8,1],"folate|卵":[10.2,1],"folate|レンズ豆":[4.6,1],"k|大豆":[36.5,1],"k|わかめ":[20.0,1],"k|ひじき":[19.7,1],"k|ほうれん草":[18.6,1],"k|さつまいも":[18.5,1],"k|アボカド":[15.9,1],"k|じゃがいも":[15.8,1],"k|里芋":[14.8,1],"k|豆乳":[14.6,1],"k|バナナ":[13.8,1],"k|まぐろ":[13.8,1],"k|小松菜":[13.5,1],"k|切り干し大根":[13.5,1],"k|玄米":[13.3,1],"k|かつお":[13.2,1],"k|かぼちゃ":[12.3,1],"k|トマト":[12.1,1],"k|昆布":[11.7,1],"k|キウイ":[11.5,1],"k|牛乳":[11.5,1],"k|納豆":[11.4,1],"k|枝豆":[11.3,1],"k|とうもろこし":[11.2,1],"k|梨":[10.8,1],"k|鮭":[10.8,1],"k|豚もも":[10.8,1],"k|ブロッコリー":[10.6,1],"k|鶏むね":[10.5,1],"k|さば":[10.2,1],"k|大根":[8.8,1],"k|白菜":[8.5,1],"k|グレープフルーツ":[8.1,1],"k|セロリ":[6.3,1],"k|なす":[5.9,1],"k|ぶどう":[5.0,1],"k|りんご":[4.6,1],"k|玉ねぎ":[4.6,1],"k|きゅうり":[3.8,1],"k|レタス":[3.1,1],"k|めかぶ":[1.7,1],"mg|玄米":[56.9,1],"mg|大豆":[37.9,1],"mg|わかめ":[37.9,1],"mg|木綿豆腐":[29.5,1],"mg|アーモンド":[26.7,1],"mg|絹ごし豆腐":[25.9,1],"mg|ひじき":[17.7,1],"mg|豆乳":[17.2,1],"mg|ほうれん草":[16.7,1],"mg|納豆":[15.5,1],"mg|あさり":[13.8,1],"mg|オートミール":[13.8,1],"mg|牡蠣":[13.4,1],"mg|カシューナッツ":[12.4,1],"mg|白米":[11.9,1],"mg|かつお":[11.6,1],"mg|ごぼう":[11.2,1],"mg|バナナ":[11.0,1],"mg|枝豆":[10.7,1],"mg|めかぶ":[10.5,1],"mg|まぐろ":[10.2,1],"mg|昆布":[9.1,1],"mg|きなこ":[9.0,1],"mg|くるみ":[7.8,1],"mg|もずく":[2.1,1],"na|梅干し":[29.7,1],"na|味噌":[34.0,1],"na|わかめ":[25.8,1],"na|ソース":[19.6,1],"na|あさり":[13.5,1],"na|醤油":[13.0,1],"na|ソーセージ":[11.1,1],"na|牡蠣":[11.1,1],"na|パン":[11.0,1],"na|ドレッシング":[8.1,1],"na|ハム":[7.0,1],"na|ケチャップ":[7.2,1],"niacin|かつお":[160.0,1],"niacin|まぐろ":[146.7,1],"niacin|さば":[106.7,1],"niacin|玄米":[100.0,1],"niacin|鶏むね":[100.0,1],"niacin|ぶり":[93.3,1],"niacin|ささみ":[85.0,1],"niacin|ツナ缶":[75.8,1],"niacin|いわし":[73.3,1],"niacin|豚ロース":[73.3,1],"niacin|さんま":[73.3,1],"niacin|鮭":[73.3,1],"niacin|豚もも":[66.7,1],"niacin|豚ひき肉":[59.3,1],"niacin|豚レバー":[79.0,1],"niacin|鶏もも":[56.7,1],"niacin|豚ばら":[48.7,1],"niacin|大豆":[41.7,1],"niacin|うなぎ":[35.3,1],"niacin|ピーナッツ":[35.0,1],"niacin|白米":[32.5,1],"niacin|えのき":[30.8,1],"niacin|しめじ":[26.7,1],"niacin|納豆":[19.5,1],"niacin|枝豆":[17.5,1],"niacin|アーモンド":[15.7,1],"niacin|オートミール":[15.0,1],"niacin|じゃがいも":[15.0,1],"niacin|牛乳":[15.0,1],"niacin|アボカド":[13.4,1],"niacin|卵":[13.3,1],"niacin|牡蠣":[13.0,1],"niacin|わかめ":[11.7,1],"niacin|ブロッコリー":[10.0,1],"p|玄米":[54.4,1],"p|大豆":[30.6,1],"p|まぐろ":[29.0,1],"p|かつお":[28.0,1],"p|うなぎ":[26.0,1],"p|鮭":[24.0,1],"p|牛乳":[23.2,1],"p|さば":[22.0,1],"p|鶏むね":[20.0,1],"p|豚もも":[20.0,1],"p|オートミール":[18.5,1],"p|チーズ":[18.0,1],"p|豚ロース":[18.0,1],"p|さんま":[18.0,1],"p|ささみ":[18.0,1],"p|白米":[17.8,1],"p|鶏もも":[17.0,1],"p|アーモンド":[15.0,1],"p|豚ばら":[13.0,1],"p|豚ひき肉":[12.0,1],"p|納豆":[10.7,1],"p|卵":[10.6,1],"p|枝豆":[10.6,1],"panto|豚レバー":[73.0,1],"panto|玄米":[41.2,1],"panto|うなぎ":[34.8,1],"panto|納豆":[32.4,1],"panto|鶏むね":[27.8,1],"panto|ささみ":[24.8,1],"panto|牛乳":[22.0,1],"panto|アボカド":[21.6,1],"panto|鮭":[20.4,1],"panto|白米":[19.8,1],"panto|豚ひき肉":[19.6,1],"panto|さつまいも":[18.0,1],"panto|ブロッコリー":[17.0,1],"panto|豚ロース":[15.6,1],"panto|大豆":[13.6,1],"panto|豚もも":[13.4,1],"panto|鶏もも":[13.0,1],"panto|さんま":[11.8,1],"panto|卵":[11.6,1],"panto|かつお":[11.2,1],"panto|さば":[10.6,1],"panto|オートミール":[10.4,1],"panto|豚ばら":[10.2,1],"panto|じゃがいも":[10.0,1],"protein|かつお":[41.3,1],"protein|牛もも":[41.0,1],"protein|まぐろ":[38.9,1],"protein|鮭":[35.7,1],"protein|ぶり":[34.2,1],"protein|鶏むね":[34.1,1],"protein|大豆":[33.8,1],"protein|さば":[33.0,1],"protein|豚もも":[32.8,1],"protein|豚ロース":[30.9,1],"protein|いわし":[30.7,1],"protein|さんま":[29.0,1],"protein|ささみ":[28.7,1],"protein|いか":[28.6,1],"protein|豚ひき肉":[28.3,1],"protein|たら":[28.2,1],"protein|うなぎ":[27.4,1],"protein|鶏もも":[26.6,1],"protein|えび":[23.5,1],"protein|豚ばら":[23.0,1],"protein|ツナ缶":[22.4,1],"protein|厚揚げ":[21.4,1],"protein|木綿豆腐":[21.0,1],"fat|木綿豆腐":[12.9,1],"protein|玄米":[20.4,1],"protein|たこ":[19.7,1],"protein|白米":[18.3,1],"protein|ほたて":[16.2,1],"protein|絹ごし豆腐":[15.9,1],"protein|低脂肪乳":[15.2,1],"protein|納豆":[14.8,1],"protein|豆乳":[14.4,1],"protein|油揚げ":[14.0,1],"protein|スキムミルク":[13.6,1],"protein|牛乳":[13.2,1],"protein|卵":[12.2,1],"protein|枝豆":[11.7,1],"protein|レンズ豆":[11.2,1],"protein|オートミール":[11.0,1],"protein|アーモンド":[10.2,1],"protein|ソーセージ":[9.7,1],"protein|ひよこ豆":[9.5,1],"protein|きなこ":[7.3,1],"protein|ヨーグルト":[7.2,1],"se|まぐろ":[236.8,1],"se|さば":[224.0,1],"se|うなぎ":[160.0,1],"se|いわし":[153.6,1],"se|かつお":[137.6,1],"se|いか":[131.2,1],"se|牡蠣":[110.4,1],"se|さんま":[102.4,1],"se|鮭":[99.2,1],"se|豚ロース":[67.2,1],"se|豚ひき肉":[60.8,1],"se|あさり":[60.8,1],"se|鶏むね":[54.4,1],"se|鶏もも":[54.4,1],"se|ささみ":[52.8,1],"se|卵":[48.0,1],"se|豚ばら":[41.6,1],"se|オートミール":[28.8,1],"se|納豆":[28.8,1],"se|しらす干し":[24.4,1],"se|牛乳":[24.0,1],"se|玄米":[18.0,1],"se|白米":[12.0,1],"se|ベーコン":[12.0,1],"se|大豆":[10.0,1],"sugar|白米":[45.4,1],"sugar|玄米":[42.8,1],"sugar|そうめん":[18.2,1],"sugar|シリアル":[13.2,1],"sugar|さつまいも":[11.3,1],"sugar|パン":[11.0,1],"sugar|もち":[9.1,1],"sugar|清涼飲料":[9.0,1],"sugar|はちみつ":[6.3,1],"sugar|砂糖":[2.4,1],"sugar|ケチャップ":[1.4,1],"sugar|ソース":[1.4,1],"sugar|みりん":[0.6,1],"va|豚レバー":[929.0,1],"va|うなぎ":[274.3,1],"va|モロヘイヤ":[72.0,1],"va|にんじん":[59.1,1],"va|ほうれん草":[35.0,1],"va|小松菜":[26.0,1],"va|卵":[15.0,1],"va|牛乳":[10.9,1],"va|のり":[9.9,1],"va|トマト":[9.6,1],"va|柿":[7.5,1],"va|ピーマン":[1.4,1],"vc|柿":[105.0,1],"vc|赤ピーマン":[85.0,1],"vc|ブロッコリー":[84.0,1],"vc|オレンジ":[78.0,1],"vc|キウイ":[71.0,1],"vc|グレープフルーツ":[54.0,1],"vc|いちご":[49.6,1],"vc|みかん":[35.0,1],"vc|キャベツ":[32.8,1],"vc|さつまいも":[29.0,1],"vc|じゃがいも":[28.0,1],"vc|水菜":[27.5,1],"vc|小松菜":[27.3,1],"vc|ほうれん草":[24.5,1],"vc|ピーマン":[22.8,1],"vc|トマト":[22.5,1],"vc|白菜":[19.0,1],"vc|バナナ":[16.0,1],"vc|枝豆":[13.5,1],"vc|かぼちゃ":[12.8,1],"vc|大根":[12.0,1],"vc|もやし":[6.4,1],"vc|ブルーベリー":[5.4,1],"vd|いわし":[284.4,1],"vd|鮭":[284.4,1],"vd|うなぎ":[160.0,1],"vd|さんま":[142.2,1],"vd|ぶり":[71.1,1],"vd|まぐろ":[53.3,1],"vd|さば":[45.3,1],"vd|かつお":[35.6,1],"vd|まいたけ":[27.2,1],"vd|卵":[21.1,1],"vd|しらす干し":[13.3,1],"vd|しいたけ":[1.0,1],"ve|アーモンド":[120.8,1],"ve|うなぎ":[98.7,1],"ve|アボカド":[38.5,1],"ve|赤ピーマン":[35.8,1],"ve|玄米":[30.0,1],"ve|ブロッコリー":[30.0,1],"ve|マヨネーズ":[26.0,1],"ve|ピーナッツ":[25.0,1],"ve|さつまいも":[25.0,1],"ve|ほうれん草":[24.5,1],"ve|かぼちゃ":[24.0,1],"ve|さんま":[22.7,1],"ve|キウイ":[21.7,1],"ve|大豆":[19.2,1],"ve|さば":[17.3,1],"ve|鮭":[16.0,1],"ve|牡蠣":[13.0,1],"ve|オリーブ油":[12.3,1],"ve|卵":[10.8,1],"ve|小松菜":[10.5,1],"vk|モロヘイヤ":[256.0,1],"vk|納豆":[180.0,1],"vk|ほうれん草":[126.0,1],"vk|小松菜":[98.0,1],"vk|ブロッコリー":[84.0,1],"vk|わかめ":[44.0,1],"vk|キャベツ":[41.6,1],"vk|水菜":[40.0,1],"vk|ひじき":[30.9,1],"vk|アスパラガス":[17.2,1],"vk|鶏もも":[15.5,1],"vk|かぼちゃ":[13.9,1],"vk|鶏むね":[12.3,1],"vk|枝豆":[10.0,1],"vk|のり":[7.8,1],"zn|牡蠣":[105.0,1],"zn|牛もも":[58.8,1],"zn|豚レバー":[43.0,1],"zn|玄米":[33.8,1],"zn|豚ひき肉":[28.0,1],"zn|白米":[26.2,1],"zn|ほたて":[20.2,1],"zn|豚もも":[20.0,1],"zn|大豆":[19.4,1],"zn|豚ばら":[18.0,1],"zn|豚ロース":[16.0,1],"zn|鶏もも":[16.0,1],"zn|うなぎ":[14.0,1],"zn|たこ":[12.0,1],"zn|アーモンド":[11.6,1],"zn|さば":[11.0,1],"zn|納豆":[10.6,1],"zn|オートミール":[10.5,1],"zn|カシューナッツ":[10.1,1],"zn|牛乳":[10.0,1],"b1|そば":[33.3,1],"b6|そば":[15.8,1],"cu|そば":[38.6,1],"fe|そば":[19.8,1],"fiber|そば":[16.4,1],"mg|そば":[27.6,1],"na|そば":[27.1,1],"niacin|そば":[40.7,1],"p|そば":[23.0,1],"panto|そば":[18.4,1],"protein|そば":[22.4,1],"se|そば":[76.8,1],"zn|そば":[15.0,1],"cu|うどん":[12.9,1],"fiber|うどん":[10.7,1],"na|うどん":[52.9,1],"niacin|うどん":[16.7,1],"protein|うどん":[13.6,1],"se|うどん":[32.0,1],"b1|パスタ":[18.9,1],"cu|パスタ":[35.7,1],"fe|パスタ":[12.0,1],"fiber|パスタ":[27.0,1],"mg|パスタ":[17.1,1],"niacin|パスタ":[36.8,1],"p|パスタ":[14.6,1],"panto|パスタ":[11.6,1],"protein|パスタ":[23.2,1],"se|パスタ":[226.8,1],"zn|パスタ":[16.9,1],"sugar|そば":[23.2,1],"sugar|うどん":[24.6,1],"sugar|パスタ":[26.4,1],"se|ぶり":[182.4,1],"folate|豚レバー":[168.8,1],"se|豚レバー":[134.0,1],"se|たら":[99.2,1],"se|牛もも":[80.0,1],"niacin|牛もも":[78.3,1],"ve|モロヘイヤ":[65.0,1],"se|えび":[64.8,1],"se|たこ":[52.8,1],"se|そうめん":[44.8,1],"niacin|いか":[43.3,1],"b12|のり":[42.5,1],"na|そうめん":[40.9,1],"cu|カシューナッツ":[40.5,1],"folate|とうもろこし":[39.6,1],"vk|白菜":[39.3,1],"vc|モロヘイヤ":[39.0,1],"cu|木綿豆腐":[34.3,1],"cu|絹ごし豆腐":[34.3,1],"cu|豆乳":[34.3,1],"niacin|えび":[34.0,1],"ve|いわし":[33.3,1],"cu|いか":[33.1,1],"cu|厚揚げ":[32.9,1],"b6|いわし":[32.7,1],"cu|たこ":[32.6,1],"cu|レンズ豆":[31.4,1],"b2|低脂肪乳":[30.0,1],"b12|牛もも":[30.0,1],"niacin|たら":[29.3,1],"cu|モロヘイヤ":[28.3,1],"ve|いか":[28.0,1],"b6|ぶり":[28.0,1],"b6|牛もも":[27.5,1],"ve|ぶり":[26.7,1],"b2|スキムミルク":[26.7,1],"b2|いわし":[26.0,1],"cu|くるみ":[25.9,1],"se|ソーセージ":[25.6,1],"folate|白菜":[25.4,1],"p|いか":[25.0,1],"p|スキムミルク":[25.0,1],"b2|ぶり":[24.0,1],"se|低脂肪乳":[24.0,1],"se|木綿豆腐":[24.0,1],"b6|豚レバー":[23.8,1],"niacin|木綿豆腐":[23.8,1],"p|牛もも":[23.8,1],"niacin|厚揚げ":[23.3,1],"niacin|とうもろこし":[23.3,1],"folate|豆乳":[23.3,1],"niacin|豆乳":[23.3,1],"vd|ツナ缶":[23.3,1],"p|いわし":[23.0,1],"p|たら":[23.0,1],"cu|いわし":[22.9,1],"fe|豆乳":[22.9,1],"p|低脂肪乳":[22.5,1],"niacin|まいたけ":[22.5,1],"ve|トマト":[22.5,1],"panto|モロヘイヤ":[22.0,1],"folate|ほたて":[21.8,1],"se|スキムミルク":[21.6,1],"p|豚レバー":[21.2,1],"panto|牛もも":[21.2,1],"b2|モロヘイヤ":[21.0,1],"panto|低脂肪乳":[20.8,1],"cu|ひよこ豆":[20.7,1],"niacin|たこ":[20.5,1],"protein|豚レバー":[20.4,1],"b1|ぶり":[20.4,1],"b12|低脂肪乳":[20.0,1],"niacin|絹ごし豆腐":[20.0,1],"fat|厚揚げ":[19.8,1],"fiber|モロヘイヤ":[19.7,1],"b12|ツナ缶":[19.2,1],"b1|豚レバー":[18.9,1],"p|厚揚げ":[18.8,1],"niacin|ソーセージ":[18.7,1],"b1|絹ごし豆腐":[18.3,1],"panto|いわし":[18.2,1],"fat|油揚げ":[18.1,1],"b12|えび":[18.0,1],"mg|厚揚げ":[17.6,1],"b6|モロヘイヤ":[17.5,1],"b2|牛もも":[17.5,1],"fat|牛もも":[17.4,1],"vk|厚揚げ":[17.3,1],"fe|絹ごし豆腐":[17.1,1],"cu|梨":[17.1,1],"niacin|ほたて":[17.0,1],"ve|えび":[17.0,1],"ve|ブルーベリー":[17.0,1],"niacin|低脂肪乳":[16.7,1],"panto|スキムミルク":[16.7,1],"b1|とうもろこし":[16.7,1],"p|木綿豆腐":[16.5,1],"p|えび":[16.5,1],"niacin|そうめん":[16.3,1],"panto|ぶり":[16.2,1],"se|カシューナッツ":[16.2,1],"zn|いわし":[16.0,1],"b1|ソーセージ":[16.0,1],"cu|きなこ":[16.0,1],"p|ほたて":[15.8,1],"cu|まいたけ":[15.7,1],"zn|レンズ豆":[15.6,1],"folate|えのき":[15.6,1],"mg|油揚げ":[15.5,1],"niacin|油揚げ":[15.5,1],"b6|ツナ缶":[15.2,1],"zn|いか":[15.0,1],"niacin|スキムミルク":[15.0,1],"b1|木綿豆腐":[15.0,1],"ve|水菜":[15.0,1],"ve|アスパラガス":[15.0,1],"cu|ピーナッツ":[14.8,1],"k|低脂肪乳":[14.6,1],"b2|ほたて":[14.5,1],"niacin|ベーコン":[14.3,1],"cu|とうもろこし":[14.3,1],"ve|ひよこ豆":[14.2,1],"folate|大根":[14.2,1],"b6|いか":[14.0,1],"panto|えのき":[14.0,1],"p|ツナ缶":[14.0,1],"vc|ベーコン":[13.8,1],"zn|厚揚げ":[13.8,1],"k|スキムミルク":[13.8,1],"folate|トマト":[13.8,1],"va|かぼちゃ":[13.7,1],"vk|油揚げ":[13.4,1],"ve|厚揚げ":[13.3,1],"b1|えのき":[13.3,1],"vk|めかぶ":[13.3,1],"protein|そうめん":[13.3,1],"fiber|柿":[13.3,1],"p|油揚げ":[13.1,1],"k|牛もも":[13.1,1],"va|みかん":[13.1,1],"p|ぶり":[13.0,1],"fat|いわし":[12.9,1],"na|シリアル":[12.9,1],"p|絹ごし豆腐":[12.8,1],"mg|とうもろこし":[12.8,1],"mg|いか":[12.7,1],"fe|ほたて":[12.6,1],"p|ヨーグルト":[12.5,1],"p|とうもろこし":[12.5,1],"zn|とうもろこし":[12.5,1],"mg|ほたて":[12.2,1],"k|モロヘイヤ":[12.2,1],"p|豆乳":[12.2,1],"p|たこ":[12.0,1],"se|ヨーグルト":[12.0,1],"b1|モロヘイヤ":[12.0,1],"vc|ソーセージ":[12.0,1],"cu|そうめん":[12.0,1],"p|レンズ豆":[11.9,1],"k|ぶり":[11.7,1],"folate|厚揚げ":[11.7,1],"b6|とうもろこし":[11.7,1],"b1|グレープフルーツ":[11.7,1],"panto|グレープフルーツ":[11.7,1],"panto|とうもろこし":[11.6,1],"mg|たこ":[11.4,1],"cu|牛もも":[11.4,1],"vk|きゅうり":[11.3,1],"zn|木綿豆腐":[11.2,1],"zn|ひよこ豆":[11.2,1],"panto|豆乳":[11.2,1],"folate|柿":[11.2,1],"cu|ほたて":[11.1,1],"b1|レンズ豆":[11.1,1],"cu|オレンジ":[11.1,1],"folate|まいたけ":[11.0,1],"k|たら":[10.8,1],"ve|たら":[10.7,1],"mg|ピーナッツ":[10.3,1],"b1|オレンジ":[10.1,1],"vc|豚レバー":[10.0,1],"zn|低脂肪乳":[10.0,1],"fe|水菜":[10.0,1],"p|ソーセージ":[10.0,1],"se|ひよこ豆":[10.0,1],"b6|かぼちゃ":[10.0,1],"niacin|しいたけ":[10.0,1],"b6|豆乳":[10.0,1],"fiber|豆乳":[10.0,1],"b6|トマト":[10.0,1],"niacin|トマト":[10.0,1],"folate|みかん":[10.0,1],"se|パン":[52.8,1],"fiber|パン":[14.0,1],"niacin|パン":[13.0,1],"protein|パン":[10.7,1],"cu|チョコレート":[24.3,1],"ca|チョコレート":[11.1,1],"b2|チョコレート":[10.0,1],"niacin|ハム":[18.7,1],"se|ハム":[16.8,1],"b1|ハム":[15.6,1],"b12|チーズ":[16.0,1],"se|チーズ":[10.4,1],"cu|味噌":[10.0,1],"niacin|ビール":[26.2,1],"b6|ビール":[14.2,1],"b6|日本酒":[10.8,1],"folate|ビール":[10.2,1],"cu|中華めん":[16.7,1],"fiber|中華めん":[39.0,1],"k|中華めん":[17.5,1],"na|中華めん":[20.0,1],"niacin|中華めん":[24.9,1],"p|中華めん":[10.7,1],"panto|中華めん":[14.3,1],"protein|中華めん":[22.4,1],"se|中華めん":[171.6,1],"sugar|中華めん":[26.2,1]};
+const PLO=3.0, PHI=200;         // この範囲でクランプ（%）。実データの5%点/95%点あたり
+const RNEAR=0, RFAR=260;        // 近い側・遠い側の距離(px)。近をより内側・遠をより外側に広げて被りを減らす（v0.702）
+const LOGLO=Math.log(PLO), LOGSP=Math.log(PHI)-Math.log(PLO);
+// 割合%→距離。対数にするのは、上位が外れ値のように突出して下位が団子になるのを防ぐため
+function radOf(nid,name,lv){
+  const e=PCT[nid+"|"+name];
+  if(!e)return RNEAR+(RO(lv)-RNEAR);      // データが無ければ旧方式
+  const p=Math.max(PLO,Math.min(PHI,e[0]));
+  const t=(Math.log(p)-LOGLO)/LOGSP;      // 0=少ない 1=多い
+  return RNEAR+(1-t)*(RFAR-RNEAR);
+}
+// 含有量が成分表で確認できているか（0=未確認）。未確認のものは輪郭を点線にして
+// 「位置＝どれだけとれるか、がまだ確かめられていない」ことを示す。
+// 基準値（一日の目安量）の出典とは別の話。混ぜないこと。
+function confOf(nid,name){const e=PCT[nid+"|"+name];return e?e[1]:0;}
+// v0.710：中心が鉄・脂質のとき、寄ってきた食材のGRPタグ（heme/nonheme・sat/unsat）の色を返す。
+// どのグループを指す食材かを、輪郭の下に敷く色線で示すため。該当なければ null。
+function grpColorOf(nid,name){
+  const arr=FOODOF[nid]; if(!arr)return null;
+  const o=arr.find(x=>x.id===name); if(!o||!o.tag)return null;
+  const g=GRP[o.tag]; return g?g.c:null;
+}
+// 食材ごとに「未確認リンク（含有量が確認済でない）を1つでも持つか」。一覧でも点線にするため。
+const FOODUNC={};Object.keys(PCT).forEach(k=>{const fn=k.split("|")[1];if(PCT[k][1]===0)FOODUNC[fn]=1;});
+function neighborsOf(id){const n=nodes[id];
+  if(n.kind==="nut"){const cross=(FOODOF[id]||[]).slice();
+    const effs=[];
+    (EFFOF[id]||[]).forEach(o=>effs.push({id:o.id,lv:o.role==="main"?1:3,tag:null}));
+    (BLKOF[id]||[]).forEach(e=>effs.push({id:e,lv:2,tag:null}));
+    return {rels:(ADJREL[id]||[]),foods:cross,effs:effs};}
+  if(n.kind==="eff"){const cross=(NUTEFF[id]||[]).map(o=>({id:o.id,lv:o.role==="main"?1:3,tag:null}));
+    (BLKBY[id]||[]).forEach(nid=>{if(!cross.some(c=>c.id===nid))cross.push({id:nid,lv:2,tag:null});});
+    return {rels:[],foods:cross,effs:[]};}
+  return {rels:[],foods:(NUTOF[id]||[]).map(o=>({id:o.id,lv:o.lv,tag:o.tag})),effs:[]};}
+function fitRotate(ids,angs,ax,ay,limit){ // 見えている要素の現在角に一番近づく回転量を求める
+  let sx=0,sy=0,n=0;
+  ids.forEach((id,i)=>{const o=nodes[id];if(!o||o.op<0.3)return;
+    const cur=Math.atan2(o.y-ay,o.x-ax),d=cur-angs[i];sx+=Math.cos(d);sy+=Math.sin(d);n++;});
+  if(!n)return 0;let d=Math.atan2(sy,sx);
+  return Math.max(-limit,Math.min(limit,d));}
+function bringFront(ids){const layer=document.getElementById("nodelayer");
+  if(!layer||!layer.appendChild)return;
+  ids.forEach(i=>{const g=document.getElementById("g_"+i);if(g&&g.parentNode===layer)layer.appendChild(g);});}
+function selectNode(id,fromNav){if(!nodes[id])return;wake();
+  if(id!==active)stage=0;                          // 別のノードを選んだら段階表示は最初から
+  Object.values(nodes).forEach(n=>{n.placed=0;});   // 手置きの記憶は選択が変わったら解除
+  active=id;relList=[];relAssign={};relRad={};groupLabels=[];
+  const A=nodes[id],N=neighborsOf(id);
+  const moved=Math.hypot(A.x-A.hx,A.y-A.hy)>12;
+  if(A.kind!==FRONT){A.ax=A.x;A.ay=A.y;A.surfaced=1;}          // 隠れ層から浮上したもの
+  else if(moved&&active){A.ax=A.x;A.ay=A.y;A.surfaced=0;}       // 寄ってきた相棒をタップ＝その場が中心
+  else{A.ax=A.hx;A.ay=A.hy;A.surfaced=0;}
+  // ===== A案: はたらき・食材・関係栄養素を総数で360度按分。各区画は「今その種類がいる平均方向」に置く =====
+  // --- 二段階表示: 最初は近い順に FOODCAP 品だけ。もう一度タップで全部 ---
+  const flAll=N.foods.filter(f=>nodes[f.id]).slice();
+  let fl;
+  // 二段階表示は「栄養素をタップして食材が寄ってくる」ときだけ。
+  // 食材をタップして栄養素が寄ってくる場合（A.kind==="food"）は数が少ないので全部出す。
+  const twoStage=(A.kind==="nut");
+  const cap=(stage<FOODSTG.length)?FOODSTG[stage]:Infinity;   // その段で見せる件数
+  if(!twoStage||flAll.length<=cap)fl=flAll;
+  else{const s=flAll.slice().sort((a,b)=>radOf(active,a.id,a.lv)-radOf(active,b.id,b.lv));
+    const keep={};s.slice(0,cap).forEach(f=>keep[f.id]=1);
+    fl=flAll.filter(f=>keep[f.id]);}
+  foodHidden=flAll.length-fl.length;
+  const order={heme:0,nonheme:1,sat:0,unsat:1,animal:0,plant:1};
+  if(fl.some(f=>GRP[f.tag]))fl.sort((a,b)=>((order[a.tag]!==undefined?order[a.tag]:2)-(order[b.tag]!==undefined?order[b.tag]:2))||(a.lv-b.lv));
+  const relIds=(N.rels||[]).filter(r=>nodes[r]).slice();
+  const effIds=(N.effs||[]).filter(e=>nodes[e.id]).map(e=>e.id).filter(id=>nodes[id]);
+  const effLv={};(N.effs||[]).forEach(e=>{effLv[e.id]=e.lv;});
+  // 各グループの平均方向（今その種類の要素がいる向き）
+  const meanDir=ids=>{let sx=0,sy=0,c=0;ids.forEach(id=>{const nn=nodes[id];if(!nn)return;const a=Math.atan2(nn.hy-A.ay,nn.hx-A.ax);sx+=Math.cos(a);sy+=Math.sin(a);c++;});return c?Math.atan2(sy,sx):-1.571;};
+  const groups=[];
+  // 角度の取り分は「個数×重み」。はたらき・関係栄養素は要素が大きく重なりやすいので厚めに、食材は小さいので薄めに配分
+  const WEIGHT={food:1.0, eff:2.6, rel:2.6};
+  // 区画の幅は「全件」で確保。展開しても区画が広がらず、他の要素が動かない。
+  if(fl.length) groups.push({kind:"food",n:flAll.length,dir:meanDir(flAll.map(f=>f.id))});
+  if(effIds.length) groups.push({kind:"eff",n:effIds.length,dir:meanDir(effIds)});
+  if(relIds.length) groups.push({kind:"rel",n:relIds.length,dir:meanDir(relIds)});
+  groups.forEach(g=>g.wt=g.n*WEIGHT[g.kind]);
+  const total=groups.reduce((s,g)=>s+g.wt,0)||1;
+  const TAU=6.283185, MINW=0.55; // 各区画の最小角度幅
+  // 重み付き個数比で幅を割り当て（合計が2πになるよう正規化、最小幅を保証）
+  let wsum=0; groups.forEach(g=>{g.w=Math.max(MINW, TAU*g.wt/total); wsum+=g.w;});
+  groups.forEach(g=>g.w*=TAU/wsum);
+  // はたらきと関係栄養素は、実際の配置では下の CAP までしか使わない（それ以上もらっても余らせる）。
+  // 余った角度を食材にまわす。食材は距離がばらばらなので、広いほうがよく散る。
+  const CAP={eff:2.6, rel:2.4};
+  const fg=groups.find(g=>g.kind==="food");
+  if(fg){let spare=0;
+    groups.forEach(g=>{const c=CAP[g.kind]; if(c&&g.w>c){spare+=g.w-c; g.w=c;}});
+    fg.w+=spare;}
+  // 希望中心（平均方向）順に円周に並べ、重なりを解消
+  groups.sort((a,b)=>a.dir-b.dir);
+  // 各区画の中心を希望方向にしつつ、隣と最低 (w_i/2+w_j/2) 空くよう緩和
+  const centers=groups.map(g=>g.dir);
+  for(let iter=0;iter<60;iter++){
+    for(let i=0;i<groups.length;i++){
+      const j=(i+1)%groups.length;
+      let d=centers[j]-centers[i]; while(d<0)d+=TAU; while(d>TAU)d-=TAU;
+      const need=groups[i].w/2+groups[j].w/2;
+      if(d<need){const push=(need-d)/2; centers[i]-=push; centers[j]+=push;}
+    }
+  }
+  groups.forEach((g,i)=>g.center=centers[i]);
+  // 区画を実際の幅ぶんだけ詰め直す。区画どうしの間に GAP を空ける。
+  // 食材が絡む境界（食材⇔はたらき/栄養素）は狭め、食材が絡まない境界
+  // （はたらき⇔栄養素）は広めにする（v0.702）。
+  {const GAP_F=0.10, GAP_N=0.16;   // 食材が絡む境界 / 絡まない境界
+   let anchor=groups[0],mx=-1;
+   groups.forEach(g=>{if(g.w>mx){mx=g.w;anchor=g;}});
+   const ai=groups.indexOf(anchor);
+   // 各境界（区画sとその次）のGAPを先に決めて合計を出す
+   const gapAt=[];
+   for(let s=0;s<groups.length;s++){
+     const g=groups[(ai+s)%groups.length], h=groups[(ai+s+1)%groups.length];
+     gapAt[s]=(g.kind==="food"||h.kind==="food")?GAP_F:GAP_N;}
+   let totGap=gapAt.reduce((a,b)=>a+b,0);
+   if(totGap<TAU-0.2){const shrink=(TAU-totGap)/TAU; groups.forEach(g=>g.w*=shrink);}
+   let cur=anchor.center-anchor.w/2;
+   for(let s=0;s<groups.length;s++){
+     const g=groups[(ai+s)%groups.length];
+     g.center=cur+g.w/2; cur+=g.w+gapAt[s];}}
+  const G={}; groups.forEach(g=>G[g.kind]=g);
+  const seen={};
+  // はたらき⇔栄養素は含有量%が無いので、専用の3段階距離を使う（両方向で同じ値）
+  const EFFRING={1:55,2:100,3:145};
+  // --- 食材: 自区画内でレベル別に層＆角度配置 ---
+  // 角度は「全件（flAll）」基準で先に決める。こうすると展開しても既に出ている食材は動かず、
+  // 隠れていた分だけが空いていた隙間に現れる。
+  if(G.food){
+    const gc=G.food.center, gw=G.food.w, fstart=gc-gw/2;
+    const srcAll=flAll.slice();
+    if(srcAll.some(f=>GRP[f.tag]))srcAll.sort((a,b)=>((order[a.tag]!==undefined?order[a.tag]:2)-(order[b.tag]!==undefined?order[b.tag]:2))||(a.lv-b.lv));
+    const byLv={1:[],2:[],3:[]}; srcAll.forEach(f=>byLv[f.lv]?byLv[f.lv].push(f):byLv[3].push(f));
+    const fang={};
+    // 角度には意味を持たせない（意味を持つのは距離＝どれだけ多くとれるか）。
+    // 近い順に並べたものを黄金角ずつ飛ばして配ると、近いものも遠いものも
+    // 円周じゅうに散らばって、方向の偏りも列っぽさも出ない。
+    // 食材ごとの位置は毎回同じ（開くたびに変わることはない）。
+    const rOf0=f=>radOf(active,f.id,f.lv);
+    // 栄養素ごとに必要量が違うので、絶対距離をまたいで比べても意味がない。
+    // その栄養素の食材群の中で min〜max を 52〜260 に張り直す（正規化）。
+    // → どの栄養素でも「一番近い＝最内、一番遠い＝最外」に揃う。
+    //   食材どうしの相対差（対数比）は保つ。絶対%は距離から読めなくなる（v0.702）。
+    const RIN=80, ROUT=260;   // v0.709：内側ほど円周が短く被るので下限を上げて全体を外へ（旧52）
+    let rLo=Infinity,rHi=-Infinity;
+    srcAll.forEach(f=>{const v=rOf0(f); if(v<rLo)rLo=v; if(v>rHi)rHi=v;});
+    const rSpan=rHi-rLo;
+    const rOf=f=>rSpan>0 ? RIN+(rOf0(f)-rLo)/rSpan*(ROUT-RIN) : RIN;
+    srcAll.sort((a,b)=>rOf(a)-rOf(b));
+    const GOLD=0.7320508076;
+    if(twoStage){
+      // v0.707 ＝角度に「食品カテゴリ」の意味を持たせる（原則2の転換・合意済み）。
+      //   角度＝カテゴリ（魚介はこの方向・豚は豚で固まる…）／距離＝いままで通り「一食でどれだけとれるか」。
+      //   カテゴリの並び順は食材タブの配置(CATPOS)に合わせる（行優先 y→x ＝タブの読み順）。
+      //   島の中は「等間隔＋軽いゆらぎ」（＝案3。粘菌のムラを少し残す）。
+      const pad=gw*0.05, innerW=gw-pad*2;
+      const n=srcAll.length;
+      // 食材→カテゴリの逆引き（CATLISTから）
+      const catOf={};
+      for(const c in CATLIST)CATLIST[c].forEach(nm=>{catOf[nm]=c;});
+      // カテゴリの並び順：CATPOSの座標を行優先（y→x）に並べる。CATPOS外は末尾。
+      const catOrder=Object.keys(CATPOS).sort((a,b)=>{
+        const pa=CATPOS[a],pb=CATPOS[b];
+        return (pa[1]-pb[1])||(pa[0]-pb[0]);
+      });
+      const catRank={}; catOrder.forEach((c,i)=>{catRank[c]=i;});
+      const rankOf=f=>{const c=catOf[f.id]; return (c!==undefined&&catRank[c]!==undefined)?catRank[c]:999;};
+      // このまわりに実在するカテゴリだけを、順序を保って抽出
+      const present=[...new Set(srcAll.map(f=>catOf[f.id]).filter(c=>c!==undefined))]
+        .sort((a,b)=>(catRank[a]??999)-(catRank[b]??999));
+      // カテゴリごとに食材をまとめる（未分類は末尾の島にひとまとめ）
+      const buckets=present.map(c=>({c,items:srcAll.filter(f=>catOf[f.id]===c)}));
+      const unc=srcAll.filter(f=>catOf[f.id]===undefined);
+      if(unc.length)buckets.push({c:null,items:unc});
+      // 弧を「食材数」で島に按分（多い島ほど広く）。島の中は等間隔＋軽いゆらぎ。
+      const GAP=innerW*0.02;                      // 島どうしの間の空き（弧内で微小）
+      const nb=buckets.length;
+      const usable=innerW-GAP*Math.max(0,nb-1);
+      let cur=fstart+pad;
+      buckets.forEach(bk=>{
+        const m=bk.items.length;
+        const w=usable*(m/n);                     // この島の弧幅
+        const step=m>0?w/m:0;                      // 島内の1食材あたり
+        bk.items.forEach((f,k)=>{
+          const jitter=(Math.random()-0.5)*step*0.5;   // ±25%のゆらぎ
+          fang[f.id]=cur+step*(k+0.5)+jitter;
+        });
+        cur+=w+GAP;
+      });
+      // v0.708 ＝案Y：カテゴリ島はそのままに、ノード同士が実際に被るペアだけ角度を押し離す。
+      //   内側（近い＝量が多い）に食材が多い島は円周が短くて団子になりやすい。
+      //   半径（＝量）は動かさず角度だけずらす。島の枠は多少はみ出してよい（隣に食い込んでも
+      //   ノードが被らなければ見える）。可動域は食材区画の端まで。
+      if(n>1){
+        const MINPX=34;            // これより近いと重なりとみなす画面距離(px)
+        const angMin=fstart+pad, angMax=fstart+pad+innerW;
+        const posOf=f=>{const rr=A.base+nodes[f.id].base+rOf(f); return {r:rr,a:fang[f.id]};};
+        for(let iter=0;iter<16;iter++){
+          let moved=false;
+          for(let i=0;i<n;i++)for(let j=i+1;j<n;j++){
+            const fi=srcAll[i],fj=srcAll[j];
+            const pa=posOf(fi), pb=posOf(fj);
+            const dx=pa.r*Math.cos(pa.a)-pb.r*Math.cos(pb.a);
+            const dy=pa.r*Math.sin(pa.a)-pb.r*Math.sin(pb.a);
+            const d=Math.hypot(dx,dy);
+            if(d<MINPX){
+              const push=(MINPX-d)/Math.max(pa.r,pb.r)*0.5;
+              const dir=(fang[fi.id]<=fang[fj.id])?1:-1;
+              fang[fi.id]=Math.max(angMin,Math.min(angMax,fang[fi.id]-dir*push));
+              fang[fj.id]=Math.max(angMin,Math.min(angMax,fang[fj.id]+dir*push));
+              moved=true;
+            }
+          }
+          if(!moved)break;
+        }
+      }
+    }else{
+      // 中心が食材＝寄ってくるのは栄養素。
+      // 各栄養素の「元いた方向」を出発点にしつつ、円周全体へ散らす。
+      // 元方向だけだと、栄養素が一方向に偏った食材（さんま等）で片側に固まるので、
+      // 元方向の並び順は保ったまま、360度均等配置へブレンドする。
+      const TAU=6.283185;
+      srcAll.forEach(f=>{const nn=nodes[f.id];fang[f.id]=Math.atan2(nn.hy-A.ay,nn.hx-A.ax);});
+      const arr=srcAll.map(f=>f.id).sort((a,b)=>fang[a]-fang[b]);
+      const m=arr.length;
+      if(m>1){
+        // 元方向の重心を基準に、順序を保って均等角へ寄せる
+        let sx=0,sy=0; arr.forEach(id=>{sx+=Math.cos(fang[id]);sy+=Math.sin(fang[id]);});
+        const base=Math.atan2(sy,sx);           // 元分布の中心方向
+        const SPREAD=0.65;                        // 0=元方向のまま 1=完全均等
+        // arr順（元方向の時計回り）を保ったまま、base中心の均等リングに割り付ける
+        // 元角度と均等角を SPREAD で内挿。均等側は「重心からの相対順位」で配る。
+        arr.forEach((id,i)=>{
+          const even=base - Math.PI + TAU*(i+0.5)/m;   // 円周を均等に一周
+          let d=even-fang[id]; while(d>Math.PI)d-=TAU; while(d<-Math.PI)d+=TAU;
+          fang[id]=fang[id]+d*SPREAD;
+        });
+      }
+    }
+    const effCenter=(A.kind==="eff");
+    fl.forEach(f=>{relAssign[f.id]=fang[f.id];relRad[f.id]=A.base+nodes[f.id].base+(effCenter?EFFRING[f.lv||3]:rOf(f));relList.push(f.id);
+      const g=GRP[f.tag];if(g){if(!seen[g.t])seen[g.t]={sum:0,n:0,c:g.c};seen[g.t].sum+=fang[f.id];seen[g.t].n++;}});
+    // 「＋n」ノード：出ている食材の少し外側、食材区画の中央に置く
+    if(foodHidden>0){const mn=nodes[MOREID];
+      let far=0; fl.forEach(f=>{if(relRad[f.id]>far)far=relRad[f.id];});
+      mn.name="＋"+foodHidden;
+      relAssign[MOREID]=gc; relRad[MOREID]=far+46; relList.push(MOREID);}
+  }
+  // --- はたらき: 自区画内で均等配置 ---
+  if(G.eff){
+    const gc=G.eff.center, gw=G.eff.w, estart=gc-gw/2, m=effIds.length;
+    effIds.forEach((id,i)=>{relAssign[id]=estart+gw*(m>1?(i+0.5)/m:0.5);relRad[id]=A.base+nodes[id].base+(EFFRING[effLv[id]||3]);relList.push(id);});
+  }
+  // --- 関係栄養素: 自区画内で均等配置（隣り合わせ）---
+  if(G.rel){
+    const gc=G.rel.center, gw=G.rel.w, rstart=gc-gw/2, m=relIds.length;
+    relIds.forEach((id,i)=>{relAssign[id]=rstart+gw*(m>1?(i+0.5)/m:0.5);relRad[id]=A.base+nodes[id].base+118;relList.push(id);});
+  }
+  Object.keys(seen).forEach(t=>groupLabels.push({abs:seen[t].sum/seen[t].n,text:t,color:seen[t].c}));
+  sinkSurfaced(relList.concat([id]));
+  relList.forEach(r=>{const R=nodes[r];
+    if(R.kind!==FRONT&&!R.surfaced){ // 隠れているレイヤー＝中心の足元から浮かび上がる
+      const a=relAssign[r]!==undefined?relAssign[r]:Math.random()*6.28;
+      R.x=A.ax+Math.cos(a)*(A.base*0.5);R.y=A.ay+Math.sin(a)*(A.base*0.5);
+      R.px=R.x;R.py=R.y;R.r=2;R.op=1;R.mSpd=0;R.surfaced=1;}});
+  A._ring=0;relList.forEach(r=>{if(relRad[r]>A._ring)A._ring=relRad[r];});
+  bringFront(relList.concat([id]));
+  A.surpriseEnd=NOW+500;A.jig=1;relList.forEach(r=>nodes[r].jig=Math.max(nodes[r].jig,0.7));
+  panTo(A.ax,A.ay);
+  if(!fromNav)pushNav(id);
+  renderTrail();}
+function sinkSurfaced(keep){const k=keep||[];
+  Object.values(nodes).forEach(n=>{if(n.surfaced&&k.indexOf(n.id)<0){n.surfaced=0;n.sinking=1;n.mSpd=0;}});}
+function deselect(){wake();stage=0;sinkSurfaced([]);active=null;relList=[];relAssign={};relRad={};groupLabels=[];
+  Object.values(nodes).forEach(n=>{n.jig=Math.max(n.jig,0.35);n.placed=0;});renderTrail();}
+
+// ===== 履歴：NAVは全部覚える／パンくずは「腕でつながっている区間」だけを導出 =====
+let NAV=[],HI=-1;
+function isNb(a,b){const A=nodes[a],B=nodes[b];if(!A||!B)return false;
+  if(A.kind==="nut"&&B.kind==="nut")return (ADJREL[a]||[]).indexOf(b)>=0;
+  if(A.kind==="nut"&&B.kind==="food")return (FOODOF[a]||[]).some(f=>f.id===b);
+  if(A.kind==="food"&&B.kind==="nut")return (NUTOF[a]||[]).some(f=>f.id===b);
+  if(A.kind==="nut"&&B.kind==="eff")return (EFFOF[a]||[]).some(f=>f.id===b)||(BLKOF[a]||[]).indexOf(b)>=0;
+  if(A.kind==="eff"&&B.kind==="nut")return (NUTEFF[a]||[]).some(f=>f.id===b)||(BLKBY[a]||[]).indexOf(b)>=0;
+  return false;}
+function pushNav(id){if(NAV[HI]===id)return;NAV=NAV.slice(0,HI+1);NAV.push(id);
+  if(NAV.length>60){NAV.shift();}HI=NAV.length-1;}
+function trailRange(){if(HI<0)return null;let st=HI;while(st>0&&isNb(NAV[st-1],NAV[st]))st--;return {st,items:NAV.slice(st,HI+1)};}
+function navBack(){if(!active&&HI>=0){selectNode(NAV[HI],true);return;}if(HI>0){HI--;selectNode(NAV[HI],true);}}
+function navFwd(){if(HI<NAV.length-1){HI++;selectNode(NAV[HI],true);}}
+function navGo(i){if(i>=0&&i<NAV.length){HI=i;selectNode(NAV[i],true);}}
+function renderTrail(){const el=document.getElementById("trail");const r=active?trailRange():null;
+  if(!r||r.items.length<1){el.innerHTML="";}
+  else{el.innerHTML=r.items.map((id,i)=>`${i?'<span class="sep">›</span>':''}<span class="crumb${(r.st+i)===HI?' cur':''}" onclick="navGo(${r.st+i})">${nodes[id]?nodes[id].name:id}</span>`).join("");
+    const cur=el.querySelector(".cur");if(cur)cur.scrollIntoView({inline:"end",block:"nearest"});}
+  document.getElementById("bk").disabled=!(HI>0);
+  document.getElementById("fw").disabled=!(HI<NAV.length-1);
+}
+function resetAll(){wake();stage=0;sinkSurfaced([]);active=null;relList=[];relAssign={};relRad={};groupLabels=[];
+  if(SEARCH)clearSearch(1);
+  Object.values(nodes).forEach(n=>{n.hx=n.ox;n.hy=n.oy;n.x=n.ox;n.y=n.oy;n.px=n.x;n.py=n.y;n.mSpd=0;n.jig=0.4;n.dragging=false;n.surfaced=0;n.sinking=0;n.placed=0;
+    const fr=(n.kind===FRONT);n.op=fr?1:0;n.r=n.base;});
+  setFront(FRONT);tvk=1;tvx=0;tvy=(FRONT==="food")?foodPanY():0;
+  renderTrail();}
+
+// ===== 描画 =====
+function chevron(ax,ay,mx,my,bx,by,node,atEnd){
+  // 二次ベジェ上の点と接線を使うので、腕の線とずれない
+  const P=t=>[(1-t)*(1-t)*ax+2*(1-t)*t*mx+t*t*bx,(1-t)*(1-t)*ay+2*(1-t)*t*my+t*t*by];
+  const D=t=>[2*(1-t)*(mx-ax)+2*t*(bx-mx),2*(1-t)*(my-ay)+2*t*(by-my)];
+  const want=node.r+9;let t=atEnd?1:0;
+  for(let i=0;i<50;i++){const q=P(t);if(Math.hypot(q[0]-node.x,q[1]-node.y)>=want)break;
+    t+=atEnd?-0.02:0.02;if(t<0||t>1){t=t<0?0:1;break;}}
+  const tip=P(t);let d=D(t);if(!atEnd)d=[-d[0],-d[1]];
+  const m=Math.hypot(d[0],d[1])||1,ux=d[0]/m,uy=d[1]/m,L=10,W=6.5;
+  const cx=tip[0]-ux*L,cy=tip[1]-uy*L,px=-uy*W,py=ux*W;
+  return `M ${(cx+px).toFixed(1)} ${(cy+py).toFixed(1)} L ${tip[0].toFixed(1)} ${tip[1].toFixed(1)} L ${(cx-px).toFixed(1)} ${(cy-py).toFixed(1)}`;}
+// 輪郭パスは「ノード中心を原点」とした相対座標で作る。
+// 位置の移動は transform=translate() が担当するので、形が変わらない限りパスを作り直さなくていい。
+function blob(o,t){const sx=1+(o.jig||0)*Math.sin(t*0.005)*0.2,sy=1-(o.jig||0)*Math.sin(t*0.005)*0.2;const st=Math.min((o.mSpd||0)*0.09,0.6);const P=[];
+  for(let i=0;i<PT;i++){const a=(i/PT)*6.283+o.seed;let rr=o.r*(1+(o.freeze?0:o.am[i])*Math.sin(t*0.0012+o.pa[i]));const al=Math.cos(a-(o.mAng||0));rr*=1+st*al*al;P.push([Math.cos(a)*rr*sx,Math.sin(a)*rr*sy]);}
+  const md=(A,B)=>[(A[0]+B[0])/2,(A[1]+B[1])/2];const s=md(P[PT-1],P[0]);let d=`M ${s[0].toFixed(1)} ${s[1].toFixed(1)} `;
+  for(let i=0;i<PT;i++){const c=P[i],nx=P[(i+1)%PT],m=md(c,nx);d+=`Q ${c[0].toFixed(1)} ${c[1].toFixed(1)} ${m[0].toFixed(1)} ${m[1].toFixed(1)} `;}return d+"Z";}
+function eyeStr(n,t){const ox=n.r*0.4,oy=-n.r*0.08,s=n.r*0.225,lx=n.x-ox,rx=n.x+ox,cy=n.y+oy,dk="#2a2a2a";
+  const moving=n.mSpd>1.5,isU=active&&n.id!==active&&relList.indexOf(n.id)<0;
+  const rnd=cx=>`<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${s.toFixed(1)}" fill="#fff"/><circle cx="${(cx+n.pd.x*s*0.4).toFixed(1)}" cy="${(cy+n.pd.y*s*0.4).toFixed(1)}" r="${(s*0.55).toFixed(1)}" fill="${dk}"/>`;
+  const sur=cx=>`<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${(s*1.35).toFixed(1)}" fill="#fff"/><circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${(s*0.42).toFixed(1)}" fill="${dk}"/>`;
+  const chev=(cx,d)=>`<polyline points="${(cx-d*s).toFixed(1)},${(cy-s).toFixed(1)} ${(cx+d*s*0.7).toFixed(1)},${cy.toFixed(1)} ${(cx-d*s).toFixed(1)},${(cy+s).toFixed(1)}" fill="none" stroke="${dk}" stroke-width="${(s*0.5).toFixed(1)}" stroke-linecap="round" stroke-linejoin="round"/>`;
+  const up=cx=>`<path d="M ${(cx-s).toFixed(1)} ${(cy+s*0.3).toFixed(1)} A ${s.toFixed(1)} ${s.toFixed(1)} 0 0 1 ${(cx+s).toFixed(1)} ${(cy+s*0.3).toFixed(1)}" fill="none" stroke="${dk}" stroke-width="${(s*0.5).toFixed(1)}" stroke-linecap="round"/>`;
+  const flat=cx=>`<line x1="${(cx-s).toFixed(1)}" y1="${cy.toFixed(1)}" x2="${(cx+s).toFixed(1)}" y2="${cy.toFixed(1)}" stroke="${dk}" stroke-width="${(s*0.5).toFixed(1)}" stroke-linecap="round"/>`;
+  // バッドばつ丸ふうの伏せ目：上が平ら・下がふくらんだ下向き半月。黒線なし、黒目は通常と同じ。
+  const dead=(cx,i)=>{const w=s*1.15,h=s*1.25,x0=cx-w,x1=cx+w,yt=cy-s*0.35,cid=`dm${n.id}_${i}`.replace(/[^\w]/g,"");
+    return `<clipPath id="${cid}"><path d="M ${x0.toFixed(1)} ${yt.toFixed(1)} L ${x1.toFixed(1)} ${yt.toFixed(1)} A ${w.toFixed(1)} ${h.toFixed(1)} 0 0 1 ${x0.toFixed(1)} ${yt.toFixed(1)} Z"/></clipPath>`
+      +`<path d="M ${x0.toFixed(1)} ${yt.toFixed(1)} L ${x1.toFixed(1)} ${yt.toFixed(1)} A ${w.toFixed(1)} ${h.toFixed(1)} 0 0 1 ${x0.toFixed(1)} ${yt.toFixed(1)} Z" fill="#fff"/>`
+      +`<circle clip-path="url(#${cid})" cx="${(cx+n.pd.x*s*0.4).toFixed(1)}" cy="${(cy+s*0.28+Math.max(n.pd.y,0)*s*0.22+Math.min(n.pd.y,0)*s*0.4).toFixed(1)}" r="${(s*0.55).toFixed(1)}" fill="${dk}"/>`;};
+  if(n.dragging||t<n.surpriseEnd)return sur(lx)+sur(rx);
+  if(moving&&isU)return flat(lx)+flat(rx);
+  if(moving)return n.moveHappy?(up(lx)+up(rx)):(chev(lx,1)+chev(rx,-1));
+  if(t<n.happyEnd)return up(lx)+up(rx);
+  if(n.eyeBase==="sleep"||t<n.blinkEnd)return flat(lx)+flat(rx);
+  if(n.eyeBase==="dead")return dead(lx,0)+dead(rx,1);
+  return rnd(lx)+rnd(rx);}
+
+// ===== 描画ループ制御（発熱対策）=====
+// running=trueの間だけrequestAnimationFrameが回る。放置で全ノードが静止したら止める。
+function schedule(){if(running)return;running=true;requestAnimationFrame(step);}
+// 何か操作があったら呼ぶ：ループ再開＋みんなを起こす
+function wake(){lastInteract=performance.now();asleep=false;Object.values(nodes).forEach(n=>{if(n.eyeBase!==n.origEye)n.eyeBase=n.origEye;});schedule();}
+
+function step(t){
+  // === E案: 上限30fps。前フレームから33ms未満なら描画せず次に回す（計算量が約半分）===
+  // ただし指で操作している間（ドラッグ・ピンチ）は追従を優先して60fpsのまま。
+  const touching=(mode==="drag"&&dragId)||mode==="pinch";
+  if(!touching&&t-_lastDraw<33){requestAnimationFrame(step);return;}
+  const FSTEP=_lastDraw?Math.min(3,Math.max(1,(t-_lastDraw)/16.7)):1;   // 実際に何フレーム分進んだか
+  // 30fps時は1フレームで2フレーム分進める（指数緩和の補正）。体感速度を変えないため。
+  const E2=(FSTEP>1.05)?(v=>1-Math.pow(1-v,FSTEP)):(v=>v);
+  const JIGD=Math.pow(0.99,FSTEP);
+  _lastDraw=t;
+  NOW=t;EFRAME++;
+  if(!lastInteract)lastInteract=t;
+  const idle=t-lastInteract>IDLE_MS;   // 10秒以上放置されたか
+  let maxSp=0;                          // 今フレームの最大移動量（静止判定用）
+  vk+=(tvk-vk)*E2(0.12);vtx+=(tvx-vtx)*E2(0.12);vty+=(tvy-vty)*E2(0.12);applyView();
+  const A=active?nodes[active]:null;
+  Object.values(nodes).forEach(n=>{
+    if(n.dragging){const mx=n.x-n.px,my=n.y-n.py;n.px=n.x;n.py=n.y;const sp=Math.hypot(mx,my);n.mSpd+=(sp-n.mSpd)*0.3;if(sp>0.1)n.mAng=Math.atan2(my,mx);
+      n.r+=(n.base-n.r)*0.1;n.op=1;n.freeze=true;n.jig*=0.9;n.pd.x+=(0-n.pd.x)*0.1;n.pd.y+=(0.3-n.pd.y)*0.1;return;}
+    if(n.sinking){n.op+=(0-n.op)*0.16;n.r+=(n.base*0.5-n.r)*0.1;n.mSpd*=0.8;n.jig*=0.9;
+      if(n.op<0.03){n.sinking=0;n.x=n.hx;n.y=n.hy;n.px=n.x;n.py=n.y;n.r=n.base*0.3;n.op=0;}
+      return;}
+    n.freeze=false;let tx,ty,tr,op,ease=0.028;
+    if(SEARCH){const isM=matched[n.id]!==undefined;
+      if(isM){const i=matched[n.id],ang=i*2.399,rad=i===0?0:50+Math.sqrt(i)*28;tx=gatherX+Math.cos(ang)*rad*0.95;ty=gatherY+Math.sin(ang)*rad*1.22;tr=n.base*1.3;op=1;ease=0.05;}
+      else{tx=n.hx;ty=n.hy;tr=n.base*0.8;op=n.kind===FRONT?0.2:0;}
+    }else if(A){
+      if(n.id===active){tx=A.ax;ty=A.ay;tr=n.base+4;op=1;}
+      else if(relList.indexOf(n.id)>=0){const ang=relAssign[n.id],rad=relRad[n.id];tx=A.ax+Math.cos(ang)*rad;ty=A.ay+Math.sin(ang)*rad;tr=n.base;op=1;
+        ease=n.placed?0.5:(n.surfaced?0.18:Math.min(0.15,0.09+Math.hypot(n.hx-tx,n.hy-ty)/30000));}
+      else{const dx=n.hx-A.ax,dy=n.hy-A.ay,m=Math.hypot(dx,dy)||1;
+        const ring=(A._ring||200)+34;
+        if(n.kind===FRONT&&m<ring){tx=n.hx+dx/m*(ring-m>38?38:ring-m);ty=n.hy+dy/m*(ring-m>38?38:ring-m);}else{tx=n.hx;ty=n.hy;}
+        const fr=(n.kind===FRONT);tr=fr?n.base*0.86:n.base*0.3;op=fr?0.25:0;}
+    }else{tx=n.hx;ty=n.hy;const fr=(n.kind===FRONT);tr=fr?n.base:n.base*0.3;op=fr?1:0;}
+    // 待機中のゆらゆら。放置に入っても急停止させず、徐々に振幅を0へ落とす。
+    // 選択中は、中心・まわり以外の背景ノードも止める（描画が軽くなる）。
+    const isRel=A&&(n.id===active||relList.indexOf(n.id)>=0);
+    const bgStill=A&&!isRel;   // 選択中の背景ノード
+    const wobT=(idle||(A&&n.id===active)||SEARCH||bgStill)?0:1;
+    if(n.wob===undefined)n.wob=1;
+    n.wob+=(wobT-n.wob)*E2(bgStill?0.4:0.05);   // 背景は速く止める。放置時はゆっくり
+    if(n.wob>0.002){tx+=Math.sin(t*0.0009+n.ph)*6*n.wob;ty+=Math.cos(t*0.0011+n.ph)*6*n.wob;}
+    n.px=n.x;n.py=n.y;n.x+=(tx-n.x)*E2(ease);n.y+=(ty-n.y)*E2(ease);n.r+=(tr-n.r)*E2(0.09);
+    // 中心・まわりは透明度を即1にする（緩和の途中で半透明になって背景が透けるのを防ぐ）。
+    // ふわっと湧く感じは位置と大きさのアニメで出しているので、透明度は飛ばしてよい。
+    const solid=A&&(n.id===active||relList.indexOf(n.id)>=0);
+    if(solid)n.op=1;else n.op+=(op-n.op)*E2(t<switchBoost?0.34:0.07);
+    n.jig*=JIGD;
+    const mx=n.x-n.px,my=n.y-n.py,sp=Math.hypot(mx,my);n.mSpd+=(sp-n.mSpd)*0.12;if(sp>0.1)n.mAng=Math.atan2(my,mx);
+    if(sp>maxSp)maxSp=sp;
+
+    // 放置：ノードごとにバラバラの遅延で目を閉じる（いつのまにか全員 ーー に）
+    if(idle){if(t-lastInteract>IDLE_MS+n.sleepDelay)n.eyeBase="sleep";}
+    else if((n.eyeBase==="open"||n.eyeBase==="dead")&&t>n.nextBlink&&t>n.blinkEnd){n.blinkEnd=t+190;n.nextBlink=t+2200+Math.random()*4500;}
+    let ldx,ldy;
+    if(SEARCH&&matched[n.id]!==undefined){ldx=gatherX-n.x;ldy=gatherY-n.y;}
+    else if(A&&n.id===active){ldx=0;ldy=0.4;}
+    else if(A&&relList.indexOf(n.id)>=0){ldx=A.x-n.x;ldy=A.y-n.y;}
+    else{ldx=Math.sin(t*0.0007+n.ph);ldy=Math.cos(t*0.0007+n.ph);}
+    const lm=Math.hypot(ldx,ldy)||1;n.pd.x+=((ldx/lm)-n.pd.x)*0.07;n.pd.y+=((ldy/lm)-n.pd.y)*0.07;});
+
+  edges.forEach((e,i)=>{const a=nodes[e.a],b=nodes[e.b];
+    // 要素参照はキャッシュ（毎フレーム getElementById を叩かない）
+    let E=e._el;
+    if(!E){E=e._el={p:document.getElementById("e"+i),
+      el:document.getElementById("el"+i),
+      ah:e.kind!=="has"?document.getElementById("ah"+i):null,
+      ahb:e.kind!=="has"?document.getElementById("ah"+i+"b"):null};}
+    const p=E.p;
+    const hot=A&&(e.a===active||e.b===active);
+    if(e.kind==="has"){
+      // 食材をタップしたときだけ、その食材と栄養素を線でつなぐ
+      const showHas=hot&&A&&A.kind==="food";
+      if(!showHas){if(p._v===0)return;p._v=0;p.setAttribute("opacity",0);}
+      else{p._v=1;p.setAttribute("d",`M ${a.x.toFixed(1)} ${a.y.toFixed(1)} L ${b.x.toFixed(1)} ${b.y.toFixed(1)}`);
+        p.setAttribute("stroke",a.kind==="nut"?a.col:b.col);p.setAttribute("stroke-width",2.4);p.setAttribute("opacity",0.7);p.setAttribute("stroke-dasharray","none");}
+      return;}
+    if(e.kind==="eff"||e.kind==="block"){
+      const ah2=E.ah,el2=E.el;
+      if(!hot){if(p._v===0)return;p._v=0;p.setAttribute("opacity",0);ah2.setAttribute("opacity",0);el2.setAttribute("opacity",0);el2.textContent="";return;}
+      p._v=1;
+      const blk=(e.kind==="block"),col=blk?"#d64545":"#555555",w=blk?2.6:(e.role==="main"?3.4:2);
+      const qx=(a.x+b.x)/2+(a.y-b.y)*0.08,qy=(a.y+b.y)/2+(b.x-a.x)*0.08;
+      p.setAttribute("d",`M ${a.x.toFixed(1)} ${a.y.toFixed(1)} Q ${qx.toFixed(1)} ${qy.toFixed(1)} ${b.x.toFixed(1)} ${b.y.toFixed(1)}`);
+      p.setAttribute("stroke",col);p.setAttribute("stroke-width",w);p.setAttribute("opacity",blk?0.9:1);
+      p.setAttribute("stroke-dasharray",blk?"7 5":"none");
+      ah2.setAttribute("d",chevron(a.x,a.y,qx,qy,b.x,b.y,b,true));ah2.setAttribute("fill","none");
+      ah2.setAttribute("stroke",col);ah2.setAttribute("stroke-width",w);ah2.setAttribute("stroke-linecap","round");
+      ah2.setAttribute("stroke-linejoin","round");ah2.setAttribute("opacity",blk?0.9:1);
+      if(blk){const midx=(a.x+b.x)/2,midy=(a.y+b.y)/2,ex=b.x-a.x,ey=b.y-a.y,eln=Math.hypot(ex,ey)||1,side=(midx<A.ax?-1:1);
+        el2.setAttribute("x",(midx+(-ey/eln)*side*20).toFixed(1));el2.setAttribute("y",(midy+(ex/eln)*side*20+3).toFixed(1));
+        el2.setAttribute("fill",col);el2.setAttribute("opacity",1);if(el2.textContent!=="妨げる")el2.textContent="妨げる";}
+      else if(el2.getAttribute("opacity")!=="0"){el2.setAttribute("opacity",0);el2.textContent="";}
+      return;}
+    const rc=REL[e.type];
+    const ah=E.ah,ahb=E.ahb,el=E.el;
+    // 非hotかつ栄養素モードでない＝完全に不可視。消し済みなら何もしない
+    const vis=hot?0.9:((FRONT==="nut")?(SEARCH?0.12:(A?0.3:0.75)):0);
+    if(!hot&&vis===0){if(p._v===0)return;p._v=0;p.setAttribute("opacity",0);p._opacity=0;
+      if(ah.getAttribute("opacity")!=="0"){ah.setAttribute("opacity",0);ah._opacity=0;ahb.setAttribute("opacity",0);ahb._opacity=0;}
+      if(el.getAttribute("opacity")!=="0"){el.setAttribute("opacity",0);el._opacity=0;el.textContent="";}return;}
+    p._v=1;
+    const mx=(a.x+b.x)/2+(a.y-b.y)*0.08,my=(a.y+b.y)/2+(b.x-a.x)*0.08;
+    p.setAttribute("d",`M ${a.x.toFixed(1)} ${a.y.toFixed(1)} Q ${mx.toFixed(1)} ${my.toFixed(1)} ${b.x.toFixed(1)} ${b.y.toFixed(1)}`);
+    const setA=(o,k,v)=>{if(o["_"+k]!==v){o["_"+k]=v;o.setAttribute(k,v);}};
+    if(hot){setA(p,"stroke",rc.c);setA(p,"stroke-width",e.type==="compete"?3:4);setA(p,"opacity",0.9);setA(p,"stroke-dasharray",e.type==="compete"?"7 5":"none");
+      const both=(e.type==="compete"||e.type==="synergy"),w=(e.type==="compete"?3:4);
+      const styleArrow=el2=>{setA(el2,"fill","none");setA(el2,"stroke",rc.c);setA(el2,"stroke-width",w);
+        setA(el2,"stroke-linecap","round");setA(el2,"stroke-linejoin","round");setA(el2,"opacity",0.9);};
+      ah.setAttribute("d",chevron(a.x,a.y,mx,my,b.x,b.y,b,true));styleArrow(ah);
+      if(both){ahb.setAttribute("d",chevron(a.x,a.y,mx,my,b.x,b.y,a,false));styleArrow(ahb);}
+      else if(ahb.getAttribute("opacity")!=="0"){ahb.setAttribute("opacity",0);ahb._opacity=0;}}
+    else{setA(p,"stroke","#a7a293");setA(p,"stroke-width",A?0.8:1.2);setA(p,"opacity",vis);setA(p,"stroke-dasharray",e.type==="compete"?"6 5":"none");
+      if(ah.getAttribute("opacity")!=="0"){ah.setAttribute("opacity",0);ah._opacity=0;ahb.setAttribute("opacity",0);ahb._opacity=0;}}
+    if(hot){const midx=(a.x+b.x)/2,midy=(a.y+b.y)/2,ex=b.x-a.x,ey=b.y-a.y,eln=Math.hypot(ex,ey)||1;const side=(a.x+b.x)/2<A.hx?-1:1;
+      el.setAttribute("x",(midx+(-ey/eln)*side*20).toFixed(1));el.setAttribute("y",(midy+(ex/eln)*side*20+3).toFixed(1));
+      setA(el,"fill",rc.c);setA(el,"opacity",1);if(el.textContent!==rc.t)el.textContent=rc.t;}
+    else if(el.getAttribute("opacity")!=="0"){el.setAttribute("opacity",0);el._opacity=0;el.textContent="";}});
+
+  Object.values(nodes).forEach(n=>{
+    // 要素参照はキャッシュ（毎フレーム getElementById を叩かない）
+    let E=n._el;
+    if(!E){E=n._el={g:document.getElementById("g_"+n.id),nb:document.getElementById("nb_"+n.id),
+      gr:document.getElementById("gr_"+n.id),
+      eyes:document.getElementById("eyes_"+n.id),sb:document.getElementById("sol_"+n.id),l:document.getElementById("nl_"+n.id),lf:document.getElementById("nlf_"+n.id)};}
+    const g=E.g;
+    // === A案: 完全に透明なノードは中身を作らない（パス生成もDOM更新も丸ごと省く）===
+    if(n.op<0.02){if(n._hid!==1){n._hid=1;g.setAttribute("opacity","0");
+      // ラベルはノード本体と別の要素なので、ここで一緒に消しておかないと
+      // 文字だけが画面に residual として残る（この下の更新処理まで到達しないため）
+      if(E.l&&E.l.getAttribute("opacity")!=="0")E.l.setAttribute("opacity",0);
+      if(E.lf&&E.lf.getAttribute("opacity")!=="0")E.lf.setAttribute("opacity",0);}return;}
+    const wasHid=n._hid;n._hid=0;
+    g.setAttribute("opacity",n.op.toFixed(2));
+    const nb=E.nb;
+    // 選択中、中心・まわり以外の背景ノードは完全に止める（位置・サイズ・輪郭）。
+    // ザワザワが気になるので、呼吸もうねりも固定する。
+    const bgFrozen=active&&n.id!==active&&relList.indexOf(n.id)<0&&!n.dragging;
+    // 位置は transform（安い・GPU向き）。サイズのゆらぎも scale なのでパス再生成は不要＝ほぼ無料。
+    const br=bgFrozen?1:1+Math.sin(t*0.0016+n.ph)*0.035;   // すこーし大小（±3.5%）
+    nb.setAttribute("transform",`translate(${n.x.toFixed(1)} ${n.y.toFixed(1)}) scale(${br.toFixed(3)})`);
+    if(E.gr&&E.gr._on)E.gr.setAttribute("transform",nb.getAttribute("transform"));
+    const shapeMoving=n.dragging||n.mSpd>0.6||n.jig>0.02||Math.abs(n.r-n._pr0)>0.3;
+    if(wasHid||(!bgFrozen&&(shapeMoving||(EFRAME+(n._bslot||0))%6===0))){n._pr0=n.r;nb.setAttribute("d",blob(n,t));if(E.gr&&E.gr._on)E.gr.setAttribute("d",nb.getAttribute("d"));}
+    if(n.kind==="eff"){nb.setAttribute("fill",n.line);nb.setAttribute("stroke","none");}
+    else if(n.kind==="nut"){nb.setAttribute("fill",n.col);nb.setAttribute("stroke","#fff");nb.setAttribute("stroke-width","2");}
+    else if(n.kind==="more"){nb.setAttribute("fill",FCOLOR);nb.setAttribute("stroke","#c3b79a");nb.setAttribute("stroke-width","1.6");}
+    else{nb.setAttribute("fill",n.col);
+      // 出典が未確認の食材は、点線の輪郭で「まだ確かめていない」ことを示す。
+      // 位置（＝含有量）が暫定であることが、図の上で分かるようにするため。
+      // GRP（ヘム鉄/非ヘム鉄など）は枠線ではなくラベルの文字色で示す（v0.719）。
+      const prov=(n.kind==="food"&&A&&A.kind==="nut"&&relList.indexOf(n.id)>=0)?confOf(active,n.id):(n.kind==="food"?(FOODUNC[n.id]?0:1):1);
+      if(n._prov!==prov){n._prov=prov;
+        if(E.gr&&E.gr._on){E.gr._on=0;E.gr.setAttribute("opacity","0");}
+        if(prov){nb.setAttribute("stroke","#fff");nb.setAttribute("stroke-width","2");nb.removeAttribute("stroke-dasharray");}
+        else{nb.setAttribute("stroke","#b5a887");nb.setAttribute("stroke-width","1.2");nb.setAttribute("stroke-dasharray","3 3");}}}
+    // === B案: 目は6フレームに1回だけ再生成（表情が動く時・復帰時は即時）===
+    const fast=wasHid||n.dragging||t<n.surpriseEnd||t<n.happyEnd||t<n.blinkEnd||n.mSpd>1.5;
+    if(fast||(EFRAME+(n._eslot||0))%6===0){const es=eyeStr(n,t);if(es!==n._eyes){n._eyes=es;E.eyes.innerHTML=es;}}
+    const sb=E.sb;
+    if(n.badge){
+      // 位置は transform でまとめて指定。色や太さなど変わらない属性は最初の一度だけ。
+      sb.setAttribute("transform",`translate(${(n.x+n.r*0.72).toFixed(1)} ${(n.y-n.r*0.62).toFixed(1)})`);
+      if(n._bdg!==n.badge){n._bdg=n.badge;
+        sb.setAttribute("cx","0");sb.setAttribute("cy","0");sb.setAttribute("r","5.5");
+        sb.setAttribute("fill",n.badge==="w"?"#3d8bd6":"#e0972a");sb.setAttribute("stroke","#fff");sb.setAttribute("stroke-width","1.3");}
+      sb.setAttribute("opacity",(n.op*0.95).toFixed(2));}
+    else if(sb.getAttribute("opacity")!=="0")sb.setAttribute("opacity",0);
+    // このノードのラベルを前面(lf)に出すか背面(l)に出すか。
+    //   検索ヒット / 選択中の中心・まわり → 前面（ノードの上、読ませる）
+    //   それ以外（背景ノード）           → 背面（ノードの下に沈める）
+    const l=E.l,lf=E.lf;
+    const toFront=SEARCH?(matched[n.id]!==undefined):(A?(n.id===active||relList.indexOf(n.id)>=0):true);
+    let dim;
+    if(SEARCH)dim=(matched[n.id]!==undefined?1:(n.kind===FRONT?0.2:0));
+    else if(A)dim=(n.id===active||relList.indexOf(n.id)>=0)?1:(n.kind===FRONT?0.3:0);
+    else dim=(n.kind===FRONT)?1:0;
+    const tgt=toFront?lf:l,off=toFront?l:lf;
+    tgt.setAttribute("x",n.x.toFixed(1));tgt.setAttribute("y",(n.y+n.r+14).toFixed(1));
+    if(tgt.textContent!==n.name)tgt.textContent=n.name;
+    tgt.setAttribute("font-size",(active&&n.id===active)?13:(n.kind==="food"?10.5:11.5));
+    // v0.719：GRP（ヘム鉄/非ヘム鉄・飽和/不飽和・動物性/植物性）を食材ラベルの文字色で示す。
+    const lgrc=(n.kind==="food"&&A&&A.kind==="nut"&&relList.indexOf(n.id)>=0)?grpColorOf(active,n.id):null;
+    const lcol=lgrc||"#3a3226";
+    if(tgt._fill!==lcol){tgt._fill=lcol;tgt.setAttribute("fill",lcol);}
+    tgt.setAttribute("opacity",dim);
+    if(off.getAttribute("opacity")!=="0")off.setAttribute("opacity",0);});
+
+  // カテゴリ弧文字：選択中はノードの下へ沈める。通常は最前に戻す（選択切替時だけ実際に移動）
+  setCatBack(!!A);
+  catLabels.forEach((c,i)=>{const el=document.getElementById("cl"+i);if(!el)return;
+    const o=(FRONT!=="food")?0:(SEARCH?0.12:(A?0.25:1));if(el._o!==o){el._o=o;el.setAttribute("opacity",o);}});
+  for(let i=0;i<6;i++){const el=document.getElementById("gl"+i);if(!el)continue;const gp=groupLabels[i];
+    if(!gp||!A){if(el.getAttribute("opacity")!=="0"){el.setAttribute("opacity",0);el.textContent="";}continue;}
+    const rad=A.base+46;
+    el.setAttribute("x",(A.x+Math.cos(gp.abs)*rad).toFixed(1));el.setAttribute("y",(A.y+Math.sin(gp.abs)*rad+3).toFixed(1));
+    el.setAttribute("fill",gp.color);el.setAttribute("opacity",1);if(el.textContent!==gp.text)el.textContent=gp.text;}
+  // 全員が寝る時刻を過ぎ、かつ全ノードがほぼ静止したら描画ループを止める（発熱ゼロ）
+  if(idle&&maxSp<0.15&&t-lastInteract>IDLE_MS+5500){asleep=true;running=false;return;}
+  requestAnimationFrame(step);}
+
+// ===== 検索 =====
+let HIST=[],histTimer=null,gatherX=280,gatherY=500;
+function loadHist(){try{HIST=JSON.parse(localStorage.getItem("tabeawase_hist")||"[]");}catch(e){HIST=[];}}
+function saveHist(){try{localStorage.setItem("tabeawase_hist",JSON.stringify(HIST));}catch(e){}}
+function pushHist(q){q=(q||"").trim();if(!q)return;HIST=HIST.filter(x=>x!==q);HIST.unshift(q);if(HIST.length>8)HIST.length=8;saveHist();}
+function delHist(i,ev){if(ev)ev.stopPropagation();HIST.splice(i,1);saveHist();renderHist();}
+function clearHist(){HIST=[];saveHist();renderHist();}
+function renderHist(){const box=document.getElementById("qhist");if(!box)return;
+  if(!HIST.length){box.style.display="none";box.innerHTML="";return;}
+  box.innerHTML=HIST.map((q,i)=>`<div onpointerdown="useHist(${i},event)" style="display:flex;align-items:center;gap:8px;padding:9px 12px;font-size:14px;color:#3a3226;cursor:pointer;border-bottom:1px solid #f2f0ec;"><span style="color:#c3b79a;font-size:12px;">🕘</span><span style="flex:1;">${q}</span><span onpointerdown="delHist(${i},event)" style="color:#c3b79a;font-size:15px;padding:0 4px;">×</span></div>`).join("")
+    +`<div onpointerdown="clearHist()" style="padding:8px 12px;font-size:12px;color:#9a9284;text-align:center;cursor:pointer;">履歴を消す</div>`;
+  box.style.display="block";}
+function showHist(){if(!document.getElementById("q").value)renderHist();}
+function hideHist(){setTimeout(()=>{const b=document.getElementById("qhist");if(b)b.style.display="none";},160);}
+function useHist(i,ev){if(ev)ev.preventDefault();const q=HIST[i];document.getElementById("q").value=q;onSearch(q);pushHist(q);hideHist();}
+function norm(x){return x.replace(/[\u30a1-\u30f6]/g,c=>String.fromCharCode(c.charCodeAt(0)-0x60)).replace(/[ー\s・]/g,"").toLowerCase();}
+// 総称エイリアス：norm済みキー→食材Setに一度だけ変換しておく
+const ALIASN={};for(const k in (typeof ALIAS!=="undefined"?ALIAS:{}))ALIASN[norm(k)]=new Set(ALIAS[k]);
+function hitName(name,q){const n=norm(name),y=norm(YOMI[name]||"");if(!q)return false;
+  if(ALIASN[q]&&ALIASN[q].has(name))return true;
+  if(n.indexOf(q)>=0||q.indexOf(n)>=0)return true;
+  for(const w of (YOMI[name]||"").split(" ")){if(!w)continue;const nw=norm(w);if(nw.indexOf(q)>=0||(nw.length>1&&q.length>1&&q.indexOf(nw)>=0))return true;}
+  return y.indexOf(q)>=0;}
+function onSearch(v,noHist){wake();SEARCH=norm(v||"");matched={};matchN=0;
+  document.getElementById("qclear").style.display=v?"block":"none";
+  if(SEARCH){deselect();if(FRONT!=="food")setFront("food");
+    gatherX=(280-vtx)/vk;gatherY=(470-vty)/vk;
+    const list=FOODNAMES.filter(nm=>hitName(nm,SEARCH));list.forEach((id,i)=>matched[id]=i);matchN=list.length;}
+  document.getElementById("qcount").textContent=SEARCH?(matchN?matchN+"件":"見つかりません"):"";
+  const raw=v||"";clearTimeout(histTimer);
+  if(raw.trim()&&matchN)histTimer=setTimeout(()=>pushHist(raw),1200);
+  if(!raw&&!noHist)renderHist();else{const b=document.getElementById("qhist");if(b)b.style.display="none";}}
+function clearSearch(keepHist){document.getElementById("q").value="";onSearch("",keepHist);}
+
+// ===== 視点 =====
+let vk=1,vtx=0,vty=0,tvk=1,tvx=0,tvy=0;
+const svg=document.getElementById("nsvg");
+function applyView(){const v=document.getElementById("view");if(v)v.setAttribute("transform",`translate(${vtx.toFixed(1)} ${vty.toFixed(1)}) scale(${vk.toFixed(3)})`);}
+function panTo(wx,wy){
+  // 同一平面なので、はみ出しそうなときだけ最小限だけ寄せる
+  const sx=wx*tvk+tvx,sy=wy*tvk+tvy,mx=210,my=250;
+  if(sx<mx)tvx+=mx-sx;else if(sx>560-mx)tvx+=(560-mx)-sx;
+  if(sy<my)tvy+=my-sy;else if(sy>1000-my)tvy+=(1000-my)-sy;}
+function tapTab(f){wake();FRONT=f;NAV=[];HI=-1;resetAll();}
+function setFront(f){wake();const changed=(FRONT!==f);FRONT=f;
+  document.getElementById("tb-eff").className=f==="eff"?"on":"";
+  document.getElementById("tb-nut").className=f==="nut"?"on":"";
+  document.getElementById("tb-food").className=f==="food"?"on":"";
+  document.getElementById("searchwrap").style.display=f==="food"?"block":"none";
+  {const sz=document.querySelector(".legsize"),hu=document.querySelector(".leghue"),bd=document.querySelector(".legbadge");if(sz)sz.style.display="flex";if(hu)hu.style.display="flex";if(bd)bd.style.display="flex";}
+  if(f==="nut"&&SEARCH)clearSearch(1);
+  if(changed){switchBoost=NOW+280;stage=0;sinkSurfaced([]);active=null;relList=[];relAssign={};relRad={};groupLabels=[];
+    Object.values(nodes).forEach(n=>{if(n.kind===f){n.r=n.base;}}); // サイズは即フル・透明度だけでふわっと
+    renderTrail();}
+  if(!active){tvk=1;tvx=0;tvy=(f==="food")?foodPanY():0;}}
+function foodPanY(){
+  // 検索窓ぶん地図を下げてかぶりを防ぐ。px→viewBox換算(縦1000/SVG実高さ)
+  const h=(svg&&svg.getBoundingClientRect().height)||800;
+  return 22*(1000/h);
+}
+function openSrc(ev){if(ev)ev.stopPropagation();
+  const box=document.getElementById("srclist");
+  box.innerHTML=SOURCES.map(s=>`<a href="${s.u}" target="_blank" rel="noopener noreferrer"><div class="t">${s.t} ↗</div><div class="o">${s.o}</div><div class="n">${s.n}</div></a>`).join("");
+  document.getElementById("srcnote").innerHTML=DISCLAIMER;
+  document.getElementById("srcmodal").className="open";}
+function closeSrc(ev){if(ev)ev.stopPropagation();document.getElementById("srcmodal").className="";}
+function toggleInfo(ev){if(ev)ev.stopPropagation();const p=document.getElementById("info"),b=document.getElementById("ibtn");
+  const open=!p.classList.contains("open");p.className=open?"open":"";b.className=open?"on":"";}
+function closeInfo(){const p=document.getElementById("info");if(p.classList.contains("open")){p.className="";document.getElementById("ibtn").className="";}
+  // 検索履歴も一緒に閉じる。入力欄の外を触れば消える、という当たり前の動きにするため
+  const b=document.getElementById("qhist");if(b&&b.style.display!=="none")b.style.display="none";}
+function clamp(v,a,b){return v<a?a:v>b?b:v;}
+const pts=new Map();let mode=null,dragId=null,grabX=0,grabY=0,downX=0,downY=0,lastMid=null,lastDist=0,lastPan=null;
+function toVB(ev){const p=svg.createSVGPoint();p.x=ev.clientX;p.y=ev.clientY;return p.matrixTransform(svg.getScreenCTM().inverse());}
+function toLocal(v){return{x:(v.x-vtx)/vk,y:(v.y-vty)/vk};}
+function hitNode(v){const L=toLocal(v);let best=null,bd=1e9;
+  Object.values(nodes).forEach(n=>{
+    const pulled=(active&&(n.id===active||relList.indexOf(n.id)>=0))||(SEARCH&&matched[n.id]!==undefined);
+    if(active){if(!pulled)return;}          // 選択中はまわりのノードだけ。背景の薄いノードは無視→背景タップ＝解除に回る
+    else if(!pulled&&n.kind!==FRONT)return; // 非選択時は今まで通りFRONTタブのノードを拾う
+    const d=Math.hypot(n.x-L.x,n.y-L.y);if(d<n.r+14&&d<bd){bd=d;best=n;}});return best;}
+function persistDrag(){const n=dragId&&nodes[dragId];if(!n||!n.dragging)return;n.dragging=false;
+  n.hx=n.x;n.hy=n.y;
+  const A=active?nodes[active]:null;
+  if(A&&n.id===active){
+    // 中心ノードを動かした：中心位置そのものを更新（周りは中心基準で付いてくる）
+    A.ax=n.x;A.ay=n.y;
+  }else if(A&&relList.indexOf(n.id)>=0){
+    // 関連ノードは角度だけ保存する。距離（relRad）は関連度で決まる値なので触らない。
+    const dx=n.x-A.ax,dy=n.y-A.ay;
+    relAssign[n.id]=Math.atan2(dy,dx);
+    n.placed=1;   // 手で置かれた：戻るアニメを挟まずその場に留める
+  }}
+svg.addEventListener("pointerdown",ev=>{wake();closeInfo();const v=toVB(ev);pts.set(ev.pointerId,v);
+  if(pts.size===2){persistDrag();dragId=null;mode="pinch";const a=[...pts.values()];lastMid={x:(a[0].x+a[1].x)/2,y:(a[0].y+a[1].y)/2};lastDist=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y);return;}
+  downX=v.x;downY=v.y;const hit=hitNode(v);
+  if(hit){mode="drag";dragId=hit.id;const L=toLocal(v);grabX=L.x-hit.x;grabY=L.y-hit.y;}else{mode="pan";lastPan=v;}});
+svg.addEventListener("pointermove",ev=>{if(!pts.has(ev.pointerId))return;const v=toVB(ev);pts.set(ev.pointerId,v);
+  if(mode==="pinch"&&pts.size>=2){const a=[...pts.values()];const mid={x:(a[0].x+a[1].x)/2,y:(a[0].y+a[1].y)/2};const dist=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y);
+    if(lastDist>0){const nk=clamp(vk*(dist/lastDist),0.35,4);vtx=mid.x-(mid.x-vtx)*(nk/vk);vty=mid.y-(mid.y-vty)*(nk/vk);vk=nk;vtx+=mid.x-lastMid.x;vty+=mid.y-lastMid.y;tvk=vk;tvx=vtx;tvy=vty;applyView();}
+    lastMid=mid;lastDist=dist;return;}
+  if(mode==="drag"&&dragId&&nodes[dragId]){if(Math.hypot(v.x-downX,v.y-downY)>4)nodes[dragId].dragging=true;
+    if(nodes[dragId].dragging){const n=nodes[dragId],L=toLocal(v);let nx=L.x-grabX,ny=L.y-grabY;
+      const A=active?nodes[active]:null;
+      if(A&&n.id!==active&&relList.indexOf(n.id)>=0&&relRad[n.id]!=null){
+        // 関連ノードは「中心からの距離＝関連度」なので距離は固定。角度だけ動かす（円周上を滑る）
+        const dx=nx-A.ax,dy=ny-A.ay,m=Math.hypot(dx,dy)||1,rad=relRad[n.id];
+        nx=A.ax+dx/m*rad;ny=A.ay+dy/m*rad;
+      }
+      n.x=nx;n.y=ny;}return;}
+  if(mode==="pan"&&lastPan){vtx+=v.x-lastPan.x;vty+=v.y-lastPan.y;tvx=vtx;tvy=vty;lastPan=v;applyView();}});
+function endPointer(ev){const m=mode,dId=dragId;pts.delete(ev.pointerId);
+  if(pts.size===0){
+    if(m==="drag"&&dId&&nodes[dId]){
+      if(nodes[dId].dragging)persistDrag();
+      else if(SEARCH&&matched[dId]===undefined)clearSearch(1);
+      else if(dId===MOREID){stage++;if(active)selectNode(active);}
+      else if(dId===active){
+        // 同じノードをもう一度タップ：隠れた食材があれば次の段へ、なければ選択解除
+        if(foodHidden>0){stage++;selectNode(dId);}
+        else deselect();
+      }
+      // 検索でヒットしたノードをタップしたら、検索をやめてから選ぶ。
+      // 検索中は位置決めが「検索結果を集める」側に支配されるので、
+      // 解除しないと線だけ伸びてまわりが集まってこない。
+      else if(SEARCH){clearSearch(1);selectNode(dId);}
+      else selectNode(dId);
+      dragId=null;}
+    else if(m==="pan"&&Math.hypot((lastPan?lastPan.x:downX)-downX,(lastPan?lastPan.y:downY)-downY)<4){
+      if(SEARCH)clearSearch(1);else if(active)deselect();}
+    mode=null;lastPan=null;lastDist=0;
+  }else if(pts.size===1){mode="pan";lastPan=[...pts.values()][0];lastDist=0;}}
+svg.addEventListener("pointerup",endPointer);svg.addEventListener("pointercancel",endPointer);
+svg.addEventListener("wheel",ev=>{wake();ev.preventDefault();const v=toVB(ev);const nk=clamp(vk*(ev.deltaY<0?1.1:0.9),0.35,4);
+  vtx=v.x-(v.x-vtx)*(nk/vk);vty=v.y-(v.y-vty)*(nk/vk);vk=nk;tvk=vk;tvx=vtx;tvy=vty;applyView();},{passive:false});
+document.addEventListener("gesturestart",e=>e.preventDefault());
+const wrapEl=document.getElementById("wrap");
+["touchstart","touchmove"].forEach(ev=>wrapEl.addEventListener(ev,e=>{if(e.target.closest("#info,#srcmodal,#ibtn,#searchwrap"))return;if(e.cancelable)e.preventDefault();},{passive:false}));
+loadHist();buildWorld();renderTrail();applyView();document.getElementById("ver").textContent=APPVER;lastInteract=performance.now();schedule();
+</script>
+</body>
+</html>
