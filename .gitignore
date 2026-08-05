@@ -1,3 +1,4 @@
-.DS_Store
-*.xlsx
-*.pdf
+# index.html 以外は GitHub に上げない
+*
+!index.html
+!.gitignore
