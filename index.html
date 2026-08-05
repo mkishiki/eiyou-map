@@ -976,9 +976,9 @@ const FOODS=[
 ["b1","えのき",2],
 ["vk","めかぶ",2],
 ["protein","そうめん",2,"plant"],
-["protein","鶏レバー",2],
-["protein","あじ",1],
-["protein","ちくわ",3],
+["protein","鶏レバー",2,"animal"],
+["protein","あじ",1,"animal"],
+["protein","ちくわ",3,"animal"],
 ["fiber","柿",2],
 ["p","油揚げ",2],
 ["k","牛もも",2],
@@ -1160,7 +1160,7 @@ const FOODNAMES=[...new Set(FOODS.map(f=>f[1]))];
 const FCOLOR="#d9d3c7";   // v0.720：食材は暖かめの無彩寄りグレー（ベージュ#ded3bbとグレー#d4d4d4の中間）
 const PT=12;
 let nodes={},edges=[],catLabels=[],groupLabels=[];
-const APPVER="v0.728";   // ← 書き出しごとに更新（第3位+1／新機能で第1位+1）
+const APPVER="v0.729";   // ← 書き出しごとに更新（第3位+1／新機能で第1位+1）
 let ADJREL={},FOODOF={},NUTOF={},EFFOF={},NUTEFF={},BLKOF={},BLKBY={};
 let NOW=0,active=null,relList=[],relAssign={},relRad={};
 let SEARCH="",matched={},matchN=0,FRONT="nut",switchBoost=0,stage=0,foodHidden=0;
@@ -1789,9 +1789,16 @@ function step(t){
   setCatBack(!!A);
   catLabels.forEach((c,i)=>{const el=document.getElementById("cl"+i);if(!el)return;
     const o=(FRONT!=="food")?0:(SEARCH?0.12:(A?0.25:1));if(el._o!==o){el._o=o;el.setAttribute("opacity",o);}});
+  // 見出しラベルのかぶり回避（ア案）：角度が近いペアは外側へ段違いにずらす
+  {const GLGAP=0.35, GLSTEP=22;  // 0.35rad(≈20°)未満で近接とみなし、22px刻みで押し出す
+   groupLabels.forEach(g=>{if(g)g.radOff=0;});  // 毎フレーム0に戻す（累積防止）
+   for(let a=0;a<groupLabels.length;a++){const g=groupLabels[a];if(!g)continue;
+     for(let b=0;b<a;b++){const h=groupLabels[b];if(!h)continue;
+       let d=g.abs-h.abs;while(d>Math.PI)d-=TAU;while(d<-Math.PI)d+=TAU;
+       if(Math.abs(d)<GLGAP&&g.radOff<=h.radOff){g.radOff=h.radOff+GLSTEP;}}}}
   for(let i=0;i<6;i++){const el=document.getElementById("gl"+i);if(!el)continue;const gp=groupLabels[i];
     if(!gp||!A){if(el.getAttribute("opacity")!=="0"){el.setAttribute("opacity",0);el.textContent="";}continue;}
-    const rad=A.base+46;
+    const rad=A.base+46+(gp.radOff||0);
     el.setAttribute("x",(A.x+Math.cos(gp.abs)*rad).toFixed(1));el.setAttribute("y",(A.y+Math.sin(gp.abs)*rad+3).toFixed(1));
     el.setAttribute("fill",gp.color);el.setAttribute("opacity",1);if(el.textContent!==gp.text)el.textContent=gp.text;}
   // 全員が寝る時刻を過ぎ、かつ全ノードがほぼ静止したら描画ループを止める（発熱ゼロ）
