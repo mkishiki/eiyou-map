@@ -1160,7 +1160,7 @@ const FOODNAMES=[...new Set(FOODS.map(f=>f[1]))];
 const FCOLOR="#d9d3c7";   // v0.720：食材は暖かめの無彩寄りグレー（ベージュ#ded3bbとグレー#d4d4d4の中間）
 const PT=12;
 let nodes={},edges=[],catLabels=[],groupLabels=[];
-const APPVER="v0.730";   // ← 書き出しごとに更新（第3位+1／新機能で第1位+1）
+const APPVER="v0.732";   // ← 書き出しごとに更新（第3位+1／新機能で第1位+1）
 let ADJREL={},FOODOF={},NUTOF={},EFFOF={},NUTEFF={},BLKOF={},BLKBY={};
 let NOW=0,active=null,relList=[],relAssign={},relRad={};
 let SEARCH="",matched={},matchN=0,FRONT="nut",switchBoost=0,stage=0,foodHidden=0;
@@ -1740,7 +1740,7 @@ function step(t){
     nb.setAttribute("transform",`translate(${n.x.toFixed(1)} ${n.y.toFixed(1)}) scale(${br.toFixed(3)})`);
     if(E.gr&&E.gr._on)E.gr.setAttribute("transform",nb.getAttribute("transform"));
     const shapeMoving=n.dragging||n.mSpd>0.6||n.jig>0.02||Math.abs(n.r-n._pr0)>0.3;
-    if(wasHid||(!bgFrozen&&(shapeMoving||(EFRAME+(n._bslot||0))%6===0))){n._pr0=n.r;nb.setAttribute("d",blob(n,t));if(E.gr&&E.gr._on)E.gr.setAttribute("d",nb.getAttribute("d"));}
+    if(wasHid||!nb.hasAttribute("d")||(!bgFrozen&&(shapeMoving||(EFRAME+(n._bslot||0))%6===0))){n._pr0=n.r;nb.setAttribute("d",blob(n,t));if(E.gr&&E.gr._on)E.gr.setAttribute("d",nb.getAttribute("d"));}
     if(n.kind==="eff"){nb.setAttribute("fill",n.line);nb.setAttribute("stroke","none");}
     else if(n.kind==="nut"){nb.setAttribute("fill",n.col);nb.setAttribute("stroke","#fff");nb.setAttribute("stroke-width","2");}
     else if(n.kind==="more"){nb.setAttribute("fill",FCOLOR);nb.setAttribute("stroke","#c3b79a");nb.setAttribute("stroke-width","1.6");}
@@ -1850,10 +1850,28 @@ function voiceQueryRaw(){
   else if(h.indexOf("open=")===0)h=h.slice(5);
   return h.replace(/^\s*(栄養|えいよう)\s*/i,"").trim();
 }
+// Siriの音声認識ゆれを、食材検索へ落とす前に吸収する。
+// 栄養素は26種と少ないため、ここだけ明示的に別名を持たせて誤爆を防ぐ。
+const VOICE_NUT_ALIAS={
+  "たんぱく":"たんぱく質","タンパク":"たんぱく質","蛋白質":"たんぱく質",
+  "塩":"塩分","食塩":"塩分",
+  "ビタミンビーワン":"ビタミンB1","ビタミンビー1":"ビタミンB1","ビタミンビーワン":"ビタミンB1",
+  "ビタミンビーツ":"ビタミンB2","ビタミンビーツー":"ビタミンB2","ビタミンビー2":"ビタミンB2","ビーツ":"ビタミンB2",
+  "ビタミンビーシックス":"ビタミンB6","ビタミンビー6":"ビタミンB6",
+  "ビタミンビートゥエルブ":"ビタミンB12","ビタミンビートゥエルヴ":"ビタミンB12","ビタミンビー12":"ビタミンB12",
+  "ビタミンシー":"ビタミンC","ビタミンエー":"ビタミンA","ビタミンディー":"ビタミンD",
+  "ビタミンイー":"ビタミンE","ビタミンケー":"ビタミンK"
+};
+function cleanVoiceQuery(q){
+  let s=(q||"").trim();
+  // ショートカット名まで音声入力側に混ざった場合だけ除去する。
+  s=s.replace(/^\s*(栄養マップ|えいようマップ|栄養チェック|えいようチェック|栄養|えいよう)\s*/i,"").trim();
+  return s;
+}
 function findNutByQuery(q){
-  const nq=norm(q);
-  const alias={たんぱく:norm("たんぱく質"),蛋白質:norm("たんぱく質"),塩:norm("塩分")};
-  const want=alias[q]||alias[nq]||nq;
+  const raw=cleanVoiceQuery(q),nq=norm(raw);
+  const alias=VOICE_NUT_ALIAS[raw]||VOICE_NUT_ALIAS[nq];
+  const want=norm(alias||raw);
   for(const id in NUT){if(norm(NUT[id][0])===want)return id;}
   return null;
 }
@@ -1866,7 +1884,7 @@ function findEffectByQuery(q){
   return null;
 }
 function openVoiceQuery(raw){
-  const q=(raw||"").replace(/^\s*(栄養|えいよう)\s*/i,"").trim();if(!q)return false;
+  const q=cleanVoiceQuery(raw);if(!q)return false;
   wake();NAV=[];HI=-1;
   const nid=findNutByQuery(q);
   if(nid){if(SEARCH)clearSearch(1);setFront("nut");selectNode(nid);return true;}
