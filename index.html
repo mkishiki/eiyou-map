@@ -1839,6 +1839,48 @@ function onSearch(v,noHist){wake();SEARCH=norm(v||"");matched={};matchN=0;
   if(!raw&&!noHist)renderHist();else{const b=document.getElementById("qhist");if(b)b.style.display="none";}}
 function clearSearch(keepHist){document.getElementById("q").value="";onSearch("",keepHist);}
 
+// ===== 外部呼び出し（Siri / ショートカット / URL） =====
+// 例: https://mkishiki.github.io/eiyou-map/#q=%E3%81%AB%E3%82%93%E3%81%98%E3%82%93
+// 「栄養 にんじん」のように接頭辞つきでも受け付ける。
+function voiceQueryRaw(){
+  let h=(location.hash||"").replace(/^#/,"");
+  if(!h)return "";
+  try{h=decodeURIComponent(h);}catch(e){}
+  if(h.indexOf("q=")===0)h=h.slice(2);
+  else if(h.indexOf("open=")===0)h=h.slice(5);
+  return h.replace(/^\s*(栄養|えいよう)\s*/i,"").trim();
+}
+function findNutByQuery(q){
+  const nq=norm(q);
+  const alias={たんぱく:norm("たんぱく質"),蛋白質:norm("たんぱく質"),塩:norm("塩分")};
+  const want=alias[q]||alias[nq]||nq;
+  for(const id in NUT){if(norm(NUT[id][0])===want)return id;}
+  return null;
+}
+function findEffectByQuery(q){
+  const nq=norm(q);if(!nq)return null;
+  const exact=[] , partial=[];
+  for(const id in EFFECTS){const nm=norm(EFFECTS[id][0]);if(nm===nq)exact.push(id);else if(nm.indexOf(nq)>=0)partial.push(id);}
+  if(exact.length===1)return exact[0];
+  if(partial.length===1)return partial[0];
+  return null;
+}
+function openVoiceQuery(raw){
+  const q=(raw||"").replace(/^\s*(栄養|えいよう)\s*/i,"").trim();if(!q)return false;
+  wake();NAV=[];HI=-1;
+  const nid=findNutByQuery(q);
+  if(nid){if(SEARCH)clearSearch(1);setFront("nut");selectNode(nid);return true;}
+  const eid=findEffectByQuery(q);
+  if(eid){if(SEARCH)clearSearch(1);setFront("eff");selectNode(eid);return true;}
+  const list=FOODNAMES.filter(nm=>hitName(nm,norm(q)));
+  if(list.length===1){if(SEARCH)clearSearch(1);setFront("food");selectNode(list[0]);return true;}
+  setFront("food");
+  const input=document.getElementById("q");if(input)input.value=q;
+  onSearch(q,1);return list.length>0;
+}
+function openFromHash(){const q=voiceQueryRaw();if(!q)return false;return openVoiceQuery(q);}
+window.addEventListener("hashchange",()=>openFromHash());
+
 // ===== 視点 =====
 let vk=1,vtx=0,vty=0,tvk=1,tvx=0,tvy=0;
 const svg=document.getElementById("nsvg");
@@ -1943,7 +1985,7 @@ svg.addEventListener("wheel",ev=>{wake();ev.preventDefault();const v=toVB(ev);co
 document.addEventListener("gesturestart",e=>e.preventDefault());
 const wrapEl=document.getElementById("wrap");
 ["touchstart","touchmove"].forEach(ev=>wrapEl.addEventListener(ev,e=>{if(e.target.closest("#info,#srcmodal,#ibtn,#searchwrap"))return;if(e.cancelable)e.preventDefault();},{passive:false}));
-loadHist();buildWorld();renderTrail();applyView();document.getElementById("ver").textContent=APPVER;lastInteract=performance.now();schedule();
+loadHist();buildWorld();renderTrail();applyView();document.getElementById("ver").textContent=APPVER;lastInteract=performance.now();schedule();openFromHash();
 </script>
 </body>
 </html>
