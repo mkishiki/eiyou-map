@@ -8,6 +8,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="eiyou map">
@@ -1386,7 +1388,7 @@ const foodIconLight=col=>mixHex(col,'#ffffff',0.04);
 const foodIconDark=col=>mixHex(col,'#000000',0.14);
 const PT=12;
 let nodes={},edges=[],catLabels=[],groupLabels=[];
-const APPVER="v1.159";   // ← 書き出しごとに更新（第3位+1／新機能で第1位+1）
+const APPVER="v1.160";   // ← 書き出しごとに更新（第3位+1／新機能で第1位+1）
 let ADJREL={},FOODOF={},NUTOF={},EFFOF={},NUTEFF={},BLKOF={},BLKBY={};
 let NOW=0,active=null,relList=[],relAssign={},relRad={};
 let SEARCH="",matched={},matchN=0,FRONT="nut",switchBoost=0,stage=0,foodHidden=0;
@@ -2422,7 +2424,7 @@ function closeServingTable(event){if(event)event.stopPropagation();
 
 function openSrc(ev){if(ev)ev.stopPropagation();
   const box=document.getElementById("srclist");
-  box.innerHTML=SOURCES.map((s,i)=>{const mark=i===0?'<span style="color:#c8452f;font-weight:750">*1 </span>':i===2?'<span style="color:#c8452f;font-weight:750">*2 </span>':'';return `<a href="${s.u}" target="_blank" rel="noopener noreferrer"><div class="t">${mark}${s.t} ↗</div><div class="o">${s.o}</div><div class="n">${s.n}</div></a>`;}).join("")+`<div style="padding:11px 0;border-top:1px solid #f2f0ec"><div class="t"><span style="color:#c8452f;font-weight:750">*3 </span>一食あたりの食材量</div><div class="o">このアプリ独自の目安</div><div class="n">一般的な食べ方をもとに設定した暫定値です。</div><button class="serving-open" type="button" onclick="toggleServingTable(event)">一食量一覧を見る</button><div id="servingPanel"><div class="serving-table-wrap"><table class="serving-table"><thead><tr><th onclick="sortServing('cat')">カテゴリ<span class="sortmark" id="sm-cat"></span></th><th onclick="sortServing('food')">食材<span class="sortmark" id="sm-food"></span></th><th onclick="sortServing('g')">量（g）<span class="sortmark" id="sm-g"></span></th></tr></thead><tbody id="servingBody"></tbody></table></div></div></div>`;
+  box.innerHTML=SOURCES.map((s,i)=>{const mark=i===0?'<span style="color:#c8452f;font-weight:750">*1 </span>':i===2?'<span style="color:#c8452f;font-weight:750">*2 </span>':'';return `<a href="${s.u}" target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer"><div class="t">${mark}${s.t} ↗</div><div class="o">${s.o}</div><div class="n">${s.n}</div></a>`;}).join("")+`<div style="padding:11px 0;border-top:1px solid #f2f0ec"><div class="t"><span style="color:#c8452f;font-weight:750">*3 </span>一食あたりの食材量</div><div class="o">このアプリ独自の目安</div><div class="n">一般的な食べ方をもとに設定した暫定値です。</div><button class="serving-open" type="button" onclick="toggleServingTable(event)">一食量一覧を見る</button><div id="servingPanel"><div class="serving-table-wrap"><table class="serving-table"><thead><tr><th onclick="sortServing('cat')">カテゴリ<span class="sortmark" id="sm-cat"></span></th><th onclick="sortServing('food')">食材<span class="sortmark" id="sm-food"></span></th><th onclick="sortServing('g')">量（g）<span class="sortmark" id="sm-g"></span></th></tr></thead><tbody id="servingBody"></tbody></table></div></div></div>`;
   document.getElementById("srcnote").innerHTML=DISCLAIMER;
   document.getElementById("srcmodal").className="open";startInfoDemos();}
 function closeSrc(ev){if(ev)ev.stopPropagation();
