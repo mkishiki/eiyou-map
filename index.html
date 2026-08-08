@@ -1386,7 +1386,7 @@ const foodIconLight=col=>mixHex(col,'#ffffff',0.04);
 const foodIconDark=col=>mixHex(col,'#000000',0.14);
 const PT=12;
 let nodes={},edges=[],catLabels=[],groupLabels=[];
-const APPVER="v1.157";   // ← 書き出しごとに更新（第3位+1／新機能で第1位+1）
+const APPVER="v1.159";   // ← 書き出しごとに更新（第3位+1／新機能で第1位+1）
 let ADJREL={},FOODOF={},NUTOF={},EFFOF={},NUTEFF={},BLKOF={},BLKBY={};
 let NOW=0,active=null,relList=[],relAssign={},relRad={};
 let SEARCH="",matched={},matchN=0,FRONT="nut",switchBoost=0,stage=0,foodHidden=0;
@@ -1804,7 +1804,7 @@ function selectNode(id,fromNav){if(!nodes[id])return;wake();
     }
     const effCenter=(A.kind==="eff");
     fl.forEach(f=>{relAssign[f.id]=fang[f.id];relRad[f.id]=A.base+nodes[f.id].base+(effCenter?EFFRING[f.lv||3]:rOf(f));relList.push(f.id);foodOcc.push({a:relAssign[f.id],r:relRad[f.id]});
-      const g=GRP[f.tag];if(g){if(!seen[g.t])seen[g.t]={sum:0,n:0,c:g.c};seen[g.t].sum+=fang[f.id];seen[g.t].n++;}});
+      const g=GRP[f.tag];if(g){if(!seen[g.t])seen[g.t]={sum:0,n:0,c:g.c,ids:[]};seen[g.t].sum+=fang[f.id];seen[g.t].n++;seen[g.t].ids.push(f.id);}});
     // 「＋n」ノード：出ている食材の少し外側、食材区画の中央に置く
     if(foodHidden>0){const mn=nodes[MOREID];
       let far=0; fl.forEach(f=>{if(relRad[f.id]>far)far=relRad[f.id];});
@@ -1831,7 +1831,7 @@ function selectNode(id,fromNav){if(!nodes[id])return;wake();
       relAssign[id]=a;relRad[id]=rr;relList.push(id);otherOcc.push({a,r:rr});
     });
   }
-  Object.keys(seen).forEach(t=>groupLabels.push({abs:seen[t].sum/seen[t].n,text:t,color:seen[t].c}));
+  Object.keys(seen).forEach(t=>groupLabels.push({abs:seen[t].sum/seen[t].n,text:t,color:seen[t].c,ids:seen[t].ids.slice()}));
   sinkSurfaced(relList.concat([id]));
   relList.forEach(r=>{const R=nodes[r];
     if(R.kind!==FRONT&&!R.surfaced){ // 隠れているレイヤー＝中心の足元から浮かび上がる
@@ -1994,9 +1994,9 @@ function step(t){
       if(n.id===active){tx=A.ax;ty=A.ay;tr=(A.kind==="food")?n.base+6:n.base+4;op=1;}
       else if(relList.indexOf(n.id)>=0){const ang=relAssign[n.id],rad=relRad[n.id];tx=A.ax+Math.cos(ang)*rad;ty=A.ay+Math.sin(ang)*rad;tr=n.base;op=1;
         ease=n.placed?0.5:(n.surfaced?0.18:Math.min(0.15,0.09+Math.hypot(n.hx-tx,n.hy-ty)/30000));}
-      else{const dx=n.hx-A.ax,dy=n.hy-A.ay,m=Math.hypot(dx,dy)||1;
-        const ring=(A._ring||200)+34;
-        if(n.kind===FRONT&&m<ring){tx=n.hx+dx/m*(ring-m>38?38:ring-m);ty=n.hy+dy/m*(ring-m>38?38:ring-m);}else{tx=n.hx;ty=n.hy;}
+      else{
+        // 選択中の無関係ノードは元位置に留める。以前の「中心からふわっと離れる」押し出しは停止。
+        tx=n.hx;ty=n.hy;
         const fr=(n.kind===FRONT);tr=fr?n.base*0.86:n.base*0.3;op=fr?0.25:0;}
     }else{tx=n.hx;ty=n.hy;const fr=(n.kind===FRONT);tr=fr?n.base:n.base*0.3;op=fr?1:0;}
     // 待機中のゆらゆら。放置に入っても急停止させず、徐々に振幅を0へ落とす。
@@ -2215,8 +2215,16 @@ function step(t){
        if(Math.abs(d)<GLGAP&&g.radOff<=h.radOff){g.radOff=h.radOff+GLSTEP;}}}}
   for(let i=0;i<6;i++){const el=document.getElementById("gl"+i);if(!el)continue;const gp=groupLabels[i];
     if(!gp||!A){if(el.getAttribute("opacity")!=="0"){el.setAttribute("opacity",0);el.textContent="";}continue;}
-    const rad=A.base+46+(gp.radOff||0);
-    el.setAttribute("x",(A.x+Math.cos(gp.abs)*rad).toFixed(1));el.setAttribute("y",(A.y+Math.sin(gp.abs)*rad+3).toFixed(1));
+    // GRPラベルは、対応する栄養素ノードの現在位置へ追従する。
+    // 食材↔栄養素の線上（中心から約42%）に置くので、栄養素をドラッグすると文字も一緒に動く。
+    let tx=0,ty=0,gn=0;
+    (gp.ids||[]).forEach(id=>{const rn=nodes[id];if(rn){tx+=rn.x;ty+=rn.y;gn++;}});
+    if(gn){tx/=gn;ty/=gn;}else{tx=A.x+Math.cos(gp.abs)*(A.base+100);ty=A.y+Math.sin(gp.abs)*(A.base+100);}
+    let dx=tx-A.x,dy=ty-A.y,d=Math.hypot(dx,dy)||1;
+    gp.abs=Math.atan2(dy,dx);
+    const along=Math.max(A.base+42,Math.min(d*0.42,A.base+88))+(gp.radOff||0);
+    const gx=A.x+dx/d*along,gy=A.y+dy/d*along;
+    el.setAttribute("x",gx.toFixed(1));el.setAttribute("y",(gy+3).toFixed(1));
     el.setAttribute("fill",gp.color);el.setAttribute("opacity",1);if(el.textContent!==gp.text)el.textContent=gp.text;}
   // 全員が寝る時刻を過ぎ、かつ全ノードがほぼ静止したら描画ループを止める（発熱ゼロ）
   if(!active&&!SEARCH&&idle&&maxSp<0.15&&t-lastInteract>IDLE_MS+5500){asleep=true;running=false;return;}
