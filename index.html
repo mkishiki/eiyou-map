@@ -1391,7 +1391,7 @@ const foodIconLight=col=>mixHex(col,'#ffffff',0.04);
 const foodIconDark=col=>mixHex(col,'#000000',0.14);
 const PT=12;
 let nodes={},edges=[],catLabels=[],groupLabels=[];
-const APPVER="v1.2";   // ← 書き出しごとに更新（第3位+1／新機能で第1位+1）
+const APPVER="v1.202";   // ← 書き出しごとに更新（第3位+1／新機能で第1位+1）
 let ADJREL={},FOODOF={},NUTOF={},EFFOF={},NUTEFF={},BLKOF={},BLKBY={};
 let NOW=0,active=null,relList=[],relAssign={},relRad={};
 let SEARCH="",matched={},matchN=0,FRONT="nut",switchBoost=0,stage=0,foodHidden=0;
@@ -1926,7 +1926,7 @@ function blob(o,t){const sx=1+(o.jig||0)*Math.sin(t*0.005)*0.2,sy=1-(o.jig||0)*M
   for(let i=0;i<PT;i++){const a=(i/PT)*6.283+o.seed;let rr=o.r*(1+(o.freeze?0:o.am[i])*Math.sin(t*0.0012+o.pa[i]));const al=Math.cos(a-(o.mAng||0));rr*=1+st*al*al;P.push([Math.cos(a)*rr*sx,Math.sin(a)*rr*sy]);}
   const md=(A,B)=>[(A[0]+B[0])/2,(A[1]+B[1])/2];const s=md(P[PT-1],P[0]);let d=`M ${s[0].toFixed(1)} ${s[1].toFixed(1)} `;
   for(let i=0;i<PT;i++){const c=P[i],nx=P[(i+1)%PT],m=md(c,nx);d+=`Q ${c[0].toFixed(1)} ${c[1].toFixed(1)} ${m[0].toFixed(1)} ${m[1].toFixed(1)} `;}return d+"Z";}
-function eyeStr(n,t){const iz=Math.max(vk,0.35),er0=(n.kind==="food")?((active&&n.id===active)?27.28:22.44):n.r,er=er0/iz;const foodEye=(n.kind==="food"),ox=er*(foodEye?0.35:0.4),oy=-er*0.08,s0=er0*(foodEye?0.195:0.225),s=s0/iz,lineW=s0*0.5,lx=n.x-ox,rx=n.x+ox,cy=n.y+oy,dk="#2a2a2a";
+function eyeStr(n,t){const iz=Math.max(vk,0.35),zFollow=Math.pow(iz,0.18),zLocal=Math.pow(iz,-0.82),er0=(n.kind==="food")?((active&&n.id===active)?27.28:22.44):n.r,er=er0*zLocal;const foodEye=(n.kind==="food"),ox=er*(foodEye?0.35:0.4),oy=-er*0.08,s0=er0*(foodEye?0.195:0.225),s=s0*zLocal,lineW=s0*0.5*Math.pow(iz,0.06),lx=n.x-ox,rx=n.x+ox,cy=n.y+oy,dk="#2a2a2a";
   const moving=n.mSpd>1.5,isU=active&&n.id!==active&&relList.indexOf(n.id)<0;
   const rnd=cx=>`<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${s.toFixed(1)}" fill="#fff"/><circle cx="${(cx+n.pd.x*s*0.4).toFixed(1)}" cy="${(cy+n.pd.y*s*0.4).toFixed(1)}" r="${(s*0.55).toFixed(1)}" fill="${dk}"/>`;
   const sur=cx=>`<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${(s*1.35).toFixed(1)}" fill="#fff"/><circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${(s*0.42).toFixed(1)}" fill="${dk}"/>`;
@@ -2129,7 +2129,7 @@ function step(t){
     const br=(bgFrozen||iconData||FRONT==="food")?1:1+Math.sin(t*0.0016+n.ph)*0.035;   // 食材タブとアイコンは拡大縮小を止めて軽くする
     const nd=E.nd,ol=E.ol;
     if(iconData){
-      const sc=(n.r/50)*br/Math.max(vk,0.35);
+      const sc=(n.r/50)*br*Math.pow(Math.max(vk,0.35),-0.82);
       const st=freezeFoodMotion?0:Math.min((n.mSpd||0)*0.055,0.22);
       const jg=freezeFoodMotion?0:(n.jig||0)*Math.sin(t*0.005)*0.10;
       const sx=1+st+jg,sy=1-st*0.62-jg*0.45,rot=freezeFoodMotion?0:((n.mAng||0)*180/Math.PI)*(st*0.12+jg*0.08);
@@ -2144,7 +2144,7 @@ function step(t){
       }
     }else{
       [nb,nd,ol,E.gr].forEach(el=>{if(!el)return;el.removeAttribute("fill-rule");el.removeAttribute("clip-rule");});
-      const nodeScale=br/Math.max(vk,0.35);
+      const nodeScale=br*Math.pow(Math.max(vk,0.35),-0.82);
       nb.setAttribute("transform",`translate(${n.x.toFixed(1)} ${n.y.toFixed(1)}) scale(${nodeScale.toFixed(4)})`);
       if(nd){nd.setAttribute("opacity","0");nd.setAttribute("d","");}
       if(ol){ol.setAttribute("opacity","0");ol.setAttribute("d","");}
@@ -2192,12 +2192,13 @@ function step(t){
     const sb=E.sb;
     if(n.badge){
       // 位置は transform でまとめて指定。色や太さなど変わらない属性は最初の一度だけ。
-      const bz=Math.max(vk,0.35);
-      sb.setAttribute("transform",`translate(${(n.x+(n.r/bz)*0.72).toFixed(1)} ${(n.y-(n.r/bz)*0.62).toFixed(1)})`);
+      const bz=Math.max(vk,0.35),bLocal=Math.pow(bz,-0.82),bFollow=Math.pow(bz,0.18);
+      sb.setAttribute("transform",`translate(${(n.x+(n.r*bLocal)*0.72).toFixed(1)} ${(n.y-(n.r*bLocal)*0.62).toFixed(1)})`);
       if(n._bdg!==n.badge){n._bdg=n.badge;
         sb.setAttribute("cx","0");sb.setAttribute("cy","0");
-        sb.setAttribute("fill",n.badge==="w"?"#3d8bd6":"#e0972a");sb.setAttribute("stroke","#fff");sb.setAttribute("stroke-width","1.3");}
-      sb.setAttribute("r",(5.5/Math.max(vk,0.35)).toFixed(2));
+        sb.setAttribute("fill",n.badge==="w"?"#3d8bd6":"#e0972a");sb.setAttribute("stroke","#fff");}
+      sb.setAttribute("stroke-width",(1.3*bFollow).toFixed(2));
+      sb.setAttribute("r",(5.5*bLocal).toFixed(2));
       sb.setAttribute("opacity",(n.op*0.95).toFixed(2));}
     else if(sb.getAttribute("opacity")!=="0")sb.setAttribute("opacity",0);
     // このノードのラベルを前面(lf)に出すか背面(l)に出すか。
@@ -2212,17 +2213,17 @@ function step(t){
     const tgt=toFront?lf:l,off=toFront?l:lf;
     // 食材ラベルはシルエットの「実際の下端」から一定距離に置く。
     // 緑黄色野菜(carrot)の現行見え方を基準に、下端→文字ベースラインを約13pxで統一。
-    const zGap=Math.max(vk,0.35);
-    const FOOD_LABEL_BASE_GAP=13.1/zGap;
-    const NODE_LABEL_BASE_GAP=14/zGap;
-    const renderR=n.r/zGap;
+    const zGap=Math.max(vk,0.35),zLocal=Math.pow(zGap,-0.82);
+    const FOOD_LABEL_BASE_GAP=13.1*zLocal;
+    const NODE_LABEL_BASE_GAP=14*zLocal;
+    const renderR=n.r*zLocal;
     const foodBottom=(n.kind==="food"&&n.icon&&FOODICON_BOTTOM[n.icon]!=null)?n.y+renderR*FOODICON_BOTTOM[n.icon]:n.y+renderR;
     const labelY=(n.kind==="food")?foodBottom+FOOD_LABEL_BASE_GAP:n.y+renderR+NODE_LABEL_BASE_GAP;
     tgt.setAttribute("x",n.x.toFixed(1));tgt.setAttribute("y",labelY.toFixed(1));
     if(tgt.textContent!==n.name)tgt.textContent=n.name;
     const labelFS=(active&&n.id===active)?16:(n.kind==="food"?11.5:14);
     tgt.dataset.fs=labelFS;
-    tgt.setAttribute("font-size",(labelFS/Math.max(vk,0.35)).toFixed(2));
+    tgt.setAttribute("font-size",(labelFS*Math.pow(Math.max(vk,0.35),-0.82)).toFixed(2));
     // 栄養素を選択中：各食材カテゴリで最も近い食材（relRad最小）だけ少し太くする。
     let nearCatFood=false;
     if(A&&A.kind==="nut"&&n.kind==="food"&&relList.indexOf(n.id)>=0){
@@ -2332,13 +2333,13 @@ window.addEventListener("hashchange",()=>openFromHash());
 let vk=1,vtx=0,vty=0,tvk=1,tvx=0,tvy=0;
 const svg=document.getElementById("nsvg");
 function updateMapTextScale(){
-  const z=Math.max(vk,0.35),inv=1/z;
+  const z=Math.max(vk,0.35),local=Math.pow(z,-0.82);
   document.querySelectorAll("#view text[data-fs]").forEach(el=>{
-    el.setAttribute("font-size",(parseFloat(el.dataset.fs)*inv).toFixed(2));
+    el.setAttribute("font-size",(parseFloat(el.dataset.fs)*local).toFixed(2));
   });
   const bg=document.getElementById("labels-bg"),fg=document.getElementById("labels-fg");
-  if(bg)bg.setAttribute("stroke-width",(3.2*inv).toFixed(2));
-  if(fg)fg.setAttribute("stroke-width",(3.2*inv).toFixed(2));
+  if(bg)bg.setAttribute("stroke-width",(3.2*local).toFixed(2));
+  if(fg)fg.setAttribute("stroke-width",(3.2*local).toFixed(2));
 }
 function applyView(){
   const v=document.getElementById("view");
