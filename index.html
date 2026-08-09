@@ -1391,7 +1391,7 @@ const foodIconLight=col=>mixHex(col,'#ffffff',0.04);
 const foodIconDark=col=>mixHex(col,'#000000',0.14);
 const PT=12;
 let nodes={},edges=[],catLabels=[],groupLabels=[];
-const APPVER="v1.170";   // ← 書き出しごとに更新（第3位+1／新機能で第1位+1）
+const APPVER="v1.2";   // ← 書き出しごとに更新（第3位+1／新機能で第1位+1）
 let ADJREL={},FOODOF={},NUTOF={},EFFOF={},NUTEFF={},BLKOF={},BLKBY={};
 let NOW=0,active=null,relList=[],relAssign={},relRad={};
 let SEARCH="",matched={},matchN=0,FRONT="nut",switchBoost=0,stage=0,foodHidden=0;
@@ -1415,7 +1415,7 @@ function buildWorld(){
     nodes[id].badge=null;});
   Object.keys(CATPOS).forEach(cat=>{const C=CATPOS[cat];const list=(CATLIST[cat]||[]).filter(n=>FOODNAMES.indexOf(n)>=0);let maxr=0;
     list.forEach((nm,i)=>{const ang=i*2.399,rad=i===0?0:22+Math.sqrt(i)*13;const ey=Math.sin(ang)*rad*0.80;
-      nodes[nm]=mkNode(nm,nm,FCOLOR,C[0]+Math.cos(ang)*rad,C[1]+ey,20.4,"food");nodes[nm].cat=cat;nodes[nm].icon=foodIconOf(nm);});
+      nodes[nm]=mkNode(nm,nm,FCOLOR,C[0]+Math.cos(ang)*rad,C[1]+ey,22.44,"food");nodes[nm].cat=cat;nodes[nm].icon=foodIconOf(nm);});
     // 食材タブの初期カテゴリ表示でも、食材同士が近すぎる場合は少し押し離す。
     // 文字を大きくしたぶん、ノード中心間36ptを最低間隔の目安にする。
     for(let iter=0;iter<14;iter++){
@@ -1470,16 +1470,15 @@ function buildDOM(){let s=`<g id="view"><rect x="-4000" y="-4000" width="12000" 
   s+=`</g>`;
   // --- カテゴリ弧文字の定位置（最前）。ここに置いておき、選択時だけ catanchor-bg へ移す ---
   s+=`<g id="catanchor-fg"><g id="catlabels">`;
-  catLabels.forEach((c,i)=>{const txt=[...(c.name+(CATEMOJI[c.name]||""))];const R=118,step=19/R,span=(txt.length-1)*step;
+  catLabels.forEach((c,i)=>{const txt=[...(c.name+(CATEMOJI[c.name]||""))];const R=118,step=18/R,span=(txt.length-1)*step;
     const acx=c.x,acy=c.y+R,a0=-Math.PI/2-span/2,a1=-Math.PI/2+span/2;
     const px=a=>[(acx+Math.cos(a)*R).toFixed(1),(acy+Math.sin(a)*R).toFixed(1)];
     const p0=px(a0-step*0.75),p1=px(a1+step*0.75);
-    const arcD=`M ${p0[0]} ${p0[1]} A ${R} ${R} 0 0 1 ${p1[0]} ${p1[1]}`;
-    // 分類名の背景はカテゴリ円弧の外側に接する帯。扇形にはせず、端も丸めない。
+    // 分類名の背景はカテゴリ円弧の外側に接する帯。濃色の下線は使わない。
     const HW=24,HR=R+HW/2, hp=a=>[(acx+Math.cos(a)*HR).toFixed(1),(acy+Math.sin(a)*HR).toFixed(1)];
     const hp0=hp(a0-step*0.75),hp1=hp(a1+step*0.75),hiD=`M ${hp0[0]} ${hp0[1]} A ${HR} ${HR} 0 0 1 ${hp1[0]} ${hp1[1]}`;
-    let g=`<g id="cl${i}"><path d="${hiD}" fill="none" stroke="#f0ece4" stroke-width="${HW}" stroke-linecap="butt" opacity="0.72"/><path d="${arcD}" fill="none" stroke="#3a3226" stroke-width="1.1" stroke-linecap="round" opacity="0.55"/>`;
-    txt.forEach((ch,k)=>{const a=a0+k*step,q=px(a);g+=`<text x="${q[0]}" y="${(parseFloat(q[1])-7).toFixed(1)}" data-fs="13" font-size="13" font-weight="700" fill="#6b6152" text-anchor="middle">${ch}</text>`;});
+    let g=`<g id="cl${i}"><path d="${hiD}" fill="none" stroke="#f0ece4" stroke-width="${HW}" stroke-linecap="butt" opacity="0.72"/>`;
+    txt.forEach((ch,k)=>{const a=a0+k*step,q=px(a);g+=`<text x="${q[0]}" y="${(parseFloat(q[1])-7).toFixed(1)}" data-fs="16.9" font-size="16.9" font-weight="700" fill="#6b6152" text-anchor="middle">${ch}</text>`;});
     s+=g+`</g>`;});
   s+=`</g></g>`;
   s+=`</g></g>`;document.getElementById("nsvg").innerHTML=s;}
@@ -1927,13 +1926,13 @@ function blob(o,t){const sx=1+(o.jig||0)*Math.sin(t*0.005)*0.2,sy=1-(o.jig||0)*M
   for(let i=0;i<PT;i++){const a=(i/PT)*6.283+o.seed;let rr=o.r*(1+(o.freeze?0:o.am[i])*Math.sin(t*0.0012+o.pa[i]));const al=Math.cos(a-(o.mAng||0));rr*=1+st*al*al;P.push([Math.cos(a)*rr*sx,Math.sin(a)*rr*sy]);}
   const md=(A,B)=>[(A[0]+B[0])/2,(A[1]+B[1])/2];const s=md(P[PT-1],P[0]);let d=`M ${s[0].toFixed(1)} ${s[1].toFixed(1)} `;
   for(let i=0;i<PT;i++){const c=P[i],nx=P[(i+1)%PT],m=md(c,nx);d+=`Q ${c[0].toFixed(1)} ${c[1].toFixed(1)} ${m[0].toFixed(1)} ${m[1].toFixed(1)} `;}return d+"Z";}
-function eyeStr(n,t){const er=(n.kind==="food")?((active&&n.id===active)?24.8:20.4):n.r;const foodEye=(n.kind==="food"),ox=er*(foodEye?0.35:0.4),oy=-er*0.08,s=er*(foodEye?0.195:0.225),lx=n.x-ox,rx=n.x+ox,cy=n.y+oy,dk="#2a2a2a";
+function eyeStr(n,t){const iz=Math.max(vk,0.35),er0=(n.kind==="food")?((active&&n.id===active)?27.28:22.44):n.r,er=er0/iz;const foodEye=(n.kind==="food"),ox=er*(foodEye?0.35:0.4),oy=-er*0.08,s0=er0*(foodEye?0.195:0.225),s=s0/iz,lineW=s0*0.5,lx=n.x-ox,rx=n.x+ox,cy=n.y+oy,dk="#2a2a2a";
   const moving=n.mSpd>1.5,isU=active&&n.id!==active&&relList.indexOf(n.id)<0;
   const rnd=cx=>`<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${s.toFixed(1)}" fill="#fff"/><circle cx="${(cx+n.pd.x*s*0.4).toFixed(1)}" cy="${(cy+n.pd.y*s*0.4).toFixed(1)}" r="${(s*0.55).toFixed(1)}" fill="${dk}"/>`;
   const sur=cx=>`<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${(s*1.35).toFixed(1)}" fill="#fff"/><circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${(s*0.42).toFixed(1)}" fill="${dk}"/>`;
-  const chev=(cx,d)=>`<polyline points="${(cx-d*s).toFixed(1)},${(cy-s).toFixed(1)} ${(cx+d*s*0.7).toFixed(1)},${cy.toFixed(1)} ${(cx-d*s).toFixed(1)},${(cy+s).toFixed(1)}" fill="none" stroke="${dk}" stroke-width="${(s*0.5).toFixed(1)}" stroke-linecap="round" stroke-linejoin="round"/>`;
-  const up=cx=>`<path d="M ${(cx-s).toFixed(1)} ${(cy+s*0.3).toFixed(1)} A ${s.toFixed(1)} ${s.toFixed(1)} 0 0 1 ${(cx+s).toFixed(1)} ${(cy+s*0.3).toFixed(1)}" fill="none" stroke="${dk}" stroke-width="${(s*0.5).toFixed(1)}" stroke-linecap="round"/>`;
-  const flat=cx=>`<line x1="${(cx-s).toFixed(1)}" y1="${cy.toFixed(1)}" x2="${(cx+s).toFixed(1)}" y2="${cy.toFixed(1)}" stroke="${dk}" stroke-width="${(s*0.5).toFixed(1)}" stroke-linecap="round"/>`;
+  const chev=(cx,d)=>`<polyline points="${(cx-d*s).toFixed(1)},${(cy-s).toFixed(1)} ${(cx+d*s*0.7).toFixed(1)},${cy.toFixed(1)} ${(cx-d*s).toFixed(1)},${(cy+s).toFixed(1)}" fill="none" stroke="${dk}" stroke-width="${lineW.toFixed(1)}" stroke-linecap="round" stroke-linejoin="round"/>`;
+  const up=cx=>`<path d="M ${(cx-s).toFixed(1)} ${(cy+s*0.3).toFixed(1)} A ${s.toFixed(1)} ${s.toFixed(1)} 0 0 1 ${(cx+s).toFixed(1)} ${(cy+s*0.3).toFixed(1)}" fill="none" stroke="${dk}" stroke-width="${lineW.toFixed(1)}" stroke-linecap="round"/>`;
+  const flat=cx=>`<line x1="${(cx-s).toFixed(1)}" y1="${cy.toFixed(1)}" x2="${(cx+s).toFixed(1)}" y2="${cy.toFixed(1)}" stroke="${dk}" stroke-width="${lineW.toFixed(1)}" stroke-linecap="round"/>`;
   // バッドばつ丸ふうの伏せ目：上が平ら・下がふくらんだ下向き半月。黒線なし、黒目は通常と同じ。
   const dead=(cx,i)=>{const w=s*1.15,h=s*1.25,x0=cx-w,x1=cx+w,yt=cy-s*0.35,cid=`dm${n.id}_${i}`.replace(/[^\w]/g,"");
     return `<clipPath id="${cid}"><path d="M ${x0.toFixed(1)} ${yt.toFixed(1)} L ${x1.toFixed(1)} ${yt.toFixed(1)} A ${w.toFixed(1)} ${h.toFixed(1)} 0 0 1 ${x0.toFixed(1)} ${yt.toFixed(1)} Z"/></clipPath>`
@@ -2130,7 +2129,7 @@ function step(t){
     const br=(bgFrozen||iconData||FRONT==="food")?1:1+Math.sin(t*0.0016+n.ph)*0.035;   // 食材タブとアイコンは拡大縮小を止めて軽くする
     const nd=E.nd,ol=E.ol;
     if(iconData){
-      const sc=(n.r/50)*br;
+      const sc=(n.r/50)*br/Math.max(vk,0.35);
       const st=freezeFoodMotion?0:Math.min((n.mSpd||0)*0.055,0.22);
       const jg=freezeFoodMotion?0:(n.jig||0)*Math.sin(t*0.005)*0.10;
       const sx=1+st+jg,sy=1-st*0.62-jg*0.45,rot=freezeFoodMotion?0:((n.mAng||0)*180/Math.PI)*(st*0.12+jg*0.08);
@@ -2145,7 +2144,8 @@ function step(t){
       }
     }else{
       [nb,nd,ol,E.gr].forEach(el=>{if(!el)return;el.removeAttribute("fill-rule");el.removeAttribute("clip-rule");});
-      nb.setAttribute("transform",`translate(${n.x.toFixed(1)} ${n.y.toFixed(1)}) scale(${br.toFixed(3)})`);
+      const nodeScale=br/Math.max(vk,0.35);
+      nb.setAttribute("transform",`translate(${n.x.toFixed(1)} ${n.y.toFixed(1)}) scale(${nodeScale.toFixed(4)})`);
       if(nd){nd.setAttribute("opacity","0");nd.setAttribute("d","");}
       if(ol){ol.setAttribute("opacity","0");ol.setAttribute("d","");}
       if(E.gr)E.gr.setAttribute("transform",nb.getAttribute("transform"));
@@ -2192,10 +2192,12 @@ function step(t){
     const sb=E.sb;
     if(n.badge){
       // 位置は transform でまとめて指定。色や太さなど変わらない属性は最初の一度だけ。
-      sb.setAttribute("transform",`translate(${(n.x+n.r*0.72).toFixed(1)} ${(n.y-n.r*0.62).toFixed(1)})`);
+      const bz=Math.max(vk,0.35);
+      sb.setAttribute("transform",`translate(${(n.x+(n.r/bz)*0.72).toFixed(1)} ${(n.y-(n.r/bz)*0.62).toFixed(1)})`);
       if(n._bdg!==n.badge){n._bdg=n.badge;
-        sb.setAttribute("cx","0");sb.setAttribute("cy","0");sb.setAttribute("r","5.5");
+        sb.setAttribute("cx","0");sb.setAttribute("cy","0");
         sb.setAttribute("fill",n.badge==="w"?"#3d8bd6":"#e0972a");sb.setAttribute("stroke","#fff");sb.setAttribute("stroke-width","1.3");}
+      sb.setAttribute("r",(5.5/Math.max(vk,0.35)).toFixed(2));
       sb.setAttribute("opacity",(n.op*0.95).toFixed(2));}
     else if(sb.getAttribute("opacity")!=="0")sb.setAttribute("opacity",0);
     // このノードのラベルを前面(lf)に出すか背面(l)に出すか。
@@ -2213,8 +2215,9 @@ function step(t){
     const zGap=Math.max(vk,0.35);
     const FOOD_LABEL_BASE_GAP=13.1/zGap;
     const NODE_LABEL_BASE_GAP=14/zGap;
-    const foodBottom=(n.kind==="food"&&n.icon&&FOODICON_BOTTOM[n.icon]!=null)?n.y+n.r*FOODICON_BOTTOM[n.icon]:n.y+n.r;
-    const labelY=(n.kind==="food")?foodBottom+FOOD_LABEL_BASE_GAP:n.y+n.r+NODE_LABEL_BASE_GAP;
+    const renderR=n.r/zGap;
+    const foodBottom=(n.kind==="food"&&n.icon&&FOODICON_BOTTOM[n.icon]!=null)?n.y+renderR*FOODICON_BOTTOM[n.icon]:n.y+renderR;
+    const labelY=(n.kind==="food")?foodBottom+FOOD_LABEL_BASE_GAP:n.y+renderR+NODE_LABEL_BASE_GAP;
     tgt.setAttribute("x",n.x.toFixed(1));tgt.setAttribute("y",labelY.toFixed(1));
     if(tgt.textContent!==n.name)tgt.textContent=n.name;
     const labelFS=(active&&n.id===active)?16:(n.kind==="food"?11.5:14);
@@ -2366,7 +2369,7 @@ function foodPanY(){
   const rb=sr&&sr.getBoundingClientRect();
   if(!sv||!rb||!sv.height||!catLabels.length)return 0;
   const pxToVB=1000/sv.height;
-  const CAT_LABEL_FS=13;
+  const CAT_LABEL_FS=16.9;
   const targetTop=Math.max(0,rb.bottom-sv.top)*pxToVB+CAT_LABEL_FS;
   // 検索バー下端からカテゴリ名1文字ぶん空けて、カテゴリ帯の上端を合わせる。
   const mapTop=Math.min(...catLabels.map(c=>c.y))-16;
