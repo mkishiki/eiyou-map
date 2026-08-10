@@ -63,9 +63,6 @@
   #howto .srcmark{color:#c8452f;font-weight:750;}
   #howto .srcrows{font-size:11.5px;color:#5c5344;line-height:1.9;margin:2px 0 8px;background:#f2f0ec;border-radius:10px;padding:9px 11px;text-align:left;}
   #howto .srccalc{margin-top:7px;padding-top:7px;border-top:1px solid #ddd8ce;text-align:left;}
-  #howto .verify{display:flex;align-items:flex-start;justify-content:center;gap:44px;margin:8px 0 4px;}
-  #howto .verify-item{min-width:70px;text-align:center;font-size:10.5px;color:#6e6656;}
-  #howto .verify-item svg{position:static;width:62px;height:58px;margin:0 auto -1px;display:block;}
   #howto .fig svg{position:relative;width:100%;height:auto;display:block;overflow:visible;}
   #howto .cap{font-size:10.5px;color:#9a9284;text-align:center;margin-top:5px;line-height:1.5;}
   #howto .rulecap{text-align:left;margin:6px 0 10px;}
@@ -82,8 +79,9 @@
   .legline{display:flex;flex-direction:column;gap:5px;padding:6px 0 0;border-top:1px solid #f2f0ec;}
   .legline b{font-size:10px;color:#9a9284;font-weight:600;}
   .legline .linekey{display:inline-flex;align-items:center;gap:7px;font-size:11px;color:#6e6656;}
-  .legline i{display:inline-block;width:25px;height:0;border-top:2px solid #8f887b;flex:none;}
-  .legline .line-dash{border-top-style:dashed;}
+  .legline i{display:inline-block;width:25px;height:1.2px;background:rgba(167,162,147,.75);flex:none;}
+  /* 25pxを5等分し、必ず「線・空白・線・空白・線」の3本で見せる。 */
+  .legline .line-dash{background:linear-gradient(to right,rgba(167,162,147,.75) 0 20%,transparent 20% 40%,rgba(167,162,147,.75) 40% 60%,transparent 60% 80%,rgba(167,162,147,.75) 80% 100%);}
 
   .serving-open{margin-top:7px;border:1px solid #ddd8ce;background:#fff;color:#6e6656;font:inherit;font-size:11.5px;padding:7px 10px;border-radius:8px;cursor:pointer;}
   #srcbox.serving-view{overflow:hidden;}
@@ -158,7 +156,7 @@
       <div class="leghue" style="padding-bottom:8px">
         <b>色</b>
         <span class="hue" style="--c:#d9d3f2">水溶性ビタミン</span>
-        <span class="hue" style="--c:#f6dfae">脂質・脂溶性</span>
+        <span class="hue" style="--c:#f6dfae">脂質・脂溶性ビタミン</span>
         <span class="hue" style="--c:#d6ecc7">食物繊維</span>
         <span class="hue" style="--c:#ecd6c6">たんぱく質・微量ミネラル</span>
         <span class="hue" style="--c:#dfe6ee">ミネラル</span>
@@ -235,17 +233,6 @@
               <b>220mg ÷ 650mg <span class="srcmark">*2</span> × 100 ＝ 34%</b>
             </div>
           </div>
-          <div class="verify" aria-label="含有量の確認状態">
-            <div class="verify-item">
-              <svg viewBox="0 0 62 58"><g class="info-demo-node" data-x="31" data-y="29" data-r="24.5" data-fill="#d9d3c7" data-food="牛乳" data-look-x="100" data-look-y="29"></g></svg>
-              確認済み
-            </div>
-            <div class="verify-item">
-              <svg viewBox="0 0 62 58"><g class="info-demo-node" data-x="31" data-y="29" data-r="24.5" data-fill="#d9d3c7" data-food="牛乳" data-dash="1" data-look-x="-40" data-look-y="29"></g></svg>
-              照合中
-            </div>
-          </div>
-
           <h4>このアプリの基準</h4>
           <div class="target"><b>30〜49歳・女性</b><br>月経あり ／ 身体活動レベル：ふつう<br>一日の目安量 → 食事摂取基準 <span class="srcmark">*2</span></div>
         </div>
@@ -1353,7 +1340,7 @@ const SOURCES=[
  {t:"Dietary Supplement Fact Sheets",o:"NIH Office of Dietary Supplements (ODS)",n:"栄養素どうしの吸収・代謝・利用と、各栄養素の主な生理機能の関係を確認する主出典。",u:"https://ods.od.nih.gov/factsheets/list-all/"},
  {t:"NIH / NIDDK・NIH News in Health",o:"National Institutes of Health",n:"食物繊維と腸・糖吸収など、ODSに専用ファクトシートがない関係の確認に使用。",u:"https://www.nih.gov/"}
 ];
-const DISCLAIMER="このアプリは栄養素どうしの関係を眺めるためのものです。病気の診断・治療・予防を目的としたものではありません。体調や持病について判断が必要なときは、医師や管理栄養士に相談してください。";
+const DISCLAIMER="このアプリのURLの共有・転載・複製・二次利用は、制作者の岸木の許諾を得てください。<br><br>このアプリは栄養素どうしの関係を眺めるためのものです。病気の診断・治療・予防を目的としたものではありません。体調や持病について判断が必要なときは、医師や管理栄養士に相談してください。";
 
 
 // ===== 世界はひとつ。栄養素の region と 食材の region が同じ座標平面にある =====
@@ -1397,7 +1384,7 @@ const foodIconLight=col=>mixHex(col,'#ffffff',0.04);
 const foodIconDark=col=>mixHex(col,'#000000',0.14);
 const PT=12;
 let nodes={},edges=[],catLabels=[],groupLabels=[];
-const APPVER="v1.214";   // ルール: 実際の出力ごとに必ず +0.001
+const APPVER="v1.222";   // ルール: 実際の出力ごとに必ず +0.001
 let ADJREL={},FOODOF={},NUTOF={},EFFOF={},NUTEFF={},BLKOF={},BLKBY={};
 let NOW=0,active=null,relList=[],relAssign={},relRad={};
 let SEARCH="",matched={},matchN=0,FRONT="nut",switchBoost=0,stage=0,foodHidden=0;
@@ -1466,7 +1453,8 @@ function buildDOM(){let s=`<g id="view"><rect x="-4000" y="-4000" width="12000" 
   s+=`<g id="catanchor-bg"></g>`;
   // --- ノード層 ---
   s+=`<g id="nodelayer">`;
-  Object.values(nodes).forEach(n=>s+=`<g id="g_${n.id}" style="cursor:pointer"><path id="nb_${n.id}"/><path id="nd_${n.id}"/><path id="ol_${n.id}" fill="none" opacity="0"/><path id="gr_${n.id}" fill="none" opacity="0"/><g id="eyes_${n.id}"></g><circle id="sol_${n.id}" opacity="0"/></g>`);
+  // 輪郭を塗りより先に描き、倍幅の内側半分を塗りで隠すことで外側だけに見せる。
+  Object.values(nodes).forEach(n=>s+=`<g id="g_${n.id}" style="cursor:pointer"><path id="ol_${n.id}" fill="none" opacity="0"/><path id="nb_${n.id}"/><path id="nd_${n.id}"/><path id="gr_${n.id}" fill="none" opacity="0"/><g id="eyes_${n.id}"></g><circle id="sol_${n.id}" opacity="0"/></g>`);
   s+=`</g>`;
   // --- 前面ラベル層：選択中ノードの文字・エッジラベル・グループラベル。ノードの上 ---
   s+=`<g id="labels-fg" style="paint-order:stroke" stroke="#fff" stroke-width="3.2" stroke-linejoin="round">`;
@@ -1476,7 +1464,7 @@ function buildDOM(){let s=`<g id="view"><rect x="-4000" y="-4000" width="12000" 
   s+=`</g>`;
   // --- カテゴリ弧文字の定位置（最前）。ここに置いておき、選択時だけ catanchor-bg へ移す ---
   s+=`<g id="catanchor-fg"><g id="catlabels">`;
-  catLabels.forEach((c,i)=>{const txt=[...(c.name+(CATEMOJI[c.name]||""))];const R=118,step=18/R,span=(txt.length-1)*step;
+  catLabels.forEach((c,i)=>{const txt=[...c.name];const R=118,step=18/R,span=(txt.length-1)*step;
     const acx=c.x,acy=c.y+R,a0=-Math.PI/2-span/2,a1=-Math.PI/2+span/2;
     const px=a=>[(acx+Math.cos(a)*R).toFixed(1),(acy+Math.sin(a)*R).toFixed(1)];
     const p0=px(a0-step*0.75),p1=px(a1+step*0.75);
@@ -2089,7 +2077,12 @@ function step(t){
     const wobT=(idle||(A&&n.id===active)||SEARCH||bgStill)?0:1;
     if(n.wob===undefined)n.wob=1;
     n.wob+=(wobT-n.wob)*E2(bgStill?0.4:0.05);   // 背景は速く止める。放置時はゆっくり
-    if(n.wob>0.002){const amp=(FRONT==="food"&&!A&&!SEARCH&&n.kind==="food")?2.5:6;tx+=Math.sin(t*0.0009+n.ph)*amp*n.wob;ty+=Math.cos(t*0.0011+n.ph)*amp*n.wob;}
+    if(n.wob>0.002){
+      // 栄養素のまわりに集まった食材は、カテゴリの塊が散って見えないよう揺れ幅を半分にする。
+      const gatheredFood=A&&A.kind==="nut"&&n.kind==="food"&&relList.indexOf(n.id)>=0;
+      const amp=gatheredFood?3:((FRONT==="food"&&!A&&!SEARCH&&n.kind==="food")?2.5:6);
+      tx+=Math.sin(t*0.0009+n.ph)*amp*n.wob;ty+=Math.cos(t*0.0011+n.ph)*amp*n.wob;
+    }
     n.px=n.x;n.py=n.y;n.x+=(tx-n.x)*E2(ease);n.y+=(ty-n.y)*E2(ease);n.r+=(tr-n.r)*E2((A&&relList.indexOf(n.id)>=0&&n.surfaced)?0.16:0.09);
     // 中心・まわりは透明度を即1にする（緩和の途中で半透明になって背景が透けるのを防ぐ）。
     // ふわっと湧く感じは位置と大きさのアニメで出しているので、透明度は飛ばしてよい。
@@ -2109,7 +2102,19 @@ function step(t){
     else{ldx=Math.sin(t*0.0007+n.ph);ldy=Math.cos(t*0.0007+n.ph);}
     const lm=Math.hypot(ldx,ldy)||1;n.pd.x+=((ldx/lm)-n.pd.x)*0.07;n.pd.y+=((ldy/lm)-n.pd.y)*0.07;});
 
-  edges.forEach((e,i)=>{const a=nodes[e.a],b=nodes[e.b];
+  // 状態に応じて、実際に表示候補になる線だけを更新する。
+  // 食材↔栄養素の約1,000本を毎フレーム総当たりしないことで、スマホの負荷を抑える。
+  if(!step._edgeIndex){
+    const byNode=new Map(),nonHas=[];
+    edges.forEach((e,i)=>{if(e.kind!=="has")nonHas.push(i);[e.a,e.b].forEach(id=>{if(!byNode.has(id))byNode.set(id,[]);byNode.get(id).push(i);});});
+    step._edgeIndex={byNode,nonHas,last:new Set()};
+  }
+  const ei=step._edgeIndex,need=new Set();
+  if(A)(ei.byNode.get(active)||[]).forEach(i=>need.add(i));
+  else if(FRONT==="nut")ei.nonHas.forEach(i=>need.add(i));
+  else if(SEARCH)ei.nonHas.forEach(i=>need.add(i));
+  const edgeWork=new Set([...need,...ei.last]);
+  edgeWork.forEach(i=>{const e=edges[i],a=nodes[e.a],b=nodes[e.b];
     // 要素参照はキャッシュ（毎フレーム getElementById を叩かない）
     let E=e._el;
     if(!E){E=e._el={p:document.getElementById("e"+i),
@@ -2167,6 +2172,7 @@ function step(t){
       el.setAttribute("x",lx);el.setAttribute("y",ly.toFixed(1));
       setA(el,"fill",rc.c);setA(el,"opacity",1);setEdgeText(el,rc.t,lx,ly);}
     else if(el.getAttribute("opacity")!=="0"){el.setAttribute("opacity",0);el._opacity=0;el.textContent="";}});
+  ei.last=need;
 
   Object.values(nodes).forEach(n=>{
     // 要素参照はキャッシュ（毎フレーム getElementById を叩かない）
@@ -2227,7 +2233,7 @@ function step(t){
         const lite=foodIconLight(n.col),dark=foodIconDark(n.col);
         nb.setAttribute("fill",inv?dark:lite);nb.setAttribute("stroke","none");
         if(nd){nd.setAttribute("fill",inv?lite:dark);nd.setAttribute("stroke","none");nd.setAttribute("opacity",iconData.dark?1:0);}
-        if(ol){ol.setAttribute("fill","none");ol.setAttribute("opacity","1");if(prov){ol.setAttribute("stroke","#fff");ol.setAttribute("stroke-width","2");ol.removeAttribute("stroke-dasharray");}else{ol.setAttribute("stroke","#000");ol.setAttribute("stroke-width","1.2");ol.setAttribute("stroke-dasharray","3 3");}}
+        if(ol){ol.setAttribute("fill","none");ol.setAttribute("opacity","1");if(prov){ol.setAttribute("stroke","#fff");ol.setAttribute("stroke-width","4");ol.removeAttribute("stroke-dasharray");}else{ol.setAttribute("stroke","#000");ol.setAttribute("stroke-width","2.4");ol.setAttribute("stroke-dasharray","3 3");}}
         E.gr.setAttribute("opacity","0");E.gr.setAttribute("fill","none");E.gr.setAttribute("stroke","none");E.gr.removeAttribute("stroke-dasharray");
       }else{nb.setAttribute("fill",n.col);
         if(nd){nd.setAttribute("opacity","0");nd.setAttribute("stroke","none");}
@@ -2298,7 +2304,7 @@ function step(t){
         if(fnn&&fnn.kind==="food"&&FOODCAT[fid]===cat&&relRad[fid]!=null&&relRad[fid]<myR-0.01){nearCatFood=false;break;}
       }
     }
-    tgt.setAttribute("font-weight",nearCatFood?700:((active&&n.id===active)?700:500));
+    tgt.setAttribute("font-weight",nearCatFood?800:((active&&n.id===active)?700:500));
     // GRP（ヘム鉄/非ヘム鉄・飽和/不飽和・動物性/植物性）を食材ラベルの文字色で示す。
     const lgrc=(n.kind==="food"&&A&&A.kind==="nut"&&relList.indexOf(n.id)>=0)?grpColorOf(active,n.id):null;
     const lcol=lgrc||"#3a3226";
@@ -2333,7 +2339,7 @@ function step(t){
   // ノード状態でラベルの基準サイズが変わるため、描画末尾でもズーム補正を同期。
   updateMapTextScale();
   // 全員が寝る時刻を過ぎ、かつ全ノードがほぼ静止したら描画ループを止める（発熱ゼロ）
-  if(!active&&!SEARCH&&idle&&maxSp<0.15&&t-lastInteract>IDLE_MS+5500){asleep=true;running=false;return;}
+  if(idle&&maxSp<0.15&&t-lastInteract>IDLE_MS+5500){asleep=true;running=false;return;}
   requestAnimationFrame(step);}
 
 // ===== 検索 =====
@@ -2440,15 +2446,17 @@ function foodPanY(){
   return targetTop-mapTop;
 }
 let _infoDemoRunning=false;
+let _wakeInfoDemos=()=>{};
 function startInfoDemos(){
-  if(_infoDemoRunning)return;_infoDemoRunning=true;
+  if(_infoDemoRunning){_wakeInfoDemos();return;}_infoDemoRunning=true;
   const els=[...document.querySelectorAll(".info-demo-node")];
   const demo=els.map((g,i)=>{
     const x=+g.dataset.x,y=+g.dataset.y,r=+g.dataset.r,food=g.dataset.food||null,effect=g.dataset.effect||null;
     const fill=g.dataset.nut&&NUT[g.dataset.nut]?NUT[g.dataset.nut][1]:(g.dataset.effect&&EFFECTS[g.dataset.effect]?EFFECTS[g.dataset.effect].fill:(g.dataset.fill||FCOLOR));
     const dash=g.dataset.dash==="1",lookX=g.dataset.lookX?+g.dataset.lookX:null,lookY=g.dataset.lookY?+g.dataset.lookY:null;
     const icon=food?FOODICONS[foodIconOf(food)]:null;
-    const seed=0.7+i*1.137,pa=Array.from({length:PT},(_,k)=>seed+k*.83),am=Array.from({length:PT},(_,k)=>.045+((k*7+i*3)%5)*.009);
+    // メインのノード（振幅 0.06〜0.12）に近い輪郭のゆらぎ。図解内なので上限だけ少し抑える。
+    const seed=0.7+i*1.137,pa=Array.from({length:PT},(_,k)=>seed+k*.83),am=Array.from({length:PT},(_,k)=>.06+((k*7+i*3)%5)*.012);
     const vr=food?r*1.16:r;
     const p=document.createElementNS("http://www.w3.org/2000/svg","path");
     const d=document.createElementNS("http://www.w3.org/2000/svg","path");
@@ -2459,12 +2467,12 @@ function startInfoDemos(){
       ol.setAttribute("d",icon.outline||"");ol.setAttribute("fill","none");ol.setAttribute("stroke",dash?"#000":"#fff");
       // シルエットは path を r/50 に縮小するため、線まで縮まないよう表示後の太さを指定する。
       // 本編の通常食材 r=20.4 / 実線2 / 点線1.2 と同じ比率。
-      const mainFoodR=20.4,targetStroke=(dash?1.2:2)*(vr/mainFoodR);
+      const mainFoodR=20.4,targetStroke=(dash?2.4:4)*(vr/mainFoodR);
       ol.setAttribute("stroke-width",targetStroke.toFixed(2));ol.setAttribute("vector-effect","non-scaling-stroke");
       if(dash){const dd=3*(vr/mainFoodR);ol.setAttribute("stroke-dasharray",`${dd.toFixed(2)} ${dd.toFixed(2)}`);}
       const sc=vr/50,tx=-50*sc,ty=-50*sc,tf=`matrix(${sc} 0 0 ${sc} ${tx} ${ty})`;
       p.setAttribute("transform",tf);d.setAttribute("transform",tf);ol.setAttribute("transform",tf);
-      g.appendChild(p);g.appendChild(d);g.appendChild(ol);
+      g.appendChild(ol);g.appendChild(p);g.appendChild(d);
     }else{
       p.setAttribute("fill",fill);p.setAttribute("stroke",dash?"#000":"#fff");p.setAttribute("stroke-width",dash?"1.2":"2");
       if(dash)p.setAttribute("stroke-dasharray","3 3");g.appendChild(p);
@@ -2480,8 +2488,11 @@ function startInfoDemos(){
   });
   // モーダル内だけの「世界時間」。
   // モーダルが開いている間だけ進み、閉じている間はスリープ時計も表情時計も止まる。
-  let modalWorldClock=0,modalWorldLastInteract=0,modalWorldLastTick=null,modalWorldAwake=true;
-  const wakeModalWorld=()=>{modalWorldAwake=true;modalWorldLastInteract=modalWorldClock;demo.forEach(n=>{if(!n.dragging)n.mSpd=Math.max(n.mSpd,0.01);});};
+  let modalWorldClock=0,modalWorldLastInteract=0,modalWorldLastTick=null,modalWorldAwake=true,modalRafRunning=false,modalLastDraw=0;
+  let tick;
+  const scheduleModal=()=>{if(modalRafRunning||!document.getElementById("srcmodal").classList.contains("open"))return;modalRafRunning=true;requestAnimationFrame(tick);};
+  const wakeModalWorld=()=>{modalWorldAwake=true;modalWorldLastInteract=modalWorldClock;demo.forEach(n=>{if(!n.dragging)n.mSpd=Math.max(n.mSpd,0.01);});scheduleModal();};
+  _wakeInfoDemos=wakeModalWorld;
   document.getElementById("srcmodal").addEventListener("pointerdown",wakeModalWorld,true);
   const demoByKey=new Map();
   demo.forEach(o=>demoByKey.set(`${o.svg.__demoId||(o.svg.__demoId=Math.random().toString(36).slice(2))}:${o.x},${o.y}`,o));
@@ -2498,17 +2509,19 @@ function startInfoDemos(){
   });
   const mkPath=(o,t)=>{if(o.effect)return circlePath(o.vr);const sx=1+(o.jig||0)*Math.sin(t*.005)*.2,sy=1-(o.jig||0)*Math.sin(t*.005)*.2,st=Math.min((o.mSpd||0)*.09,.6),P=[];for(let i=0;i<PT;i++){const a=i/PT*6.283+o.seed;let rr=o.vr*(1+(o.freeze?0:o.am[i])*Math.sin(t*.0012+o.pa[i]));const al=Math.cos(a-(o.mAng||0));rr*=1+st*al*al;P.push([Math.cos(a)*rr*sx,Math.sin(a)*rr*sy]);}const md=(A,B)=>[(A[0]+B[0])/2,(A[1]+B[1])/2],stp=md(P[PT-1],P[0]);let dd=`M ${stp[0].toFixed(1)} ${stp[1].toFixed(1)} `;for(let i=0;i<PT;i++){const m=md(P[i],P[(i+1)%PT]);dd+=`Q ${P[i][0].toFixed(1)} ${P[i][1].toFixed(1)} ${m[0].toFixed(1)} ${m[1].toFixed(1)} `;}return dd+"Z";};
   const mkEyes=(o,t)=>{const ox=o.r*.35,oy=-o.r*.08,sz=o.r*.195,dk="#2a2a2a",surprised=o.dragging||t<o.surpriseUntil,moving=o.mSpd>1.5||modalWorldClock<o.postMoveUntil,sleeping=!o.dragging&&modalWorldClock-modalWorldLastInteract>10000+o.sleepDelay;let gx=.08,gy=.12;if(o.lookX!==null&&o.lookY!==null){const dx=o.lookX-o.x,dy=o.lookY-o.y,L=Math.hypot(dx,dy)||1;gx=dx/L*.32;gy=dy/L*.32;}const rnd=cx=>`<circle cx="${cx.toFixed(1)}" cy="${oy.toFixed(1)}" r="${sz.toFixed(1)}" fill="#fff"/><circle cx="${(cx+sz*gx).toFixed(1)}" cy="${(oy+sz*gy).toFixed(1)}" r="${(sz*.55).toFixed(1)}" fill="${dk}"/>`;const sur=cx=>`<circle cx="${cx.toFixed(1)}" cy="${oy.toFixed(1)}" r="${(sz*1.28).toFixed(1)}" fill="#fff"/><circle cx="${cx.toFixed(1)}" cy="${oy.toFixed(1)}" r="${(sz*.42).toFixed(1)}" fill="${dk}"/>`;const up=cx=>`<path d="M ${(cx-sz).toFixed(1)} ${(oy+sz*.3).toFixed(1)} A ${sz.toFixed(1)} ${sz.toFixed(1)} 0 0 1 ${(cx+sz).toFixed(1)} ${(oy+sz*.3).toFixed(1)}" fill="none" stroke="${dk}" stroke-width="${(sz*.5).toFixed(1)}" stroke-linecap="round"/>`;const chev=(cx,d)=>`<polyline points="${(cx-d*sz).toFixed(1)},${(oy-sz).toFixed(1)} ${(cx+d*sz*.7).toFixed(1)},${oy.toFixed(1)} ${(cx-d*sz).toFixed(1)},${(oy+sz).toFixed(1)}" fill="none" stroke="${dk}" stroke-width="${(sz*.5).toFixed(1)}" stroke-linecap="round" stroke-linejoin="round"/>`;const flat=cx=>`<line x1="${(cx-sz).toFixed(1)}" y1="${oy.toFixed(1)}" x2="${(cx+sz).toFixed(1)}" y2="${oy.toFixed(1)}" stroke="${dk}" stroke-width="${(sz*.5).toFixed(1)}" stroke-linecap="round"/>`;if(surprised)return sur(-ox)+sur(ox);if(moving)return o.moveHappy?(up(-ox)+up(ox)):(chev(-ox,1)+chev(ox,-1));if(sleeping)return flat(-ox)+flat(ox);return rnd(-ox)+rnd(ox);};
-  const tick=t=>{const modalOpen=document.getElementById("srcmodal").classList.contains("open");if(modalOpen){if(modalWorldLastTick!==null)modalWorldClock+=Math.min(100,t-modalWorldLastTick);modalWorldLastTick=t;demo.forEach(o=>{if(!o.dragging){const px=o.cx,py=o.cy;o.cx+=(o.x-o.cx)*.13;o.cy+=(o.y-o.cy)*.13;const mx=o.cx-px,my=o.cy-py,sp=Math.hypot(mx,my);o.mSpd+=(sp-o.mSpd)*.12;if(sp>.1)o.mAng=Math.atan2(my,mx);o.jig*=0.9;o.freeze=false;}else{o.jig*=0.9;}const dx=o.dragging?0:Math.sin(t*.00072+o.seed)*1.15,dy=o.dragging?0:Math.cos(t*.00061+o.seed*1.7)*.9;o.g.setAttribute("transform",`translate(${(o.cx+dx).toFixed(2)} ${(o.cy+dy).toFixed(2)})`);if(o.icon){const st=Math.min((o.mSpd||0)*0.055,0.22),jg=(o.jig||0)*Math.sin(t*.005)*0.10,sx=1+st+jg,sy=1-st*0.62-jg*0.45,rot=((o.mAng||0)*180/Math.PI)*(st*0.12+jg*0.08),sc=o.vr/50,tf=`rotate(${rot.toFixed(2)}) scale(${(sc*sx).toFixed(4)} ${(sc*sy).toFixed(4)}) translate(-50 -50)`;o.p.setAttribute("transform",tf);o.d.setAttribute("transform",tf);o.ol.setAttribute("transform",tf);}else{o.p.setAttribute("d",mkPath(o,t));}const eyeActive=(o.dragging||t<o.surpriseUntil)||(o.defaultEyes&&modalWorldAwake);if(eyeActive){o.eyes.innerHTML=mkEyes(o,t);}else if(o.eyes.innerHTML){o.eyes.innerHTML="";}});
+  tick=t=>{modalRafRunning=false;const modalOpen=document.getElementById("srcmodal").classList.contains("open");if(!modalOpen){modalWorldLastTick=null;return;}if(t-modalLastDraw<33){scheduleModal();return;}modalLastDraw=t;if(modalWorldLastTick!==null)modalWorldClock+=Math.min(100,t-modalWorldLastTick);modalWorldLastTick=t;if(modalWorldClock-modalWorldLastInteract>15500)modalWorldAwake=false;let modalMaxSp=0;demo.forEach(o=>{if(!o.dragging){const px=o.cx,py=o.cy;o.cx+=(o.x-o.cx)*.13;o.cy+=(o.y-o.cy)*.13;const mx=o.cx-px,my=o.cy-py,sp=Math.hypot(mx,my);modalMaxSp=Math.max(modalMaxSp,sp);o.mSpd+=(sp-o.mSpd)*.12;if(sp>.1)o.mAng=Math.atan2(my,mx);o.jig*=0.9;o.freeze=false;}else{o.jig*=0.9;}/* メインの6px幅・周期に寄せつつ、説明図の関係が崩れないよう4pxに抑える。 */const dx=(o.dragging||!modalWorldAwake)?0:Math.sin(t*.0009+o.seed)*4,dy=(o.dragging||!modalWorldAwake)?0:Math.cos(t*.0011+o.seed*1.7)*4;o.g.setAttribute("transform",`translate(${(o.cx+dx).toFixed(2)} ${(o.cy+dy).toFixed(2)})`);if(o.icon){const st=Math.min((o.mSpd||0)*0.055,0.22),jg=(o.jig||0)*Math.sin(t*.005)*0.10,sx=1+st+jg,sy=1-st*0.62-jg*0.45,rot=((o.mAng||0)*180/Math.PI)*(st*0.12+jg*0.08),sc=o.vr/50,tf=`rotate(${rot.toFixed(2)}) scale(${(sc*sx).toFixed(4)} ${(sc*sy).toFixed(4)}) translate(-50 -50)`;o.p.setAttribute("transform",tf);o.d.setAttribute("transform",tf);o.ol.setAttribute("transform",tf);}else{o.p.setAttribute("d",mkPath(o,t));}const eyeActive=(o.dragging||t<o.surpriseUntil)||o.defaultEyes;if(eyeActive){o.eyes.innerHTML=mkEyes(o,t);}else if(o.eyes.innerHTML){o.eyes.innerHTML="";}});
     demoLinks.forEach(l=>{
       const sid=l.svg.__demoId;
       const a=demoByKey.get(`${sid}:${l.ax},${l.ay}`),b=demoByKey.get(`${sid}:${l.bx},${l.by}`);
       const ax=a?a.cx:l.ax,ay=a?a.cy:l.ay,bx=b?b.cx:l.bx,by=b?b.cy:l.by;
       l.p.setAttribute("d",`M ${ax.toFixed(2)} ${ay.toFixed(2)} L ${bx.toFixed(2)} ${by.toFixed(2)}`);
     });
-  }else{modalWorldLastTick=null;}requestAnimationFrame(tick);};
-  requestAnimationFrame(tick);
+    if(modalWorldAwake||modalDemoDragging>0||modalMaxSp>.05)scheduleModal();};
+  scheduleModal();
 }
 const SERVINGS=[{"cat":"魚介","food":"鮭","g":80.0},{"cat":"魚介","food":"かつお","g":80.0},{"cat":"魚介","food":"まぐろ","g":80.0},{"cat":"魚介","food":"あさり","g":40.0},{"cat":"魚介","food":"うなぎ","g":80.0},{"cat":"魚介","food":"さんま","g":80.0},{"cat":"魚介","food":"牡蠣","g":60.0},{"cat":"魚介","food":"さば","g":80.0},{"cat":"魚介","food":"いわし","g":80.0},{"cat":"魚介","food":"ぶり","g":80.0},{"cat":"魚介","food":"たら","g":80.0},{"cat":"魚介","food":"えび","g":60.0},{"cat":"魚介","food":"ほたて","g":60.0},{"cat":"魚介","food":"いか","g":80.0},{"cat":"魚介","food":"たこ","g":60.0},{"cat":"魚介","food":"ツナ缶","g":70.0},{"cat":"魚介","food":"しらす干し","g":10.0},{"cat":"魚介","food":"あじ","g":80.0},{"cat":"魚介","food":"ちくわ","g":50.0},{"cat":"肉・卵","food":"鶏むね","g":80.0},{"cat":"肉・卵","food":"ハム","g":20.0},{"cat":"肉・卵","food":"ベーコン","g":20.0},{"cat":"肉・卵","food":"卵","g":50.0},{"cat":"肉・卵","food":"牛脂","g":5.0},{"cat":"肉・卵","food":"牛もも","g":100.0},{"cat":"肉・卵","food":"鶏もも","g":80.0},{"cat":"肉・卵","food":"ソーセージ","g":40.0},{"cat":"肉・卵","food":"豚ロース","g":80.0},{"cat":"肉・卵","food":"豚ばら","g":80.0},{"cat":"肉・卵","food":"豚もも","g":80.0},{"cat":"肉・卵","food":"豚ひき肉","g":80.0},{"cat":"肉・卵","food":"豚レバー","g":50.0},{"cat":"肉・卵","food":"ささみ","g":60.0},{"cat":"肉・卵","food":"鶏レバー","g":50.0},{"cat":"肉・卵","food":"鶏ひき肉","g":80.0},{"cat":"乳製品","food":"牛乳","g":200.0},{"cat":"乳製品","food":"チーズ","g":20.0},{"cat":"乳製品","food":"バター","g":10.0},{"cat":"乳製品","food":"生クリーム","g":20.0},{"cat":"乳製品","food":"ヨーグルト","g":100.0},{"cat":"乳製品","food":"低脂肪乳","g":200.0},{"cat":"乳製品","food":"スキムミルク","g":20.0},{"cat":"豆・大豆","food":"大豆","g":50.0},{"cat":"豆・大豆","food":"納豆","g":45.0},{"cat":"豆・大豆","food":"枝豆","g":50.0},{"cat":"豆・大豆","food":"絹ごし豆腐","g":150.0},{"cat":"豆・大豆","food":"木綿豆腐","g":150.0},{"cat":"豆・大豆","food":"厚揚げ","g":100.0},{"cat":"豆・大豆","food":"油揚げ","g":30.0},{"cat":"豆・大豆","food":"豆乳","g":200.0},{"cat":"豆・大豆","food":"きなこ","g":10.0},{"cat":"豆・大豆","food":"ひよこ豆","g":50.0},{"cat":"豆・大豆","food":"レンズ豆","g":50.0},{"cat":"豆・大豆","food":"小豆","g":50.0},{"cat":"緑黄色野菜","food":"ほうれん草","g":70.0},{"cat":"緑黄色野菜","food":"小松菜","g":70.0},{"cat":"緑黄色野菜","food":"赤パプリカ","g":50.0},{"cat":"緑黄色野菜","food":"ブロッコリー","g":60.0},{"cat":"緑黄色野菜","food":"にんじん","g":60.0},{"cat":"緑黄色野菜","food":"かぼちゃ","g":80.0},{"cat":"緑黄色野菜","food":"トマト","g":150.0},{"cat":"緑黄色野菜","food":"ピーマン","g":30.0},{"cat":"緑黄色野菜","food":"アスパラガス","g":60.0},{"cat":"緑黄色野菜","food":"モロヘイヤ","g":60.0},{"cat":"緑黄色野菜","food":"水菜","g":50.0},{"cat":"緑黄色野菜","food":"チンゲンサイ","g":80.0},{"cat":"緑黄色野菜","food":"オクラ","g":60.0},{"cat":"緑黄色野菜","food":"にら","g":50.0},{"cat":"緑黄色野菜","food":"春菊","g":60.0},{"cat":"緑黄色野菜","food":"しそ","g":5.0},{"cat":"緑黄色野菜","food":"黄パプリカ","g":50.0},{"cat":"その他の野菜","food":"ごぼう","g":60.0},{"cat":"その他の野菜","food":"切り干し大根","g":10.0},{"cat":"その他の野菜","food":"キャベツ","g":80.0},{"cat":"その他の野菜","food":"玉ねぎ","g":80.0},{"cat":"その他の野菜","food":"大根","g":100.0},{"cat":"その他の野菜","food":"きゅうり","g":50.0},{"cat":"その他の野菜","food":"白菜","g":100.0},{"cat":"その他の野菜","food":"なす","g":70.0},{"cat":"その他の野菜","food":"レタス","g":40.0},{"cat":"その他の野菜","food":"もやし","g":80.0},{"cat":"その他の野菜","food":"とうもろこし","g":100.0},{"cat":"その他の野菜","food":"セロリ","g":40.0},{"cat":"その他の野菜","food":"ズッキーニ","g":80.0},{"cat":"その他の野菜","food":"かぶ","g":60.0},{"cat":"その他の野菜","food":"れんこん","g":60.0},{"cat":"その他の野菜","food":"ゴーヤ","g":80.0},{"cat":"その他の野菜","food":"長ねぎ","g":60.0},{"cat":"その他の野菜","food":"カリフラワー","g":80.0},{"cat":"その他の野菜","food":"たけのこ","g":80.0},{"cat":"きのこ","food":"しいたけ","g":30.0},{"cat":"きのこ","food":"まいたけ","g":50.0},{"cat":"きのこ","food":"えのき","g":50.0},{"cat":"きのこ","food":"しめじ","g":50.0},{"cat":"きのこ","food":"エリンギ","g":40.0},{"cat":"きのこ","food":"なめこ","g":40.0},{"cat":"海藻","food":"わかめ","g":10.0},{"cat":"海藻","food":"ひじき","g":8.0},{"cat":"海藻","food":"のり","g":3.0},{"cat":"海藻","food":"昆布","g":5.0},{"cat":"海藻","food":"もずく","g":50.0},{"cat":"海藻","food":"めかぶ","g":50.0},{"cat":"果物","food":"バナナ","g":100.0},{"cat":"果物","food":"アボカド","g":70.0},{"cat":"果物","food":"キウイ","g":100.0},{"cat":"果物","food":"いちご","g":80.0},{"cat":"果物","food":"りんご","g":100.0},{"cat":"果物","food":"みかん","g":100.0},{"cat":"果物","food":"オレンジ","g":130.0},{"cat":"果物","food":"ぶどう","g":100.0},{"cat":"果物","food":"柿","g":150.0},{"cat":"果物","food":"梨","g":200.0},{"cat":"果物","food":"ブルーベリー","g":60.0},{"cat":"果物","food":"グレープフルーツ","g":150.0},{"cat":"果物","food":"桃","g":100.0},{"cat":"果物","food":"パイナップル","g":100.0},{"cat":"果物","food":"マンゴー","g":100.0},{"cat":"穀類・いも","food":"玄米","g":150.0},{"cat":"穀類・いも","food":"白米","g":150.0},{"cat":"穀類・いも","food":"パン","g":60.0},{"cat":"穀類・いも","food":"オートミール","g":40.0},{"cat":"穀類・いも","food":"中華めん","g":130.0},{"cat":"穀類・いも","food":"うどん","g":80.0},{"cat":"穀類・いも","food":"そば","g":80.0},{"cat":"穀類・いも","food":"パスタ","g":90.0},{"cat":"穀類・いも","food":"もち","g":50.0},{"cat":"穀類・いも","food":"シリアル","g":40.0},{"cat":"穀類・いも","food":"そうめん","g":70.0},{"cat":"穀類・いも","food":"キヌア","g":20.0},{"cat":"穀類・いも","food":"大麦","g":20.0},{"cat":"穀類・いも","food":"じゃがいも","g":100.0},{"cat":"穀類・いも","food":"さつまいも","g":100.0},{"cat":"穀類・いも","food":"里芋","g":60.0},{"cat":"種実・油","food":"アーモンド","g":25.0},{"cat":"種実・油","food":"ごま","g":6.0},{"cat":"種実・油","food":"オリーブ油","g":10.0},{"cat":"種実・油","food":"マヨネーズ","g":12.0},{"cat":"種実・油","food":"くるみ","g":15.0},{"cat":"種実・油","food":"カシューナッツ","g":15.0},{"cat":"種実・油","food":"ピーナッツ","g":15.0},{"cat":"種実・油","food":"えごま油","g":5.0},{"cat":"種実・油","food":"亜麻仁油","g":5.0},{"cat":"香味・調味料","food":"にんにく","g":10.0},{"cat":"香味・調味料","food":"しょうが","g":10.0},{"cat":"香味・調味料","food":"味噌","g":18.0},{"cat":"香味・調味料","food":"醤油","g":6.0},{"cat":"香味・調味料","food":"梅干し","g":10.0},{"cat":"香味・調味料","food":"ケチャップ","g":15.0},{"cat":"香味・調味料","food":"ソース","g":15.0},{"cat":"香味・調味料","food":"はちみつ","g":21.0},{"cat":"香味・調味料","food":"砂糖","g":6.0},{"cat":"香味・調味料","food":"みりん","g":6.0},{"cat":"酒・嗜好品","food":"ビール","g":350.0},{"cat":"酒・嗜好品","food":"日本酒","g":180.0},{"cat":"酒・嗜好品","food":"ワイン","g":120.0},{"cat":"酒・嗜好品","food":"焼酎","g":90.0},{"cat":"酒・嗜好品","food":"梅酒","g":60.0},{"cat":"酒・嗜好品","food":"チョコレート","g":30.0},{"cat":"酒・嗜好品","food":"ピュアココア","g":5.0},{"cat":"酒・嗜好品","food":"抹茶","g":2.0},{"cat":"酒・嗜好品","food":"クラッカー","g":40.0},{"cat":"酒・嗜好品","food":"ポップコーン","g":30.0}];
+// データ追加時に一食量一覧から漏れないよう、最新追加分も明示的に同期。
+SERVINGS.push({cat:"きのこ",food:"きくらげ",g:5.0});
 const SERVING_CAT_ORDER=Object.keys(CATPOS);
 const SERVING_CAT_NO=Object.fromEntries(SERVING_CAT_ORDER.map((cat,i)=>[cat,i+1]));
 const SERVING_FOOD_ORDER={};SERVING_CAT_ORDER.forEach(cat=>(CATLIST[cat]||[]).forEach((food,i)=>{SERVING_FOOD_ORDER[cat+"|"+food]=i;}));
@@ -2632,7 +2645,7 @@ svg.addEventListener("wheel",ev=>{wake();ev.preventDefault();const v=toVB(ev);co
 document.addEventListener("gesturestart",e=>e.preventDefault());
 const wrapEl=document.getElementById("wrap");
 ["touchstart","touchmove"].forEach(ev=>wrapEl.addEventListener(ev,e=>{if(e.target.closest("#info,#srcmodal,#ibtn,#searchwrap"))return;if(e.cancelable)e.preventDefault();},{passive:false}));
-loadHist();buildWorld();renderTrail();applyView();document.getElementById("ver").textContent=APPVER;document.title="eiyou map "+APPVER;lastInteract=performance.now();schedule();setTimeout(openFromHash,0);
+loadHist();buildWorld();renderTrail();applyView();document.getElementById("ver").textContent="eiyou map "+APPVER;document.title="eiyou map "+APPVER;lastInteract=performance.now();schedule();setTimeout(openFromHash,0);
 </script>
 </body>
 </html>
