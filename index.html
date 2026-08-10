@@ -1386,7 +1386,7 @@ const foodIconLight=col=>mixHex(col,'#ffffff',0.04);
 const foodIconDark=col=>mixHex(col,'#000000',0.14);
 const PT=12;
 let nodes={},edges=[],catLabels=[],groupLabels=[];
-const APPVER="v1.228";   // ルール: 実際の出力ごとに必ず +0.001
+const APPVER="v1.229";   // ルール: 実際の出力ごとに必ず +0.001
 let ADJREL={},FOODOF={},NUTOF={},EFFOF={},NUTEFF={},BLKOF={},BLKBY={};
 let NOW=0,active=null,relList=[],relAssign={},relRad={};
 let SEARCH="",matched={},matchN=0,FRONT="nut",switchBoost=0,stage=0,foodHidden=0;
@@ -2026,7 +2026,27 @@ function wake(){lastInteract=performance.now();asleep=false;Object.values(nodes)
 // 画面外では予約済みの描画も解除する。戻ったときは操作待ちにせず再開する。
 document.addEventListener("visibilitychange",()=>{if(document.hidden)stopMainLoop();else wake();});
 window.addEventListener("pagehide",stopMainLoop);
-window.addEventListener("pageshow",()=>{if(!document.hidden)wake();});
+window.addEventListener("pageshow",()=>{if(!document.hidden){wake();checkLatestVersion();}});
+
+// ホーム画面から開いた古いHTMLがブラウザキャッシュに残っていても、公開中の最新版を確認する。
+// 同じURLへ no-store + 時刻クエリで1回だけ取りに行き、APPVERが新しければその版へ差し替える。
+let latestCheckAt=0,latestCheckBusy=false;
+function appVerNumber(v){const m=String(v||"").match(/v(\d+(?:\.\d+)?)/);return m?Number(m[1]):0;}
+async function checkLatestVersion(){
+  const now=Date.now();
+  if(latestCheckBusy||now-latestCheckAt<60000)return;
+  latestCheckAt=now;latestCheckBusy=true;
+  try{
+    const check=new URL(location.href);check.hash="";check.searchParams.set("__fresh",String(now));
+    const res=await fetch(check.toString(),{cache:"no-store"});
+    if(!res.ok)return;
+    const html=await res.text(),m=html.match(/const APPVER="(v\d+(?:\.\d+)?)"/);
+    if(!m||appVerNumber(m[1])<=appVerNumber(APPVER))return;
+    const next=new URL(location.href);next.searchParams.delete("__fresh");next.searchParams.set("appver",m[1]);
+    location.replace(next.toString());
+  }catch(_){/* オフライン時は現在の版をそのまま使う */}
+  finally{latestCheckBusy=false;}
+}
 
 function step(t){
   rafId=0;
@@ -2135,8 +2155,11 @@ function step(t){
     const p=E.p;
     const hot=A&&(e.a===active||e.b===active);
     if(e.kind==="has"){
-      // 食材をタップしたときだけ、その食材と栄養素を線でつなぐ
-      const showHas=hot&&A&&A.kind==="food";
+      // 食材中心では関連栄養素への線を常時表示。栄養素中心では、食材をドラッグしている間だけ
+      // その1本を見せ、中心からの距離を固定したまま円弧上を動くことを視覚化する。
+      const draggingFood=A&&A.kind==="nut"&&dragId&&nodes[dragId]&&nodes[dragId].dragging&&nodes[dragId].kind==="food"&&
+        ((e.a===active&&e.b===dragId)||(e.b===active&&e.a===dragId));
+      const showHas=hot&&A&&(A.kind==="food"||draggingFood);
       if(!showHas){if(p._v===0)return;p._v=0;p.setAttribute("opacity",0);}
       else{p._v=1;p.setAttribute("d",`M ${a.x.toFixed(1)} ${a.y.toFixed(1)} L ${b.x.toFixed(1)} ${b.y.toFixed(1)}`);
         p.setAttribute("stroke",a.kind==="nut"?a.col:b.col);p.setAttribute("stroke-width",2.4);p.setAttribute("opacity",0.7);p.setAttribute("stroke-dasharray","none");}
@@ -2679,7 +2702,7 @@ function refreshFoodHomeView(){
 window.addEventListener("resize",refreshFoodHomeView,{passive:true});
 if(window.visualViewport)window.visualViewport.addEventListener("resize",refreshFoodHomeView,{passive:true});
 
-loadHist();buildWorld();renderTrail();applyView();document.getElementById("ver").textContent="eiyou map "+APPVER;document.title="eiyou map "+APPVER;lastInteract=performance.now();schedule();setTimeout(openFromHash,0);
+loadHist();buildWorld();renderTrail();applyView();document.getElementById("ver").textContent="eiyou map "+APPVER;document.title="eiyou map "+APPVER;lastInteract=performance.now();schedule();setTimeout(openFromHash,0);setTimeout(checkLatestVersion,250);
 </script>
 </body>
 </html>
