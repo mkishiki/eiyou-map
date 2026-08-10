@@ -115,7 +115,7 @@
   /* 地図ズームでも線幅は画面上で一定（Google Maps 的な見え方） */
   #view path,#view line,#view polyline{vector-effect:non-scaling-stroke;}
   #trailrow{display:flex;align-items:center;gap:6px;border-top:1px solid #f2f0ec;padding:6px 8px 6px 10px;min-height:40px;}
-  #trail{flex:1;display:flex;align-items:center;gap:4px;overflow-x:auto;white-space:nowrap;scrollbar-width:none;}
+  #trail{flex:1;display:flex;align-items:center;gap:4px;overflow-x:auto;white-space:nowrap;scrollbar-width:none;padding-right:4px;box-sizing:border-box;}
   #trail::-webkit-scrollbar{display:none;}
   #trail .crumb{font-size:12px;color:#9a9284;padding:3px 8px;border-radius:8px;background:#f2f0ec;cursor:pointer;flex:none;}
   #trail .crumb.cur{background:#8a8172;color:#fff;font-weight:600;}
@@ -1340,7 +1340,7 @@ const SOURCES=[
  {t:"Dietary Supplement Fact Sheets",o:"NIH Office of Dietary Supplements (ODS)",n:"栄養素どうしの吸収・代謝・利用と、各栄養素の主な生理機能の関係を確認する主出典。",u:"https://ods.od.nih.gov/factsheets/list-all/"},
  {t:"NIH / NIDDK・NIH News in Health",o:"National Institutes of Health",n:"食物繊維と腸・糖吸収など、ODSに専用ファクトシートがない関係の確認に使用。",u:"https://www.nih.gov/"}
 ];
-const DISCLAIMER="このアプリのURLの共有・転載・複製・二次利用は、制作者の岸木の許諾を得てください。<br><br>このアプリは栄養素どうしの関係を眺めるためのものです。病気の診断・治療・予防を目的としたものではありません。体調や持病について判断が必要なときは、医師や管理栄養士に相談してください。";
+const DISCLAIMER="このアプリは、栄養素の関係を眺めるために作られた、個人による作品です。料理や食事を楽しむときの参考のひとつとして、ご利用ください。";
 
 
 // ===== 世界はひとつ。栄養素の region と 食材の region が同じ座標平面にある =====
@@ -1384,7 +1384,7 @@ const foodIconLight=col=>mixHex(col,'#ffffff',0.04);
 const foodIconDark=col=>mixHex(col,'#000000',0.14);
 const PT=12;
 let nodes={},edges=[],catLabels=[],groupLabels=[];
-const APPVER="v1.222";   // ルール: 実際の出力ごとに必ず +0.001
+const APPVER="v1.226";   // ルール: 実際の出力ごとに必ず +0.001
 let ADJREL={},FOODOF={},NUTOF={},EFFOF={},NUTEFF={},BLKOF={},BLKBY={};
 let NOW=0,active=null,relList=[],relAssign={},relRad={};
 let SEARCH="",matched={},matchN=0,FRONT="nut",switchBoost=0,stage=0,foodHidden=0;
@@ -1394,7 +1394,7 @@ let nearestEyeFrontLast=null;
 const FOODSTG=[12,24];   // 各段で見せる食材数（近い順）。最終段は全部
 const TAU=Math.PI*2;        // 円一周の角度（ラジアン）
 const MOREID="__more__";   // 「＋n」ノードのID
-let running=false,lastInteract=0,IDLE_MS=10000,asleep=false,EFRAME=0,_lastDraw=0;
+let running=false,rafId=0,lastInteract=0,IDLE_MS=10000,asleep=false,EFRAME=0,_lastDraw=0;
 
 function mkWob(o){o.seed=Math.random()*6.28;o.pa=[];o.am=[];for(let i=0;i<PT;i++){o.pa.push(Math.random()*6.28);o.am.push(0.06+Math.random()*0.06);}}
 function mkNode(id,name,col,x,y,base,kind){const rr=Math.random();const oe=rr<0.14?"sleep":(rr<0.28?"dead":"open");const n={id,name,col,kind,hx:x,hy:y,x,y,px:x,py:y,base,r:base,op:1,ph:Math.random()*6.28,pd:{x:0,y:0.3},jig:0,mAng:0,mSpd:0,eyeBase:oe,origEye:oe,sleepDelay:Math.random()*5000,_eslot:(Math.random()*6)|0,_bslot:(Math.random()*6)|0,_pr0:base,moveHappy:Math.random()<0.6,nextBlink:1000+Math.random()*5000,blinkEnd:0,surpriseEnd:0,happyEnd:0,wasMoving:false};mkWob(n);return n;}
@@ -1947,7 +1947,7 @@ function navGo(i){if(i>=0&&i<NAV.length){HI=i;selectNode(NAV[i],true);}}
 function renderTrail(){const el=document.getElementById("trail");const r=active?trailRange():null;
   if(!r||r.items.length<1){el.innerHTML="";}
   else{el.innerHTML=r.items.map((id,i)=>{const last=i===r.items.length-1;return `${i?`<span class="sep">›</span>`:''}<span class="crumb${last?' trail-in':''}${(r.st+i)===HI?' cur':''}" onclick="navGo(${r.st+i})">${nodes[id]?nodes[id].name:id}</span>`;}).join("");
-    const cur=el.querySelector(".cur");if(cur)cur.scrollIntoView({inline:"end",block:"nearest"});}
+    requestAnimationFrame(()=>{el.scrollLeft=el.scrollWidth;});}
   document.getElementById("bk").disabled=!(HI>0);
   document.getElementById("fw").disabled=!(HI<NAV.length-1);
 }
@@ -2016,18 +2016,25 @@ window.addEventListener("unhandledrejection",e=>{
   console.error(r||msg);
   showAppError(msg);
 });
-function schedule(){if(running)return;running=true;requestAnimationFrame(step);}
+function queueStep(){rafId=requestAnimationFrame(step);}
+function schedule(){if(running||document.hidden)return;running=true;queueStep();}
+function stopMainLoop(){if(rafId)cancelAnimationFrame(rafId);rafId=0;running=false;}
 // 何か操作があったら呼ぶ：ループ再開＋みんなを起こす
 function wake(){lastInteract=performance.now();asleep=false;Object.values(nodes).forEach(n=>{if(n.eyeBase!==n.origEye)n.eyeBase=n.origEye;});schedule();}
+// 画面外では予約済みの描画も解除する。戻ったときは操作待ちにせず再開する。
+document.addEventListener("visibilitychange",()=>{if(document.hidden)stopMainLoop();else wake();});
+window.addEventListener("pagehide",stopMainLoop);
+window.addEventListener("pageshow",()=>{if(!document.hidden)wake();});
 
 function step(t){
+  rafId=0;
   // === 通常時は上限30fps。前フレームから33ms未満なら描画を省略して負荷を抑える ===
   // ただし指で操作している間（ドラッグ・ピンチ）は追従を優先して60fpsのまま。
   const touching=(mode==="drag"&&dragId)||mode==="pinch";
   // 地図をパン・ピンチ、またはノードをドラッグしている間は、食材の流体変形を止める。
   // 位置だけ追従させ、複雑なシルエットの伸縮・回転やblob再生成を操作中に増やさない。
   const freezeFoodMotion=mode==="pan"||mode==="pinch"||mode==="drag";
-  if(!touching&&t-_lastDraw<33){requestAnimationFrame(step);return;}
+  if(!touching&&t-_lastDraw<33){queueStep();return;}
   const FSTEP=_lastDraw?Math.min(3,Math.max(1,(t-_lastDraw)/16.7)):1;   // 実際に何フレーム分進んだか
   // 30fps時は1フレームで2フレーム分進める（指数緩和の補正）。体感速度を変えないため。
   const E2=(FSTEP>1.05)?(v=>1-Math.pow(1-v,FSTEP)):(v=>v);
@@ -2110,9 +2117,11 @@ function step(t){
     step._edgeIndex={byNode,nonHas,last:new Set()};
   }
   const ei=step._edgeIndex,need=new Set();
+  // 栄養素どうしの線は本数が少ないので、栄養素画面では背景分も追従させる。
+  // 連続タップ時に、ひとつ前まで動いているノードから線が引っぱられる感触を残すため。
+  // 重い食材リンク（has）は、これまでどおり選択中ノードの必要分だけに絞る。
+  if(FRONT==="nut"||SEARCH)ei.nonHas.forEach(i=>need.add(i));
   if(A)(ei.byNode.get(active)||[]).forEach(i=>need.add(i));
-  else if(FRONT==="nut")ei.nonHas.forEach(i=>need.add(i));
-  else if(SEARCH)ei.nonHas.forEach(i=>need.add(i));
   const edgeWork=new Set([...need,...ei.last]);
   edgeWork.forEach(i=>{const e=edges[i],a=nodes[e.a],b=nodes[e.b];
     // 要素参照はキャッシュ（毎フレーム getElementById を叩かない）
@@ -2340,7 +2349,7 @@ function step(t){
   updateMapTextScale();
   // 全員が寝る時刻を過ぎ、かつ全ノードがほぼ静止したら描画ループを止める（発熱ゼロ）
   if(idle&&maxSp<0.15&&t-lastInteract>IDLE_MS+5500){asleep=true;running=false;return;}
-  requestAnimationFrame(step);}
+  queueStep();}
 
 // ===== 検索 =====
 let HIST=[],histTimer=null,gatherX=280,gatherY=500;
