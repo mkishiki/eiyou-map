@@ -178,16 +178,16 @@
           <div class="fig plain">
             <svg viewBox="0 0 300 158" xmlns="http://www.w3.org/2000/svg" aria-label="はたらき、栄養素、食材の3レイヤー">
               <g font-size="9.5" fill="#8a8172" text-anchor="middle" font-weight="600">
-                <text x="70" y="12">はたらきから</text>
+                <text x="70" y="36">はたらきから</text>
                 <text x="150" y="24">栄養素から</text>
                 <text x="230" y="36">食材から</text>
               </g>
               <g fill="none" stroke="#c9c4bb" stroke-width="0.7">
-                <polygon points="70,18 116,44 116,96 70,122 24,96 24,44"/>
+                <polygon points="70,42 116,68 116,120 70,146 24,120 24,68"/>
                 <polygon points="150,30 196,56 196,108 150,134 104,108 104,56"/>
                 <polygon points="230,42 276,68 276,120 230,146 184,120 184,68"/>
               </g>
-              <g class="info-demo-node" data-x="70" data-y="70" data-r="22" data-fill="#7a9b46" data-label="腸を整える" data-look-x="150" data-look-y="82"></g>
+              <g class="info-demo-node" data-x="70" data-y="94" data-r="22" data-fill="#7a9b46" data-label="腸を整える" data-look-x="150" data-look-y="82"></g>
               <g class="info-demo-node" data-x="150" data-y="82" data-r="23" data-fill="#e0ead0" data-label="食物繊維"></g>
               <g class="info-demo-node" data-x="230" data-y="94" data-r="15" data-fill="#d9d3c7" data-label="大豆" data-food="大豆" data-look-x="150" data-look-y="82"></g>
             </svg>
@@ -211,14 +211,14 @@
           <p>一食で一日の目安量を多く満たせる食材ほど、栄養素の近くに表示します。</p>
           <div class="fig plain">
             <svg viewBox="0 0 300 160" xmlns="http://www.w3.org/2000/svg" aria-label="カルシウムと牛乳、いわし、昆布の距離の例">
-              <g class="info-demo-node" data-x="108" data-y="42" data-r="17" data-fill="#d9d3c7" data-label="牛乳" data-food="牛乳" data-look-x="145" data-look-y="78"></g>
+              <g class="info-demo-node" data-x="108" data-y="42" data-r="17" data-fill="#d9d3c7" data-label="牛乳" data-food="牛乳" data-look-x="145" data-look-y="78" data-orbit-x="145" data-orbit-y="78"></g>
               <g class="info-demo-node" data-x="145" data-y="78" data-r="22" data-fill="#dfe6ee" data-label="カルシウム" data-look-x="108" data-look-y="42"></g>
-              <g class="info-demo-node" data-x="228" data-y="31" data-r="17" data-fill="#d9d3c7" data-label="いわし" data-food="いわし" data-look-x="145" data-look-y="78" data-eyes="0"></g>
-              <g class="info-demo-node" data-x="254" data-y="107" data-r="17" data-fill="#d9d3c7" data-label="昆布" data-food="昆布" data-look-x="145" data-look-y="78" data-eyes="0"></g>
+              <g class="info-demo-node" data-x="228" data-y="31" data-r="17" data-fill="#d9d3c7" data-label="いわし" data-food="いわし" data-look-x="145" data-look-y="78" data-eyes="0" data-orbit-x="145" data-orbit-y="78"></g>
+              <g class="info-demo-node" data-x="254" data-y="107" data-r="17" data-fill="#d9d3c7" data-label="昆布" data-food="昆布" data-look-x="145" data-look-y="78" data-eyes="0" data-orbit-x="145" data-orbit-y="78"></g>
               <g font-size="9" text-anchor="middle" font-weight="700">
-                <text x="108" y="21" fill="#c8452f">34%</text>
-                <text x="228" y="11" fill="#8a8172">9%</text>
-                <text x="254" y="84" fill="#8a8172">6%</text>
+                <text class="info-demo-pct" data-node-x="108" data-node-y="42" x="108" y="21" fill="#c8452f">34%</text>
+                <text class="info-demo-pct" data-node-x="228" data-node-y="31" x="228" y="11" fill="#8a8172">9%</text>
+                <text class="info-demo-pct" data-node-x="254" data-node-y="107" x="254" y="84" fill="#8a8172">6%</text>
               </g>
             </svg>
           </div>
@@ -1386,7 +1386,7 @@ const foodIconLight=col=>mixHex(col,'#ffffff',0.04);
 const foodIconDark=col=>mixHex(col,'#000000',0.14);
 const PT=12;
 let nodes={},edges=[],catLabels=[],groupLabels=[];
-const APPVER="v1.230";   // ルール: 実際の出力ごとに必ず +0.001
+const APPVER="v1.236";   // ルール: 実際の出力ごとに必ず +0.001
 let ADJREL={},FOODOF={},NUTOF={},EFFOF={},NUTEFF={},BLKOF={},BLKBY={};
 let NOW=0,active=null,relList=[],relAssign={},relRad={};
 let SEARCH="",matched={},matchN=0,FRONT="nut",switchBoost=0,stage=0,foodHidden=0;
@@ -2050,15 +2050,15 @@ async function checkLatestVersion(){
 
 function step(t){
   rafId=0;
-  // === 通常時は上限30fps。前フレームから33ms未満なら描画を省略して負荷を抑える ===
-  // ただし指で操作している間（ドラッグ・ピンチ）は追従を優先して60fpsのまま。
-  const touching=(mode==="drag"&&dragId)||mode==="pinch";
+  // === 通常時は上限20fps。ゆっくりした揺れの更新回数を減らして発熱を抑える ===
+  // 指で操作している間（ノードドラッグ・パン・ピンチ）は追従を優先して60fpsのまま。
+  const touching=(mode==="drag"&&dragId)||mode==="pan"||mode==="pinch";
   // 地図をパン・ピンチ、またはノードをドラッグしている間は、食材の流体変形を止める。
   // 位置だけ追従させ、複雑なシルエットの伸縮・回転やblob再生成を操作中に増やさない。
   const freezeFoodMotion=mode==="pan"||mode==="pinch"||mode==="drag";
-  if(!touching&&t-_lastDraw<33){queueStep();return;}
+  if(!touching&&t-_lastDraw<50){queueStep();return;}
   const FSTEP=_lastDraw?Math.min(3,Math.max(1,(t-_lastDraw)/16.7)):1;   // 実際に何フレーム分進んだか
-  // 30fps時は1フレームで2フレーム分進める（指数緩和の補正）。体感速度を変えないため。
+  // 低fps時も経過時間ぶん進める（指数緩和の補正）。体感速度を変えないため。
   const E2=(FSTEP>1.05)?(v=>1-Math.pow(1-v,FSTEP)):(v=>v);
   const JIGD=Math.pow(0.99,FSTEP);
   _lastDraw=t;
@@ -2501,7 +2501,7 @@ function startInfoDemos(){
   const demo=els.map((g,i)=>{
     const x=+g.dataset.x,y=+g.dataset.y,r=+g.dataset.r,food=g.dataset.food||null,effect=g.dataset.effect||null;
     const fill=g.dataset.nut&&NUT[g.dataset.nut]?NUT[g.dataset.nut][1]:(g.dataset.effect&&EFFECTS[g.dataset.effect]?EFFECTS[g.dataset.effect].fill:(g.dataset.fill||FCOLOR));
-    const dash=g.dataset.dash==="1",lookX=g.dataset.lookX?+g.dataset.lookX:null,lookY=g.dataset.lookY?+g.dataset.lookY:null;
+    const dash=g.dataset.dash==="1",lookX=g.dataset.lookX?+g.dataset.lookX:null,lookY=g.dataset.lookY?+g.dataset.lookY:null,orbitX=g.dataset.orbitX?+g.dataset.orbitX:null,orbitY=g.dataset.orbitY?+g.dataset.orbitY:null;
     const icon=food?FOODICONS[foodIconOf(food)]:null;
     // メインのノード（振幅 0.06〜0.12）に近い輪郭のゆらぎ。図解内なので上限だけ少し抑える。
     const seed=0.7+i*1.137,pa=Array.from({length:PT},(_,k)=>seed+k*.83),am=Array.from({length:PT},(_,k)=>.06+((k*7+i*3)%5)*.012);
@@ -2530,7 +2530,7 @@ function startInfoDemos(){
       const demoAria=(g.closest("svg")&&g.closest("svg").getAttribute("aria-label"))||"";
       const modalNearFood=(g.dataset.label==="牛乳"&&demoAria.includes("カルシウム"));
       tx.setAttribute("font-weight",modalNearFood?"700":"500");tx.setAttribute("fill","#3a3226");tx.setAttribute("text-anchor","middle");g.appendChild(tx);}
-    const o={g,p,d,ol,icon,eyes,x,y,cx:x,cy:y,r,vr,food,effect,seed,pa,am,blink:(i*720+1700)%3300,lookX,lookY,defaultEyes:g.dataset.eyes!=="0",dragging:false,pid:null,grabX:0,grabY:0,surpriseUntil:0,svg:g.ownerSVGElement,vx:0,vy:0,lastPX:null,lastPY:null,mSpd:0,mAng:0,jig:0,freeze:false,moveHappy:(i%2===0),lastInteract:performance.now(),sleepDelay:(i*617)%2400,postMoveUntil:0};
+    const o={g,p,d,ol,icon,eyes,x,y,cx:x,cy:y,rx:x,ry:y,r,vr,food,effect,seed,pa,am,blink:(i*720+1700)%3300,lookX,lookY,orbitX,orbitY,orbitR:(orbitX!==null&&orbitY!==null)?Math.hypot(x-orbitX,y-orbitY):null,defaultEyes:g.dataset.eyes!=="0",dragging:false,pid:null,grabX:0,grabY:0,surpriseUntil:0,svg:g.ownerSVGElement,vx:0,vy:0,lastPX:null,lastPY:null,mSpd:0,mAng:0,jig:0,freeze:false,moveHappy:(i%2===0),lastInteract:performance.now(),sleepDelay:(i*617)%2400,postMoveUntil:0};
     g.style.cursor="grab";g.style.touchAction="none";
     return o;
   });
@@ -2541,29 +2541,42 @@ function startInfoDemos(){
   const scheduleModal=()=>{if(modalRafRunning||!document.getElementById("srcmodal").classList.contains("open"))return;modalRafRunning=true;requestAnimationFrame(tick);};
   const wakeModalWorld=()=>{modalWorldAwake=true;modalWorldLastInteract=modalWorldClock;demo.forEach(n=>{if(!n.dragging)n.mSpd=Math.max(n.mSpd,0.01);});scheduleModal();};
   _wakeInfoDemos=wakeModalWorld;
+  const srcbox=document.getElementById("srcbox");
+  const demoSvgVisible=svg=>{
+    if(!svg)return false;
+    const box=svg.getBoundingClientRect(),clip=srcbox.getBoundingClientRect();
+    return box.bottom>clip.top&&box.top<clip.bottom&&box.right>clip.left&&box.left<clip.right;
+  };
   document.getElementById("srcmodal").addEventListener("pointerdown",wakeModalWorld,true);
+  srcbox.addEventListener("scroll",wakeModalWorld,{passive:true});
   const demoByKey=new Map();
   demo.forEach(o=>demoByKey.set(`${o.svg.__demoId||(o.svg.__demoId=Math.random().toString(36).slice(2))}:${o.x},${o.y}`,o));
   const demoLinks=[...document.querySelectorAll(".info-demo-link")].map(p=>({p,svg:p.ownerSVGElement,ax:+p.dataset.aX,ay:+p.dataset.aY,bx:+p.dataset.bX,by:+p.dataset.bY}));
+  // 距離説明図では、食材を触っている間だけカルシウムへの固定半径を線で見せる。
+  const orbitLinks=[];
+  demo.filter(o=>o.orbitR!==null).forEach(o=>{const p=document.createElementNS("http://www.w3.org/2000/svg","path");p.setAttribute("fill","none");p.setAttribute("stroke","#dfe6ee");p.setAttribute("stroke-width","2.1");p.setAttribute("stroke-linecap","round");p.style.display="none";o.svg.insertBefore(p,o.svg.querySelector(".info-demo-node"));orbitLinks.push({p,o});});
+  const demoPct=[...document.querySelectorAll(".info-demo-pct")].map(t=>({t,svg:t.ownerSVGElement,nx:+t.dataset.nodeX,ny:+t.dataset.nodeY,x:+t.getAttribute("x"),y:+t.getAttribute("y")}));
   const demoPoint=(o,ev)=>{const svg=o.g.ownerSVGElement,p=svg.createSVGPoint();p.x=ev.clientX;p.y=ev.clientY;return p.matrixTransform(svg.getScreenCTM().inverse());};
   let modalDemoDragging=0;
-  const srcbox=document.getElementById("srcbox");
   srcbox.addEventListener("touchmove",ev=>{if(modalDemoDragging>0)ev.preventDefault();},{passive:false});
   demo.forEach(o=>{
     o.g.addEventListener("pointerdown",ev=>{ev.preventDefault();ev.stopPropagation();const q=demoPoint(o,ev);o.dragging=true;modalDemoDragging++;o.pid=ev.pointerId;o.grabX=q.x-o.cx;o.grabY=q.y-o.cy;o.surpriseUntil=performance.now()+520;wakeModalWorld();o.lastPX=q.x;o.lastPY=q.y;o.vx=0;o.vy=0;o.jig=1;o.freeze=true;o.g.style.cursor="grabbing";if(o.svg){o.svg.appendChild(o.g);o.svg.style.zIndex="40";o.svg.style.overflow="visible";const fig=o.svg.closest(".fig");if(fig){fig.style.position="relative";fig.style.zIndex="40";fig.style.overflow="visible";}}try{o.g.setPointerCapture(ev.pointerId);}catch(_){}});
-    o.g.addEventListener("pointermove",ev=>{if(!o.dragging||ev.pointerId!==o.pid)return;ev.preventDefault();ev.stopPropagation();const q=demoPoint(o,ev);if(o.lastPX!==null){const mx=q.x-o.lastPX,my=q.y-o.lastPY,sp=Math.hypot(mx,my);o.vx=mx;o.vy=my;o.mSpd+=(sp-o.mSpd)*.3;if(sp>.1)o.mAng=Math.atan2(my,mx);}o.lastPX=q.x;o.lastPY=q.y;o.cx=q.x-o.grabX;o.cy=q.y-o.grabY;});
+    o.g.addEventListener("pointermove",ev=>{if(!o.dragging||ev.pointerId!==o.pid)return;ev.preventDefault();ev.stopPropagation();const q=demoPoint(o,ev);if(o.lastPX!==null){const mx=q.x-o.lastPX,my=q.y-o.lastPY,sp=Math.hypot(mx,my);o.vx=mx;o.vy=my;o.mSpd+=(sp-o.mSpd)*.3;if(sp>.1)o.mAng=Math.atan2(my,mx);}o.lastPX=q.x;o.lastPY=q.y;if(o.orbitR!==null){const center=demoByKey.get(`${o.svg.__demoId}:${o.orbitX},${o.orbitY}`),ocx=center?center.cx:o.orbitX,ocy=center?center.cy:o.orbitY,tx=q.x-o.grabX,ty=q.y-o.grabY,a=Math.atan2(ty-ocy,tx-ocx);o.cx=ocx+Math.cos(a)*o.orbitR;o.cy=ocy+Math.sin(a)*o.orbitR;}else{o.cx=q.x-o.grabX;o.cy=q.y-o.grabY;}});
     const release=ev=>{if(!o.dragging||ev.pointerId!==o.pid)return;ev.preventDefault();ev.stopPropagation();o.dragging=false;modalDemoDragging=Math.max(0,modalDemoDragging-1);o.pid=null;o.lastPX=null;o.lastPY=null;o.freeze=false;wakeModalWorld();o.mSpd=Math.max(o.mSpd,4.5);o.postMoveUntil=modalWorldClock+1500;o.surpriseUntil=Math.max(o.surpriseUntil,performance.now()+120);o.g.style.cursor="grab";const raisedSvg=o.svg,fig=raisedSvg&&raisedSvg.closest(".fig");setTimeout(()=>{if(!o.dragging&&Math.hypot(o.cx-o.x,o.cy-o.y)<2){if(raisedSvg)raisedSvg.style.zIndex="";if(fig)fig.style.zIndex="";}},850);};
     o.g.addEventListener("pointerup",release);o.g.addEventListener("pointercancel",release);
   });
   const mkPath=(o,t)=>{if(o.effect)return circlePath(o.vr);const sx=1+(o.jig||0)*Math.sin(t*.005)*.2,sy=1-(o.jig||0)*Math.sin(t*.005)*.2,st=Math.min((o.mSpd||0)*.09,.6),P=[];for(let i=0;i<PT;i++){const a=i/PT*6.283+o.seed;let rr=o.vr*(1+(o.freeze?0:o.am[i])*Math.sin(t*.0012+o.pa[i]));const al=Math.cos(a-(o.mAng||0));rr*=1+st*al*al;P.push([Math.cos(a)*rr*sx,Math.sin(a)*rr*sy]);}const md=(A,B)=>[(A[0]+B[0])/2,(A[1]+B[1])/2],stp=md(P[PT-1],P[0]);let dd=`M ${stp[0].toFixed(1)} ${stp[1].toFixed(1)} `;for(let i=0;i<PT;i++){const m=md(P[i],P[(i+1)%PT]);dd+=`Q ${P[i][0].toFixed(1)} ${P[i][1].toFixed(1)} ${m[0].toFixed(1)} ${m[1].toFixed(1)} `;}return dd+"Z";};
   const mkEyes=(o,t)=>{const ox=o.r*.35,oy=-o.r*.08,sz=o.r*.195,dk="#2a2a2a",surprised=o.dragging||t<o.surpriseUntil,moving=o.mSpd>1.5||modalWorldClock<o.postMoveUntil,sleeping=!o.dragging&&modalWorldClock-modalWorldLastInteract>10000+o.sleepDelay;let gx=.08,gy=.12;if(o.lookX!==null&&o.lookY!==null){const dx=o.lookX-o.x,dy=o.lookY-o.y,L=Math.hypot(dx,dy)||1;gx=dx/L*.32;gy=dy/L*.32;}const rnd=cx=>`<circle cx="${cx.toFixed(1)}" cy="${oy.toFixed(1)}" r="${sz.toFixed(1)}" fill="#fff"/><circle cx="${(cx+sz*gx).toFixed(1)}" cy="${(oy+sz*gy).toFixed(1)}" r="${(sz*.55).toFixed(1)}" fill="${dk}"/>`;const sur=cx=>`<circle cx="${cx.toFixed(1)}" cy="${oy.toFixed(1)}" r="${(sz*1.28).toFixed(1)}" fill="#fff"/><circle cx="${cx.toFixed(1)}" cy="${oy.toFixed(1)}" r="${(sz*.42).toFixed(1)}" fill="${dk}"/>`;const up=cx=>`<path d="M ${(cx-sz).toFixed(1)} ${(oy+sz*.3).toFixed(1)} A ${sz.toFixed(1)} ${sz.toFixed(1)} 0 0 1 ${(cx+sz).toFixed(1)} ${(oy+sz*.3).toFixed(1)}" fill="none" stroke="${dk}" stroke-width="${(sz*.5).toFixed(1)}" stroke-linecap="round"/>`;const chev=(cx,d)=>`<polyline points="${(cx-d*sz).toFixed(1)},${(oy-sz).toFixed(1)} ${(cx+d*sz*.7).toFixed(1)},${oy.toFixed(1)} ${(cx-d*sz).toFixed(1)},${(oy+sz).toFixed(1)}" fill="none" stroke="${dk}" stroke-width="${(sz*.5).toFixed(1)}" stroke-linecap="round" stroke-linejoin="round"/>`;const flat=cx=>`<line x1="${(cx-sz).toFixed(1)}" y1="${oy.toFixed(1)}" x2="${(cx+sz).toFixed(1)}" y2="${oy.toFixed(1)}" stroke="${dk}" stroke-width="${(sz*.5).toFixed(1)}" stroke-linecap="round"/>`;if(surprised)return sur(-ox)+sur(ox);if(moving)return o.moveHappy?(up(-ox)+up(ox)):(chev(-ox,1)+chev(ox,-1));if(sleeping)return flat(-ox)+flat(ox);return rnd(-ox)+rnd(ox);};
-  tick=t=>{modalRafRunning=false;const modalOpen=document.getElementById("srcmodal").classList.contains("open");if(!modalOpen){modalWorldLastTick=null;return;}if(t-modalLastDraw<33){scheduleModal();return;}modalLastDraw=t;if(modalWorldLastTick!==null)modalWorldClock+=Math.min(100,t-modalWorldLastTick);modalWorldLastTick=t;if(modalWorldClock-modalWorldLastInteract>15500)modalWorldAwake=false;let modalMaxSp=0;demo.forEach(o=>{if(!o.dragging){const px=o.cx,py=o.cy;o.cx+=(o.x-o.cx)*.13;o.cy+=(o.y-o.cy)*.13;const mx=o.cx-px,my=o.cy-py,sp=Math.hypot(mx,my);modalMaxSp=Math.max(modalMaxSp,sp);o.mSpd+=(sp-o.mSpd)*.12;if(sp>.1)o.mAng=Math.atan2(my,mx);o.jig*=0.9;o.freeze=false;}else{o.jig*=0.9;}/* メインの6px幅・周期に寄せつつ、説明図の関係が崩れないよう4pxに抑える。 */const dx=(o.dragging||!modalWorldAwake)?0:Math.sin(t*.0009+o.seed)*4,dy=(o.dragging||!modalWorldAwake)?0:Math.cos(t*.0011+o.seed*1.7)*4;o.g.setAttribute("transform",`translate(${(o.cx+dx).toFixed(2)} ${(o.cy+dy).toFixed(2)})`);if(o.icon){const st=Math.min((o.mSpd||0)*0.055,0.22),jg=(o.jig||0)*Math.sin(t*.005)*0.10,sx=1+st+jg,sy=1-st*0.62-jg*0.45,rot=((o.mAng||0)*180/Math.PI)*(st*0.12+jg*0.08),sc=o.vr/50,tf=`rotate(${rot.toFixed(2)}) scale(${(sc*sx).toFixed(4)} ${(sc*sy).toFixed(4)}) translate(-50 -50)`;o.p.setAttribute("transform",tf);o.d.setAttribute("transform",tf);o.ol.setAttribute("transform",tf);}else{o.p.setAttribute("d",mkPath(o,t));}const eyeActive=(o.dragging||t<o.surpriseUntil)||o.defaultEyes;if(eyeActive){o.eyes.innerHTML=mkEyes(o,t);}else if(o.eyes.innerHTML){o.eyes.innerHTML="";}});
+  tick=t=>{modalRafRunning=false;const modalOpen=document.getElementById("srcmodal").classList.contains("open");if(!modalOpen){modalWorldLastTick=null;return;}const modalTouching=modalDemoDragging>0;if(!modalTouching&&t-modalLastDraw<50){scheduleModal();return;}modalLastDraw=t;if(modalWorldLastTick!==null)modalWorldClock+=Math.min(100,t-modalWorldLastTick);modalWorldLastTick=t;if(modalWorldClock-modalWorldLastInteract>15500)modalWorldAwake=false;let modalMaxSp=0;demo.forEach(o=>{if(!o.dragging&&!demoSvgVisible(o.svg))return;if(!o.dragging){const px=o.cx,py=o.cy;o.cx+=(o.x-o.cx)*.13;o.cy+=(o.y-o.cy)*.13;const mx=o.cx-px,my=o.cy-py,sp=Math.hypot(mx,my);modalMaxSp=Math.max(modalMaxSp,sp);o.mSpd+=(sp-o.mSpd)*.12;if(sp>.1)o.mAng=Math.atan2(my,mx);o.jig*=0.9;o.freeze=false;}else{o.jig*=0.9;}/* メインの6px幅・周期に寄せつつ、説明図の関係が崩れないよう4pxに抑える。 */const dx=(o.dragging||!modalWorldAwake)?0:Math.sin(t*.0009+o.seed)*4,dy=(o.dragging||!modalWorldAwake)?0:Math.cos(t*.0011+o.seed*1.7)*4;o.rx=o.cx+dx;o.ry=o.cy+dy;o.g.setAttribute("transform",`translate(${o.rx.toFixed(2)} ${o.ry.toFixed(2)})`);if(o.icon){const st=Math.min((o.mSpd||0)*0.055,0.22),jg=(o.jig||0)*Math.sin(t*.005)*0.10,sx=1+st+jg,sy=1-st*0.62-jg*0.45,rot=((o.mAng||0)*180/Math.PI)*(st*0.12+jg*0.08),sc=o.vr/50,tf=`rotate(${rot.toFixed(2)}) scale(${(sc*sx).toFixed(4)} ${(sc*sy).toFixed(4)}) translate(-50 -50)`;o.p.setAttribute("transform",tf);o.d.setAttribute("transform",tf);o.ol.setAttribute("transform",tf);}else{o.p.setAttribute("d",mkPath(o,t));}const eyeActive=(o.dragging||t<o.surpriseUntil)||o.defaultEyes;if(eyeActive){o.eyes.innerHTML=mkEyes(o,t);}else if(o.eyes.innerHTML){o.eyes.innerHTML="";}});
     demoLinks.forEach(l=>{
+      if(!demoSvgVisible(l.svg))return;
       const sid=l.svg.__demoId;
       const a=demoByKey.get(`${sid}:${l.ax},${l.ay}`),b=demoByKey.get(`${sid}:${l.bx},${l.by}`);
-      const ax=a?a.cx:l.ax,ay=a?a.cy:l.ay,bx=b?b.cx:l.bx,by=b?b.cy:l.by;
+      const ax=a?a.rx:l.ax,ay=a?a.ry:l.ay,bx=b?b.rx:l.bx,by=b?b.ry:l.by;
       l.p.setAttribute("d",`M ${ax.toFixed(2)} ${ay.toFixed(2)} L ${bx.toFixed(2)} ${by.toFixed(2)}`);
     });
+    orbitLinks.forEach(l=>{if(!l.o.dragging&&!demoSvgVisible(l.o.svg)){l.p.style.display="none";return;}const o=l.o,center=demoByKey.get(`${o.svg.__demoId}:${o.orbitX},${o.orbitY}`);if(o.dragging&&center){l.p.style.display="";l.p.setAttribute("d",`M ${center.rx.toFixed(2)} ${center.ry.toFixed(2)} L ${o.rx.toFixed(2)} ${o.ry.toFixed(2)}`);}else l.p.style.display="none";});
+    demoPct.forEach(q=>{if(!demoSvgVisible(q.svg))return;const n=demoByKey.get(`${q.svg.__demoId}:${q.nx},${q.ny}`);if(n){q.t.setAttribute("x",(q.x+n.rx-q.nx).toFixed(2));q.t.setAttribute("y",(q.y+n.ry-q.ny).toFixed(2));}});
     if(modalWorldAwake||modalDemoDragging>0||modalMaxSp>.05)scheduleModal();};
   scheduleModal();
 }
