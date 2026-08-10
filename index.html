@@ -173,8 +173,8 @@
       <div id="srcbox" onclick="event.stopPropagation()">
         <div id="srchead"><b id="srctitle">このアプリについて</b><button onclick="closeSrc(event)" id="srcx">×</button></div>
         <div id="howto">
-          <h4>世界はひとつ　入り口はみっつ</h4>
-          <p>このアプリは、栄養素のはたらきやつながりを、たどって楽しむアプリです。栄養素・食材・はたらきのみっつの層は、ひとつの世界でつながっています。</p>
+          <h4>世界は一つ　入り口は三つ</h4>
+          <p>このアプリは、栄養素のはたらきやつながりを、たどって楽しむアプリです。栄養素・食材・はたらきの三つの層は、一つの世界でつながっています。</p>
           <div class="fig plain">
             <svg viewBox="0 0 300 158" xmlns="http://www.w3.org/2000/svg" aria-label="はたらき、栄養素、食材の3レイヤー">
               <g font-size="9.5" fill="#8a8172" text-anchor="middle" font-weight="600">
@@ -1386,7 +1386,7 @@ const foodIconLight=col=>mixHex(col,'#ffffff',0.04);
 const foodIconDark=col=>mixHex(col,'#000000',0.14);
 const PT=12;
 let nodes={},edges=[],catLabels=[],groupLabels=[];
-const APPVER="v1.229";   // ルール: 実際の出力ごとに必ず +0.001
+const APPVER="v1.230";   // ルール: 実際の出力ごとに必ず +0.001
 let ADJREL={},FOODOF={},NUTOF={},EFFOF={},NUTEFF={},BLKOF={},BLKBY={};
 let NOW=0,active=null,relList=[],relAssign={},relRad={};
 let SEARCH="",matched={},matchN=0,FRONT="nut",switchBoost=0,stage=0,foodHidden=0;
