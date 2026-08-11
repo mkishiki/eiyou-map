@@ -1399,7 +1399,7 @@ const foodIconLight=col=>mixHex(col,'#ffffff',0.04);
 const foodIconDark=col=>mixHex(col,'#000000',0.14);
 const PT=12;
 let nodes={},edges=[],catLabels=[],groupLabels=[];
-const APPVER="v1.246";   // ルール: 実際の出力ごとに必ず +0.001
+const APPVER="v1.247";   // ルール: 実際の出力ごとに必ず +0.001
 let ADJREL={},FOODOF={},NUTOF={},EFFOF={},NUTEFF={},BLKOF={},BLKBY={};
 let NOW=0,active=null,relList=[],relAssign={},relRad={};
 let SEARCH="",matched={},matchN=0,FRONT="nut",switchBoost=0,stage=0,foodHidden=0;
@@ -2323,8 +2323,8 @@ function step(t){
     const l=E.l,lf=E.lf;
     const toFront=SEARCH?(matched[n.id]!==undefined):(A?(n.id===active||relList.indexOf(n.id)>=0):true);
     let dim;
-    if(SEARCH)dim=(matched[n.id]!==undefined?1:(n.kind===FRONT?0.2:0));
-    else if(A)dim=(n.id===active||relList.indexOf(n.id)>=0)?1:(n.kind===FRONT?0.3:0);
+    if(SEARCH)dim=(matched[n.id]!==undefined?1:(n.kind===FRONT?0.14:0));
+    else if(A)dim=(n.id===active||relList.indexOf(n.id)>=0)?1:(n.kind===FRONT?0.18:0);
     else dim=(n.kind===FRONT)?1:0;
     const tgt=toFront?lf:l,off=toFront?l:lf;
     // 食材ラベルはシルエットの「実際の下端」から一定距離に置く。
