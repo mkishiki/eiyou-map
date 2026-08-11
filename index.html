@@ -1399,7 +1399,7 @@ const foodIconLight=col=>mixHex(col,'#ffffff',0.04);
 const foodIconDark=col=>mixHex(col,'#000000',0.14);
 const PT=12;
 let nodes={},edges=[],catLabels=[],groupLabels=[];
-const APPVER="v1.244";   // ルール: 実際の出力ごとに必ず +0.001
+const APPVER="v1.246";   // ルール: 実際の出力ごとに必ず +0.001
 let ADJREL={},FOODOF={},NUTOF={},EFFOF={},NUTEFF={},BLKOF={},BLKBY={};
 let NOW=0,active=null,relList=[],relAssign={},relRad={};
 let SEARCH="",matched={},matchN=0,FRONT="nut",switchBoost=0,stage=0,foodHidden=0;
@@ -1970,7 +1970,7 @@ function resetAll(){wake();stage=0;sinkSurfaced([]);active=null;relList=[];relAs
   if(SEARCH)clearSearch(1);
   Object.values(nodes).forEach(n=>{n.hx=n.ox;n.hy=n.oy;n.x=n.ox;n.y=n.oy;n.px=n.x;n.py=n.y;n.mSpd=0;n.jig=0.4;n.dragging=false;n.surfaced=0;n.sinking=0;n.placed=0;
     const fr=(n.kind===FRONT);n.op=fr?1:0;n.r=n.base;});
-  setFront(FRONT);{const h=(FRONT==="food")?foodHomeView():{k:1,x:0,y:-56};tvk=h.k;tvx=h.x;tvy=h.y;}
+  setFront(FRONT);{const h=homeView(FRONT);tvk=h.k;tvx=h.x;tvy=h.y;}
   renderTrail();}
 
 // ===== 描画 =====
@@ -2478,7 +2478,12 @@ function setFront(f){wake();const changed=(FRONT!==f);FRONT=f;
   if(changed){switchBoost=NOW+280;stage=0;sinkSurfaced([]);active=null;relList=[];relAssign={};relRad={};groupLabels=[];
     Object.values(nodes).forEach(n=>{if(n.kind===f){n.r=n.base;}}); // サイズは即フル・透明度だけでふわっと
     renderTrail();}
-  if(!active){const h=(f==="food")?foodHomeView():{k:1,x:0,y:-56};tvk=h.k;tvx=h.x;tvy=h.y;}}
+  if(!active){const h=homeView(f);tvk=h.k;tvx=h.x;tvy=h.y;}}
+function homeView(f){
+  if(f==="food")return foodHomeView();
+  // はたらき・栄養素は同じ初期視点にそろえる。
+  return {k:1,x:0,y:-18};
+}
 function foodViewportTop(){
   const sr=document.getElementById("searchwrap");
   const sv=svg&&svg.getBoundingClientRect();
@@ -2728,7 +2733,7 @@ function refreshFoodHomeView(){
 window.addEventListener("resize",refreshFoodHomeView,{passive:true});
 if(window.visualViewport)window.visualViewport.addEventListener("resize",refreshFoodHomeView,{passive:true});
 
-loadHist();buildWorld();renderTrail();applyView();document.getElementById("ver").textContent="eiyou map "+APPVER;document.title="eiyou map "+APPVER;lastInteract=performance.now();schedule();setTimeout(openFromHash,0);setTimeout(checkLatestVersion,250);
+loadHist();buildWorld();renderTrail();{const h=homeView(FRONT);vk=tvk=h.k;vtx=tvx=h.x;vty=tvy=h.y;}applyView();document.getElementById("ver").textContent="eiyou map "+APPVER;document.title="eiyou map "+APPVER;lastInteract=performance.now();schedule();setTimeout(openFromHash,0);setTimeout(checkLatestVersion,250);
 </script>
 </body>
 </html>
