@@ -1399,7 +1399,7 @@ const foodIconLight=col=>mixHex(col,'#ffffff',0.04);
 const foodIconDark=col=>mixHex(col,'#000000',0.14);
 const PT=12;
 let nodes={},edges=[],catLabels=[],groupLabels=[];
-const APPVER="v1.256";   // ルール: 実際の出力ごとに必ず +0.001
+const APPVER="v1.259";   // ルール: 実際の出力ごとに必ず +0.001
 let ADJREL={},FOODOF={},NUTOF={},EFFOF={},NUTEFF={},BLKOF={},BLKBY={};
 let NOW=0,active=null,relList=[],relAssign={},relRad={};
 let SEARCH="",matched={},matchN=0,FRONT="nut",switchBoost=0,stage=0,foodHidden=0;
@@ -1411,7 +1411,8 @@ const TAU=Math.PI*2;        // 円一周の角度（ラジアン）
 const MOREID="__more__";   // 「＋n」ノードのID
 let running=false,rafId=0,lastInteract=0,IDLE_MS=10000,asleep=false,EFRAME=0,_lastDraw=0;
 // 起動時だけ、栄養素が小さな泡から生まれるように登場する。タブ切替では繰り返さない。
-let nutrientIntroStart=0,nutrientIntroDone=false;
+const NUT_INTRO_STAGGER=14,NUT_INTRO_DURATION=414,NUT_INTRO_REVEAL=80;
+let nutrientIntroStart=0,nutrientIntroDone=false,nutrientIntroEnd=0;
 
 function mkWob(o){o.seed=Math.random()*6.28;o.pa=[];o.am=[];for(let i=0;i<PT;i++){o.pa.push(Math.random()*6.28);o.am.push(0.06+Math.random()*0.06);}}
 function mkNode(id,name,col,x,y,base,kind){const rr=Math.random();const oe=rr<0.14?"sleep":(rr<0.28?"dead":"open");const n={id,name,col,kind,hx:x,hy:y,x,y,px:x,py:y,base,r:base,op:1,ph:Math.random()*6.28,pd:{x:0,y:0.3},jig:0,mAng:0,mSpd:0,eyeBase:oe,origEye:oe,sleepDelay:Math.random()*5000,_eslot:(Math.random()*6)|0,_bslot:(Math.random()*6)|0,_pr0:base,moveHappy:Math.random()<0.6,nextBlink:1000+Math.random()*5000,blinkEnd:0,surpriseEnd:0,happyEnd:0,wasMoving:false};mkWob(n);return n;}
@@ -1423,7 +1424,8 @@ function buildWorld(){
   let nutrientIntroIndex=0;
   Object.keys(NUT).forEach(id=>{const p=NPOS[id];
     nodes[id]=mkNode(id,NUT[id][0],NUT[id][1],p[0],p[1],NUTBIG[id]?40:(NUTMID[id]?28:19),"nut");
-    nodes[id].badge=null;nodes[id].introDelay=nutrientIntroIndex++*7;});
+    nodes[id].badge=null;nodes[id].introDelay=nutrientIntroIndex++*NUT_INTRO_STAGGER;
+    nutrientIntroEnd=Math.max(nutrientIntroEnd,nodes[id].introDelay+NUT_INTRO_DURATION);});
   Object.keys(CATPOS).forEach(cat=>{const C=CATPOS[cat];const list=(CATLIST[cat]||[]).filter(n=>FOODNAMES.indexOf(n)>=0);let maxr=0;
     list.forEach((nm,i)=>{const ang=i*2.399,rad=i===0?0:22+Math.sqrt(i)*13;const ey=Math.sin(ang)*rad*0.80;
       nodes[nm]=mkNode(nm,nm,FCOLOR,C[0]+Math.cos(ang)*rad,C[1]+ey,22.44,"food");nodes[nm].cat=cat;nodes[nm].icon=foodIconOf(nm);});
@@ -2064,11 +2066,16 @@ function schedule(){if(running||document.hidden)return;running=true;queueStep();
 function stopMainLoop(){if(rafId)cancelAnimationFrame(rafId);rafId=0;running=false;}
 function nutrientIntroState(n,t){
   if(nutrientIntroDone||n.kind!=="nut"||!nutrientIntroStart)return {p:1,scale:1};
-  const p=Math.max(0,Math.min(1,(t-nutrientIntroStart-(n.introDelay||0))/207));
+  const p=Math.max(0,Math.min(1,(t-nutrientIntroStart-(n.introDelay||0))/NUT_INTRO_DURATION));
   if(p>=1)return {p:1,scale:1};
   // easeOutBack: 少しだけ行き過ぎて戻る「ぽわん」。最小サイズは完全な0にせず泡として見せる。
   const c1=1.38,c3=c1+1,u=p-1,back=1+c3*u*u*u+c1*u*u;
   return {p,scale:0.10+0.90*back};
+}
+function nutrientIntroReveal(t){
+  if(nutrientIntroDone||!nutrientIntroStart)return 1;
+  const elapsed=t-nutrientIntroStart-nutrientIntroEnd;
+  return Math.max(0,Math.min(1,elapsed/NUT_INTRO_REVEAL));
 }
 // 何か操作があったら呼ぶ：ループ再開＋みんなを起こす
 function wake(){lastInteract=performance.now();asleep=false;Object.values(nodes).forEach(n=>{if(n.eyeBase!==n.origEye)n.eyeBase=n.origEye;});schedule();}
@@ -2188,6 +2195,7 @@ function step(t){
     step._edgeIndex={byNode,nonHas,last:new Set()};
   }
   const ei=step._edgeIndex,need=new Set();
+  const introReveal=nutrientIntroReveal(t);
   // 栄養素どうしの線は本数が少ないので、栄養素画面では背景分も追従させる。
   // 連続タップ時に、ひとつ前まで動いているノードから線が引っぱられる感触を残すため。
   // 重い食材リンク（has）は、これまでどおり選択中ノードの必要分だけに絞る。
@@ -2235,7 +2243,7 @@ function step(t){
     const rc=REL[e.type];
     const ah=E.ah,ahb=E.ahb,el=E.el;
     // 非hotかつ栄養素モードでない＝完全に不可視。消し済みなら何もしない
-    const vis=hot?0.9:((FRONT==="nut")?(SEARCH?0.12:(A?0.3:0.75)):0);
+    const vis=(hot?0.9:((FRONT==="nut")?(SEARCH?0.12:(A?0.3:0.75)):0))*((!A&&!SEARCH&&FRONT==="nut")?introReveal:1);
     if(!hot&&vis===0){if(p._v===0)return;p._v=0;p.setAttribute("opacity",0);p._opacity=0;
       if(ah.getAttribute("opacity")!=="0"){ah.setAttribute("opacity",0);ah._opacity=0;ahb.setAttribute("opacity",0);ahb._opacity=0;}
       if(el.getAttribute("opacity")!=="0"){el.setAttribute("opacity",0);el._opacity=0;el.textContent="";}return;}
@@ -2367,7 +2375,7 @@ function step(t){
     if(SEARCH)dim=(matched[n.id]!==undefined?1:(n.kind===FRONT?0.14:0));
     else if(A)dim=(n.id===active||relList.indexOf(n.id)>=0)?1:(n.kind===FRONT?0.18:0);
     else dim=(n.kind===FRONT)?1:0;
-    if(n.kind==="nut"&&!nutrientIntroDone)dim*=Math.max(0,Math.min(1,(intro.p-0.28)/0.42));
+    if(n.kind==="nut"&&!nutrientIntroDone)dim*=introReveal;
     const tgt=toFront?lf:l,off=toFront?l:lf;
     // 食材ラベルはシルエットの「実際の下端」から一定距離に置く。
     // 緑黄色野菜(carrot)の現行見え方を基準に、下端→文字ベースラインを約13pxで統一。
@@ -2427,7 +2435,7 @@ function step(t){
     el.setAttribute("fill",gp.color);el.setAttribute("opacity",1);if(el.textContent!==gp.text)el.textContent=gp.text;}
   // ノード状態でラベルの基準サイズが変わるため、描画末尾でもズーム補正を同期。
   updateMapTextScale();
-  if(!nutrientIntroDone&&nutrientIntroStart&&t-nutrientIntroStart>470)nutrientIntroDone=true;
+  if(!nutrientIntroDone&&nutrientIntroStart&&t-nutrientIntroStart>nutrientIntroEnd+NUT_INTRO_REVEAL)nutrientIntroDone=true;
   // 全員が寝る時刻を過ぎ、かつ全ノードがほぼ静止したら描画ループを止める（発熱ゼロ）
   if(idle&&maxSp<0.15&&t-lastInteract>IDLE_MS+5500){asleep=true;running=false;return;}
   queueStep();}
