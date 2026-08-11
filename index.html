@@ -1399,7 +1399,7 @@ const foodIconLight=col=>mixHex(col,'#ffffff',0.04);
 const foodIconDark=col=>mixHex(col,'#000000',0.14);
 const PT=12;
 let nodes={},edges=[],catLabels=[],groupLabels=[];
-const APPVER="v1.247";   // ルール: 実際の出力ごとに必ず +0.001
+const APPVER="v1.256";   // ルール: 実際の出力ごとに必ず +0.001
 let ADJREL={},FOODOF={},NUTOF={},EFFOF={},NUTEFF={},BLKOF={},BLKBY={};
 let NOW=0,active=null,relList=[],relAssign={},relRad={};
 let SEARCH="",matched={},matchN=0,FRONT="nut",switchBoost=0,stage=0,foodHidden=0;
@@ -1410,6 +1410,8 @@ const FOODSTG=[12,24];   // 各段で見せる食材数（近い順）。最終�
 const TAU=Math.PI*2;        // 円一周の角度（ラジアン）
 const MOREID="__more__";   // 「＋n」ノードのID
 let running=false,rafId=0,lastInteract=0,IDLE_MS=10000,asleep=false,EFRAME=0,_lastDraw=0;
+// 起動時だけ、栄養素が小さな泡から生まれるように登場する。タブ切替では繰り返さない。
+let nutrientIntroStart=0,nutrientIntroDone=false;
 
 function mkWob(o){o.seed=Math.random()*6.28;o.pa=[];o.am=[];for(let i=0;i<PT;i++){o.pa.push(Math.random()*6.28);o.am.push(0.06+Math.random()*0.06);}}
 function mkNode(id,name,col,x,y,base,kind){const rr=Math.random();const oe=rr<0.14?"sleep":(rr<0.28?"dead":"open");const n={id,name,col,kind,hx:x,hy:y,x,y,px:x,py:y,base,r:base,op:1,ph:Math.random()*6.28,pd:{x:0,y:0.3},jig:0,mAng:0,mSpd:0,eyeBase:oe,origEye:oe,sleepDelay:Math.random()*5000,_eslot:(Math.random()*6)|0,_bslot:(Math.random()*6)|0,_pr0:base,moveHappy:Math.random()<0.6,nextBlink:1000+Math.random()*5000,blinkEnd:0,surpriseEnd:0,happyEnd:0,wasMoving:false};mkWob(n);return n;}
@@ -1418,9 +1420,10 @@ function mkNode(id,name,col,x,y,base,kind){const rr=Math.random();const oe=rr<0.
 const NUTBIG={protein:1,fat:1,sugar:1},NUTMID={fe:1,ca:1,fiber:1,folate:1,vd:1,mg:1,va:1};
 function buildWorld(){
   nodes={};edges=[];catLabels=[];ADJREL={};FOODOF={};NUTOF={};EFFOF={};NUTEFF={};BLKOF={};BLKBY={};
+  let nutrientIntroIndex=0;
   Object.keys(NUT).forEach(id=>{const p=NPOS[id];
     nodes[id]=mkNode(id,NUT[id][0],NUT[id][1],p[0],p[1],NUTBIG[id]?40:(NUTMID[id]?28:19),"nut");
-    nodes[id].badge=null;});
+    nodes[id].badge=null;nodes[id].introDelay=nutrientIntroIndex++*7;});
   Object.keys(CATPOS).forEach(cat=>{const C=CATPOS[cat];const list=(CATLIST[cat]||[]).filter(n=>FOODNAMES.indexOf(n)>=0);let maxr=0;
     list.forEach((nm,i)=>{const ang=i*2.399,rad=i===0?0:22+Math.sqrt(i)*13;const ey=Math.sin(ang)*rad*0.80;
       nodes[nm]=mkNode(nm,nm,FCOLOR,C[0]+Math.cos(ang)*rad,C[1]+ey,22.44,"food");nodes[nm].cat=cat;nodes[nm].icon=foodIconOf(nm);});
@@ -1974,17 +1977,42 @@ function resetAll(){wake();stage=0;sinkSurfaced([]);active=null;relList=[];relAs
   renderTrail();}
 
 // ===== 描画 =====
-function chevron(ax,ay,mx,my,bx,by,node,atEnd){
-  // 二次ベジェ上の点と接線を使うので、腕の線とずれない
+function chevron(ax,ay,mx,my,bx,by,node,atEnd,extraGap=0,avoidBox=null){
+  // 二次ベジェ上の点と接線を使うので、腕の線とずれない。
+  // ラベル領域が渡された場合は、矢尻が文字に重ならない位置まで中央側へ逃がす。
   const P=t=>[(1-t)*(1-t)*ax+2*(1-t)*t*mx+t*t*bx,(1-t)*(1-t)*ay+2*(1-t)*t*my+t*t*by];
   const D=t=>[2*(1-t)*(mx-ax)+2*t*(bx-mx),2*(1-t)*(my-ay)+2*t*(by-my)];
-  const want=node.r+9;let t=atEnd?1:0;
+  const want=node.r+9+extraGap;let t=atEnd?1:0;
   for(let i=0;i<50;i++){const q=P(t);if(Math.hypot(q[0]-node.x,q[1]-node.y)>=want)break;
     t+=atEnd?-0.02:0.02;if(t<0||t>1){t=t<0?0:1;break;}}
+  const hitsLabel=q=>avoidBox&&q[0]>=avoidBox.x-7&&q[0]<=avoidBox.x+avoidBox.w+7&&q[1]>=avoidBox.y-7&&q[1]<=avoidBox.y+avoidBox.h+7;
+  if(avoidBox){for(let i=0;i<35&&hitsLabel(P(t));i++){t+=atEnd?-0.02:0.02;if(t<0||t>1){t=t<0?0:1;break;}}}
   const tip=P(t);let d=D(t);if(!atEnd)d=[-d[0],-d[1]];
   const m=Math.hypot(d[0],d[1])||1,ux=d[0]/m,uy=d[1]/m,L=10,W=6.5;
   const cx=tip[0]-ux*L,cy=tip[1]-uy*L,px=-uy*W,py=ux*W;
   return `M ${(cx+px).toFixed(1)} ${(cy+py).toFixed(1)} L ${tip[0].toFixed(1)} ${tip[1].toFixed(1)} L ${(cx-px).toFixed(1)} ${(cy-py).toFixed(1)}`;}
+function curvePoint(ax,ay,mx,my,bx,by,t){
+  return [(1-t)*(1-t)*ax+2*(1-t)*t*mx+t*t*bx,(1-t)*(1-t)*ay+2*(1-t)*t*my+t*t*by];
+}
+function curveDir(ax,ay,mx,my,bx,by,t){
+  return [2*(1-t)*(mx-ax)+2*t*(bx-mx),2*(1-t)*(my-ay)+2*t*(by-my)];
+}
+function visibleCurveT(a,b,f){
+  // ノード中心間ではなく「外周から外周までの見えている線」を0〜1として扱う。
+  // 輪郭はゆらぐが、現在半径 r の円として近似すれば軽く、大小ノードでも見た目の比率が揃う。
+  const dist=Math.hypot(b.x-a.x,b.y-a.y)||1;
+  let t0=Math.min(.46,Math.max(0,a.r/dist));
+  let t1=Math.max(.54,Math.min(1,1-b.r/dist));
+  if(t1<t0){const m=(t0+t1)/2;t0=m-.02;t1=m+.02;}
+  return t0+(t1-t0)*f;
+}
+function chevronAt(ax,ay,mx,my,bx,by,t,forward=true){
+  // t は曲線全体に対する位置。呼び出し側で見えている線区間を考慮して決める。
+  const tip=curvePoint(ax,ay,mx,my,bx,by,t);let d=curveDir(ax,ay,mx,my,bx,by,t);if(!forward)d=[-d[0],-d[1]];
+  const m=Math.hypot(d[0],d[1])||1,ux=d[0]/m,uy=d[1]/m,L=10,W=6.5;
+  const cx=tip[0]-ux*L,cy=tip[1]-uy*L,px=-uy*W,py=ux*W;
+  return `M ${(cx+px).toFixed(1)} ${(cy+py).toFixed(1)} L ${tip[0].toFixed(1)} ${tip[1].toFixed(1)} L ${(cx-px).toFixed(1)} ${(cy-py).toFixed(1)}`;
+}
 // 輪郭パスは「ノード中心を原点」とした相対座標で作る。
 // 位置の移動は transform=translate() が担当するので、形が変わらない限りパスを作り直さなくていい。
 function circlePath(r){return `M ${(-r).toFixed(2)} 0 A ${r.toFixed(2)} ${r.toFixed(2)} 0 1 0 ${(r).toFixed(2)} 0 A ${r.toFixed(2)} ${r.toFixed(2)} 0 1 0 ${(-r).toFixed(2)} 0 Z`;}
@@ -2034,6 +2062,14 @@ window.addEventListener("unhandledrejection",e=>{
 function queueStep(){rafId=requestAnimationFrame(step);}
 function schedule(){if(running||document.hidden)return;running=true;queueStep();}
 function stopMainLoop(){if(rafId)cancelAnimationFrame(rafId);rafId=0;running=false;}
+function nutrientIntroState(n,t){
+  if(nutrientIntroDone||n.kind!=="nut"||!nutrientIntroStart)return {p:1,scale:1};
+  const p=Math.max(0,Math.min(1,(t-nutrientIntroStart-(n.introDelay||0))/207));
+  if(p>=1)return {p:1,scale:1};
+  // easeOutBack: 少しだけ行き過ぎて戻る「ぽわん」。最小サイズは完全な0にせず泡として見せる。
+  const c1=1.38,c3=c1+1,u=p-1,back=1+c3*u*u*u+c1*u*u;
+  return {p,scale:0.10+0.90*back};
+}
 // 何か操作があったら呼ぶ：ループ再開＋みんなを起こす
 function wake(){lastInteract=performance.now();asleep=false;Object.values(nodes).forEach(n=>{if(n.eyeBase!==n.origEye)n.eyeBase=n.origEye;});schedule();}
 // 画面外では予約済みの描画も解除する。戻ったときは操作待ちにせず再開する。
@@ -2186,13 +2222,15 @@ function step(t){
       p.setAttribute("d",`M ${a.x.toFixed(1)} ${a.y.toFixed(1)} Q ${qx.toFixed(1)} ${qy.toFixed(1)} ${b.x.toFixed(1)} ${b.y.toFixed(1)}`);
       p.setAttribute("stroke",col);p.setAttribute("stroke-width",w);p.setAttribute("opacity",blk?0.9:1);
       p.setAttribute("stroke-dasharray","none");
-      ah2.setAttribute("d",chevron(a.x,a.y,qx,qy,b.x,b.y,b,true));ah2.setAttribute("fill","none");
+      if(blk){const labelT=visibleCurveT(a,b,.35),lp=curvePoint(a.x,a.y,qx,qy,b.x,b.y,labelT),d=curveDir(a.x,a.y,qx,qy,b.x,b.y,labelT),eln=Math.hypot(d[0],d[1])||1,side=((a.x+b.x)/2<A.ax?-1:1);
+        el2.setAttribute("x",(lp[0]+(-d[1]/eln)*side*20).toFixed(1));el2.setAttribute("y",(lp[1]+(d[0]/eln)*side*20+3).toFixed(1));
+        el2.setAttribute("fill",col);el2.setAttribute("opacity",1);const blabel=e.label||"妨げる";if(el2.textContent!==blabel)el2.textContent=blabel;
+      }else if(el2.getAttribute("opacity")!=="0"){el2.setAttribute("opacity",0);el2.textContent="";}
+      // 栄養素→はたらきは、ラベルなしなら中央。ラベルありなら発信元側にラベル、発信先側に矢尻。
+      const arrowT=visibleCurveT(a,b,blk?.80:.50);
+      ah2.setAttribute("d",chevronAt(a.x,a.y,qx,qy,b.x,b.y,arrowT,true));ah2.setAttribute("fill","none");
       ah2.setAttribute("stroke",col);ah2.setAttribute("stroke-width",w);ah2.setAttribute("stroke-linecap","round");
       ah2.setAttribute("stroke-linejoin","round");ah2.setAttribute("opacity",blk?0.9:1);
-      if(blk){const midx=(a.x+b.x)/2,midy=(a.y+b.y)/2,ex=b.x-a.x,ey=b.y-a.y,eln=Math.hypot(ex,ey)||1,side=(midx<A.ax?-1:1);
-        el2.setAttribute("x",(midx+(-ey/eln)*side*20).toFixed(1));el2.setAttribute("y",(midy+(ex/eln)*side*20+3).toFixed(1));
-        el2.setAttribute("fill",col);el2.setAttribute("opacity",1);const blabel=e.label||"妨げる";if(el2.textContent!==blabel)el2.textContent=blabel;}
-      else if(el2.getAttribute("opacity")!=="0"){el2.setAttribute("opacity",0);el2.textContent="";}
       return;}
     const rc=REL[e.type];
     const ah=E.ah,ahb=E.ahb,el=E.el;
@@ -2209,13 +2247,14 @@ function step(t){
       const both=(e.type==="compete"||e.type==="synergy"||e.type==="onecarbon"||e.type==="bone_synergy"||e.type==="antiox_synergy"),w=(e.type==="compete"?3:4);
       const styleArrow=el2=>{setA(el2,"fill","none");setA(el2,"stroke",rc.c);setA(el2,"stroke-width",w);
         setA(el2,"stroke-linecap","round");setA(el2,"stroke-linejoin","round");setA(el2,"opacity",0.9);};
-      ah.setAttribute("d",chevron(a.x,a.y,mx,my,b.x,b.y,b,true));styleArrow(ah);
-      if(both){ahb.setAttribute("d",chevron(a.x,a.y,mx,my,b.x,b.y,a,false));styleArrow(ahb);}
+      const arrowT=visibleCurveT(a,b,.80);
+      ah.setAttribute("d",chevronAt(a.x,a.y,mx,my,b.x,b.y,arrowT,true));styleArrow(ah);
+      if(both){const backArrowT=visibleCurveT(a,b,.28);ahb.setAttribute("d",chevronAt(a.x,a.y,mx,my,b.x,b.y,backArrowT,false));styleArrow(ahb);}
       else if(ahb.getAttribute("opacity")!=="0"){ahb.setAttribute("opacity",0);ahb._opacity=0;}}
     else{setA(p,"stroke","#a7a293");setA(p,"stroke-width",A?0.8:1.2);setA(p,"opacity",vis);setA(p,"stroke-dasharray",rc.dash?"6 7.5":"none");
       if(ah.getAttribute("opacity")!=="0"){ah.setAttribute("opacity",0);ah._opacity=0;ahb.setAttribute("opacity",0);ahb._opacity=0;}}
-    if(hot){const midx=(a.x+b.x)/2,midy=(a.y+b.y)/2,ex=b.x-a.x,ey=b.y-a.y,eln=Math.hypot(ex,ey)||1;const side=(a.x+b.x)/2<A.hx?-1:1;
-      const lx=(midx+(-ey/eln)*side*20).toFixed(1),ly=(midy+(ex/eln)*side*20+3);
+    if(hot){const labelT=visibleCurveT(a,b,.35),lp=curvePoint(a.x,a.y,mx,my,b.x,b.y,labelT),d=curveDir(a.x,a.y,mx,my,b.x,b.y,labelT),eln=Math.hypot(d[0],d[1])||1;const side=(a.x+b.x)/2<A.hx?-1:1;
+      const lx=(lp[0]+(-d[1]/eln)*side*20).toFixed(1),ly=(lp[1]+(d[0]/eln)*side*20+3);
       el.setAttribute("x",lx);el.setAttribute("y",ly.toFixed(1));
       setA(el,"fill",rc.c);setA(el,"opacity",1);setEdgeText(el,rc.t,lx,ly);}
     else if(el.getAttribute("opacity")!=="0"){el.setAttribute("opacity",0);el._opacity=0;el.textContent="";}});
@@ -2240,6 +2279,7 @@ function step(t){
     // 選択中、中心・まわり以外の背景ノードは完全に止める（位置・サイズ・輪郭）。
     // ザワザワが気になるので、呼吸もうねりも固定する。
     const bgFrozen=active&&n.id!==active&&relList.indexOf(n.id)<0&&!n.dragging;
+    const intro=nutrientIntroState(n,t);
     // 位置は transform（安い・GPU向き）。サイズのゆらぎも scale なのでパス再生成は不要＝ほぼ無料。
     const iconData=(n.kind==="food"&&n.icon&&FOODICONS[n.icon])?FOODICONS[n.icon]:null;
     const br=(bgFrozen||iconData||FRONT==="food")?1:1+Math.sin(t*0.0016+n.ph)*0.035;   // 食材タブとアイコンは拡大縮小を止めて軽くする
@@ -2260,7 +2300,7 @@ function step(t){
       }
     }else{
       [nb,nd,ol,E.gr].forEach(el=>{if(!el)return;el.removeAttribute("fill-rule");el.removeAttribute("clip-rule");});
-      const nodeScale=br*Math.pow(Math.max(vk,0.35),-0.82);
+      const nodeScale=br*Math.pow(Math.max(vk,0.35),-0.82)*intro.scale;
       nb.setAttribute("transform",`translate(${n.x.toFixed(1)} ${n.y.toFixed(1)}) scale(${nodeScale.toFixed(4)})`);
       if(nd){nd.setAttribute("opacity","0");nd.setAttribute("d","");}
       if(ol){ol.setAttribute("opacity","0");ol.setAttribute("d","");}
@@ -2268,6 +2308,7 @@ function step(t){
       const freezeThisFood=freezeFoodMotion&&n.kind==="food";
       const shapeMoving=!freezeThisFood&&(n.dragging||n.mSpd>0.6||n.jig>0.02||Math.abs(n.r-n._pr0)>0.3);
       if(n.kind==="eff"){n._pr0=n.r;nb.setAttribute("d",circlePath(n.r));}
+      else if(n.kind==="nut"&&intro.p<0.46){n._pr0=n.r;nb.setAttribute("d",circlePath(n.r));}
       else if(!freezeThisFood&&(wasHid||(!bgFrozen&&(shapeMoving||(EFRAME+(n._bslot||0))%6===0)))){n._pr0=n.r;nb.setAttribute("d",blob(n,t));if(E.gr&&E.gr._on)E.gr.setAttribute("d",nb.getAttribute("d"));}
     }
     if(n.kind==="eff"){nb.setAttribute("fill",n.effectFill);nb.setAttribute("stroke","none");if(nd){nd.setAttribute("opacity","0");nd.setAttribute("stroke","none");}if(E.gr)E.gr.setAttribute("opacity","0");}
@@ -2326,6 +2367,7 @@ function step(t){
     if(SEARCH)dim=(matched[n.id]!==undefined?1:(n.kind===FRONT?0.14:0));
     else if(A)dim=(n.id===active||relList.indexOf(n.id)>=0)?1:(n.kind===FRONT?0.18:0);
     else dim=(n.kind===FRONT)?1:0;
+    if(n.kind==="nut"&&!nutrientIntroDone)dim*=Math.max(0,Math.min(1,(intro.p-0.28)/0.42));
     const tgt=toFront?lf:l,off=toFront?l:lf;
     // 食材ラベルはシルエットの「実際の下端」から一定距離に置く。
     // 緑黄色野菜(carrot)の現行見え方を基準に、下端→文字ベースラインを約13pxで統一。
@@ -2385,6 +2427,7 @@ function step(t){
     el.setAttribute("fill",gp.color);el.setAttribute("opacity",1);if(el.textContent!==gp.text)el.textContent=gp.text;}
   // ノード状態でラベルの基準サイズが変わるため、描画末尾でもズーム補正を同期。
   updateMapTextScale();
+  if(!nutrientIntroDone&&nutrientIntroStart&&t-nutrientIntroStart>470)nutrientIntroDone=true;
   // 全員が寝る時刻を過ぎ、かつ全ノードがほぼ静止したら描画ループを止める（発熱ゼロ）
   if(idle&&maxSp<0.15&&t-lastInteract>IDLE_MS+5500){asleep=true;running=false;return;}
   queueStep();}
@@ -2733,7 +2776,7 @@ function refreshFoodHomeView(){
 window.addEventListener("resize",refreshFoodHomeView,{passive:true});
 if(window.visualViewport)window.visualViewport.addEventListener("resize",refreshFoodHomeView,{passive:true});
 
-loadHist();buildWorld();renderTrail();{const h=homeView(FRONT);vk=tvk=h.k;vtx=tvx=h.x;vty=tvy=h.y;}applyView();document.getElementById("ver").textContent="eiyou map "+APPVER;document.title="eiyou map "+APPVER;lastInteract=performance.now();schedule();setTimeout(openFromHash,0);setTimeout(checkLatestVersion,250);
+loadHist();buildWorld();renderTrail();{const h=homeView(FRONT);vk=tvk=h.k;vtx=tvx=h.x;vty=tvy=h.y;}applyView();document.getElementById("ver").textContent="eiyou map "+APPVER;document.title="eiyou map "+APPVER;lastInteract=performance.now();nutrientIntroStart=lastInteract;schedule();setTimeout(openFromHash,0);setTimeout(checkLatestVersion,250);
 </script>
 </body>
 </html>
