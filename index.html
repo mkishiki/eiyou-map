@@ -14,6 +14,12 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="eiyou map">
 <meta name="theme-color" content="#e8503f">
+<meta name="description" content="栄養素・食材・はたらきの関係を、たどって楽しむ個人制作のアプリです。">
+<meta property="og:title" content="eiyou map">
+<meta property="og:description" content="栄養素・食材・はたらきの関係を、たどって楽しむ個人制作のアプリです。">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://mkishiki.github.io/eiyou-map/apple-touch-icon.png">
+<meta name="twitter:card" content="summary">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -58,6 +64,7 @@
   #howto p{font-size:12px;color:#5c5344;line-height:1.75;margin:0 0 8px;}
   #howto .fig{background:#f2f0ec;border-radius:12px;padding:12px 10px 8px;margin:8px 0 10px;}
   #howto .fig.plain{background:transparent;border-radius:0;padding:4px 0 2px;}
+  #howto .leadfig{margin-top:-4px;padding-top:0;}
   #howto .chainfig{margin-top:-4px;margin-bottom:2px;}
   #howto .chainline{font-size:8.5px;fill:#9a9284;font-weight:600;paint-order:stroke;stroke:#fff;stroke-width:2.4;stroke-linejoin:round;}
   #howto .srcmark{color:#c8452f;font-weight:750;}
@@ -175,8 +182,8 @@
         <div id="howto">
           <h4>世界は一つ　入り口は三つ</h4>
           <p>このアプリは、栄養素のはたらきやつながりを、たどって楽しむアプリです。栄養素・食材・はたらきの三つの層は、一つの世界でつながっています。</p>
-          <div class="fig plain">
-            <svg viewBox="0 0 300 158" xmlns="http://www.w3.org/2000/svg" aria-label="はたらき、栄養素、食材の3レイヤー">
+          <div class="fig plain leadfig">
+            <svg viewBox="0 8 300 150" xmlns="http://www.w3.org/2000/svg" aria-label="はたらき、栄養素、食材の3レイヤー">
               <g font-size="9.5" fill="#8a8172" text-anchor="middle" font-weight="600">
                 <text x="70" y="36">はたらきから</text>
                 <text x="150" y="24">栄養素から</text>
@@ -188,7 +195,7 @@
                 <polygon points="230,42 276,68 276,120 230,146 184,120 184,68"/>
               </g>
               <g class="info-demo-node" data-x="70" data-y="94" data-r="22" data-fill="#7a9b46" data-label="腸を整える" data-round="1" data-look-x="150" data-look-y="82"></g>
-              <g class="info-demo-node" data-x="150" data-y="82" data-r="23" data-fill="#e0ead0" data-label="食物繊維"></g>
+              <g class="info-demo-node" data-x="150" data-y="82" data-r="23" data-nut="fiber" data-label="食物繊維"></g>
               <g class="info-demo-node" data-x="230" data-y="94" data-r="15" data-fill="#d9d3c7" data-label="大豆" data-food="大豆" data-look-x="150" data-look-y="82"></g>
             </svg>
           </div>
@@ -1392,7 +1399,7 @@ const foodIconLight=col=>mixHex(col,'#ffffff',0.04);
 const foodIconDark=col=>mixHex(col,'#000000',0.14);
 const PT=12;
 let nodes={},edges=[],catLabels=[],groupLabels=[];
-const APPVER="v1.238";   // ルール: 実際の出力ごとに必ず +0.001
+const APPVER="v1.244";   // ルール: 実際の出力ごとに必ず +0.001
 let ADJREL={},FOODOF={},NUTOF={},EFFOF={},NUTEFF={},BLKOF={},BLKBY={};
 let NOW=0,active=null,relList=[],relAssign={},relRad={};
 let SEARCH="",matched={},matchN=0,FRONT="nut",switchBoost=0,stage=0,foodHidden=0;
@@ -1963,7 +1970,7 @@ function resetAll(){wake();stage=0;sinkSurfaced([]);active=null;relList=[];relAs
   if(SEARCH)clearSearch(1);
   Object.values(nodes).forEach(n=>{n.hx=n.ox;n.hy=n.oy;n.x=n.ox;n.y=n.oy;n.px=n.x;n.py=n.y;n.mSpd=0;n.jig=0.4;n.dragging=false;n.surfaced=0;n.sinking=0;n.placed=0;
     const fr=(n.kind===FRONT);n.op=fr?1:0;n.r=n.base;});
-  setFront(FRONT);{const h=(FRONT==="food")?foodHomeView():{k:1,x:0,y:0};tvk=h.k;tvx=h.x;tvy=h.y;}
+  setFront(FRONT);{const h=(FRONT==="food")?foodHomeView():{k:1,x:0,y:-56};tvk=h.k;tvx=h.x;tvy=h.y;}
   renderTrail();}
 
 // ===== 描画 =====
@@ -2471,7 +2478,7 @@ function setFront(f){wake();const changed=(FRONT!==f);FRONT=f;
   if(changed){switchBoost=NOW+280;stage=0;sinkSurfaced([]);active=null;relList=[];relAssign={};relRad={};groupLabels=[];
     Object.values(nodes).forEach(n=>{if(n.kind===f){n.r=n.base;}}); // サイズは即フル・透明度だけでふわっと
     renderTrail();}
-  if(!active){const h=(f==="food")?foodHomeView():{k:1,x:0,y:0};tvk=h.k;tvx=h.x;tvy=h.y;}}
+  if(!active){const h=(f==="food")?foodHomeView():{k:1,x:0,y:-56};tvk=h.k;tvx=h.x;tvy=h.y;}}
 function foodViewportTop(){
   const sr=document.getElementById("searchwrap");
   const sv=svg&&svg.getBoundingClientRect();
