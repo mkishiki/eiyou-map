@@ -187,7 +187,7 @@
                 <polygon points="150,30 196,56 196,108 150,134 104,108 104,56"/>
                 <polygon points="230,42 276,68 276,120 230,146 184,120 184,68"/>
               </g>
-              <g class="info-demo-node" data-x="70" data-y="94" data-r="22" data-fill="#7a9b46" data-label="腸を整える" data-look-x="150" data-look-y="82"></g>
+              <g class="info-demo-node" data-x="70" data-y="94" data-r="22" data-fill="#7a9b46" data-label="腸を整える" data-round="1" data-look-x="150" data-look-y="82"></g>
               <g class="info-demo-node" data-x="150" data-y="82" data-r="23" data-fill="#e0ead0" data-label="食物繊維"></g>
               <g class="info-demo-node" data-x="230" data-y="94" data-r="15" data-fill="#d9d3c7" data-label="大豆" data-food="大豆" data-look-x="150" data-look-y="82"></g>
             </svg>
@@ -195,6 +195,12 @@
           <p>要素をタップすると、層を横断しながら、関連する要素へ次々とつながっていきます。</p>
           <div class="fig plain chainfig">
             <svg viewBox="0 0 300 126" xmlns="http://www.w3.org/2000/svg" aria-label="食物繊維から大豆、鉄、血をつくるへつながる例">
+              <g font-size="8.5" fill="#8a8172" text-anchor="middle" font-weight="700">
+                <text x="44" y="16">栄養素</text>
+                <text x="118" y="50">食材</text>
+                <text x="190" y="16">栄養素</text>
+                <text x="258" y="50">はたらき</text>
+              </g>
               <g fill="none" stroke-linecap="round" stroke-linejoin="round">
                 <path class="info-demo-link" data-a-x="44" data-a-y="42" data-b-x="118" data-b-y="76" d="M 44 42 L 118 76" stroke="#e0ead0" stroke-width="2.4"/>
                 <path class="info-demo-link" data-a-x="118" data-a-y="76" data-b-x="190" data-b-y="42" d="M 118 76 L 190 42" stroke="#ecd6c6" stroke-width="2.4"/>
@@ -1386,7 +1392,7 @@ const foodIconLight=col=>mixHex(col,'#ffffff',0.04);
 const foodIconDark=col=>mixHex(col,'#000000',0.14);
 const PT=12;
 let nodes={},edges=[],catLabels=[],groupLabels=[];
-const APPVER="v1.236";   // ルール: 実際の出力ごとに必ず +0.001
+const APPVER="v1.238";   // ルール: 実際の出力ごとに必ず +0.001
 let ADJREL={},FOODOF={},NUTOF={},EFFOF={},NUTEFF={},BLKOF={},BLKBY={};
 let NOW=0,active=null,relList=[],relAssign={},relRad={};
 let SEARCH="",matched={},matchN=0,FRONT="nut",switchBoost=0,stage=0,foodHidden=0;
@@ -2499,7 +2505,7 @@ function startInfoDemos(){
   if(_infoDemoRunning){_wakeInfoDemos();return;}_infoDemoRunning=true;
   const els=[...document.querySelectorAll(".info-demo-node")];
   const demo=els.map((g,i)=>{
-    const x=+g.dataset.x,y=+g.dataset.y,r=+g.dataset.r,food=g.dataset.food||null,effect=g.dataset.effect||null;
+    const x=+g.dataset.x,y=+g.dataset.y,r=+g.dataset.r,food=g.dataset.food||null,effect=g.dataset.effect||null,round=g.dataset.round==="1";
     const fill=g.dataset.nut&&NUT[g.dataset.nut]?NUT[g.dataset.nut][1]:(g.dataset.effect&&EFFECTS[g.dataset.effect]?EFFECTS[g.dataset.effect].fill:(g.dataset.fill||FCOLOR));
     const dash=g.dataset.dash==="1",lookX=g.dataset.lookX?+g.dataset.lookX:null,lookY=g.dataset.lookY?+g.dataset.lookY:null,orbitX=g.dataset.orbitX?+g.dataset.orbitX:null,orbitY=g.dataset.orbitY?+g.dataset.orbitY:null;
     const icon=food?FOODICONS[foodIconOf(food)]:null;
@@ -2530,7 +2536,7 @@ function startInfoDemos(){
       const demoAria=(g.closest("svg")&&g.closest("svg").getAttribute("aria-label"))||"";
       const modalNearFood=(g.dataset.label==="牛乳"&&demoAria.includes("カルシウム"));
       tx.setAttribute("font-weight",modalNearFood?"700":"500");tx.setAttribute("fill","#3a3226");tx.setAttribute("text-anchor","middle");g.appendChild(tx);}
-    const o={g,p,d,ol,icon,eyes,x,y,cx:x,cy:y,rx:x,ry:y,r,vr,food,effect,seed,pa,am,blink:(i*720+1700)%3300,lookX,lookY,orbitX,orbitY,orbitR:(orbitX!==null&&orbitY!==null)?Math.hypot(x-orbitX,y-orbitY):null,defaultEyes:g.dataset.eyes!=="0",dragging:false,pid:null,grabX:0,grabY:0,surpriseUntil:0,svg:g.ownerSVGElement,vx:0,vy:0,lastPX:null,lastPY:null,mSpd:0,mAng:0,jig:0,freeze:false,moveHappy:(i%2===0),lastInteract:performance.now(),sleepDelay:(i*617)%2400,postMoveUntil:0};
+    const o={g,p,d,ol,icon,eyes,x,y,cx:x,cy:y,rx:x,ry:y,r,vr,food,effect,round,seed,pa,am,blink:(i*720+1700)%3300,lookX,lookY,orbitX,orbitY,orbitR:(orbitX!==null&&orbitY!==null)?Math.hypot(x-orbitX,y-orbitY):null,defaultEyes:g.dataset.eyes!=="0",dragging:false,pid:null,grabX:0,grabY:0,surpriseUntil:0,svg:g.ownerSVGElement,vx:0,vy:0,lastPX:null,lastPY:null,mSpd:0,mAng:0,jig:0,freeze:false,moveHappy:(i%2===0),lastInteract:performance.now(),sleepDelay:(i*617)%2400,postMoveUntil:0};
     g.style.cursor="grab";g.style.touchAction="none";
     return o;
   });
@@ -2565,7 +2571,7 @@ function startInfoDemos(){
     const release=ev=>{if(!o.dragging||ev.pointerId!==o.pid)return;ev.preventDefault();ev.stopPropagation();o.dragging=false;modalDemoDragging=Math.max(0,modalDemoDragging-1);o.pid=null;o.lastPX=null;o.lastPY=null;o.freeze=false;wakeModalWorld();o.mSpd=Math.max(o.mSpd,4.5);o.postMoveUntil=modalWorldClock+1500;o.surpriseUntil=Math.max(o.surpriseUntil,performance.now()+120);o.g.style.cursor="grab";const raisedSvg=o.svg,fig=raisedSvg&&raisedSvg.closest(".fig");setTimeout(()=>{if(!o.dragging&&Math.hypot(o.cx-o.x,o.cy-o.y)<2){if(raisedSvg)raisedSvg.style.zIndex="";if(fig)fig.style.zIndex="";}},850);};
     o.g.addEventListener("pointerup",release);o.g.addEventListener("pointercancel",release);
   });
-  const mkPath=(o,t)=>{if(o.effect)return circlePath(o.vr);const sx=1+(o.jig||0)*Math.sin(t*.005)*.2,sy=1-(o.jig||0)*Math.sin(t*.005)*.2,st=Math.min((o.mSpd||0)*.09,.6),P=[];for(let i=0;i<PT;i++){const a=i/PT*6.283+o.seed;let rr=o.vr*(1+(o.freeze?0:o.am[i])*Math.sin(t*.0012+o.pa[i]));const al=Math.cos(a-(o.mAng||0));rr*=1+st*al*al;P.push([Math.cos(a)*rr*sx,Math.sin(a)*rr*sy]);}const md=(A,B)=>[(A[0]+B[0])/2,(A[1]+B[1])/2],stp=md(P[PT-1],P[0]);let dd=`M ${stp[0].toFixed(1)} ${stp[1].toFixed(1)} `;for(let i=0;i<PT;i++){const m=md(P[i],P[(i+1)%PT]);dd+=`Q ${P[i][0].toFixed(1)} ${P[i][1].toFixed(1)} ${m[0].toFixed(1)} ${m[1].toFixed(1)} `;}return dd+"Z";};
+  const mkPath=(o,t)=>{if(o.effect||o.round)return circlePath(o.vr);const sx=1+(o.jig||0)*Math.sin(t*.005)*.2,sy=1-(o.jig||0)*Math.sin(t*.005)*.2,st=Math.min((o.mSpd||0)*.09,.6),P=[];for(let i=0;i<PT;i++){const a=i/PT*6.283+o.seed;let rr=o.vr*(1+(o.freeze?0:o.am[i])*Math.sin(t*.0012+o.pa[i]));const al=Math.cos(a-(o.mAng||0));rr*=1+st*al*al;P.push([Math.cos(a)*rr*sx,Math.sin(a)*rr*sy]);}const md=(A,B)=>[(A[0]+B[0])/2,(A[1]+B[1])/2],stp=md(P[PT-1],P[0]);let dd=`M ${stp[0].toFixed(1)} ${stp[1].toFixed(1)} `;for(let i=0;i<PT;i++){const m=md(P[i],P[(i+1)%PT]);dd+=`Q ${P[i][0].toFixed(1)} ${P[i][1].toFixed(1)} ${m[0].toFixed(1)} ${m[1].toFixed(1)} `;}return dd+"Z";};
   const mkEyes=(o,t)=>{const ox=o.r*.35,oy=-o.r*.08,sz=o.r*.195,dk="#2a2a2a",surprised=o.dragging||t<o.surpriseUntil,moving=o.mSpd>1.5||modalWorldClock<o.postMoveUntil,sleeping=!o.dragging&&modalWorldClock-modalWorldLastInteract>10000+o.sleepDelay;let gx=.08,gy=.12;if(o.lookX!==null&&o.lookY!==null){const dx=o.lookX-o.x,dy=o.lookY-o.y,L=Math.hypot(dx,dy)||1;gx=dx/L*.32;gy=dy/L*.32;}const rnd=cx=>`<circle cx="${cx.toFixed(1)}" cy="${oy.toFixed(1)}" r="${sz.toFixed(1)}" fill="#fff"/><circle cx="${(cx+sz*gx).toFixed(1)}" cy="${(oy+sz*gy).toFixed(1)}" r="${(sz*.55).toFixed(1)}" fill="${dk}"/>`;const sur=cx=>`<circle cx="${cx.toFixed(1)}" cy="${oy.toFixed(1)}" r="${(sz*1.28).toFixed(1)}" fill="#fff"/><circle cx="${cx.toFixed(1)}" cy="${oy.toFixed(1)}" r="${(sz*.42).toFixed(1)}" fill="${dk}"/>`;const up=cx=>`<path d="M ${(cx-sz).toFixed(1)} ${(oy+sz*.3).toFixed(1)} A ${sz.toFixed(1)} ${sz.toFixed(1)} 0 0 1 ${(cx+sz).toFixed(1)} ${(oy+sz*.3).toFixed(1)}" fill="none" stroke="${dk}" stroke-width="${(sz*.5).toFixed(1)}" stroke-linecap="round"/>`;const chev=(cx,d)=>`<polyline points="${(cx-d*sz).toFixed(1)},${(oy-sz).toFixed(1)} ${(cx+d*sz*.7).toFixed(1)},${oy.toFixed(1)} ${(cx-d*sz).toFixed(1)},${(oy+sz).toFixed(1)}" fill="none" stroke="${dk}" stroke-width="${(sz*.5).toFixed(1)}" stroke-linecap="round" stroke-linejoin="round"/>`;const flat=cx=>`<line x1="${(cx-sz).toFixed(1)}" y1="${oy.toFixed(1)}" x2="${(cx+sz).toFixed(1)}" y2="${oy.toFixed(1)}" stroke="${dk}" stroke-width="${(sz*.5).toFixed(1)}" stroke-linecap="round"/>`;if(surprised)return sur(-ox)+sur(ox);if(moving)return o.moveHappy?(up(-ox)+up(ox)):(chev(-ox,1)+chev(ox,-1));if(sleeping)return flat(-ox)+flat(ox);return rnd(-ox)+rnd(ox);};
   tick=t=>{modalRafRunning=false;const modalOpen=document.getElementById("srcmodal").classList.contains("open");if(!modalOpen){modalWorldLastTick=null;return;}const modalTouching=modalDemoDragging>0;if(!modalTouching&&t-modalLastDraw<50){scheduleModal();return;}modalLastDraw=t;if(modalWorldLastTick!==null)modalWorldClock+=Math.min(100,t-modalWorldLastTick);modalWorldLastTick=t;if(modalWorldClock-modalWorldLastInteract>15500)modalWorldAwake=false;let modalMaxSp=0;demo.forEach(o=>{if(!o.dragging&&!demoSvgVisible(o.svg))return;if(!o.dragging){const px=o.cx,py=o.cy;o.cx+=(o.x-o.cx)*.13;o.cy+=(o.y-o.cy)*.13;const mx=o.cx-px,my=o.cy-py,sp=Math.hypot(mx,my);modalMaxSp=Math.max(modalMaxSp,sp);o.mSpd+=(sp-o.mSpd)*.12;if(sp>.1)o.mAng=Math.atan2(my,mx);o.jig*=0.9;o.freeze=false;}else{o.jig*=0.9;}/* メインの6px幅・周期に寄せつつ、説明図の関係が崩れないよう4pxに抑える。 */const dx=(o.dragging||!modalWorldAwake)?0:Math.sin(t*.0009+o.seed)*4,dy=(o.dragging||!modalWorldAwake)?0:Math.cos(t*.0011+o.seed*1.7)*4;o.rx=o.cx+dx;o.ry=o.cy+dy;o.g.setAttribute("transform",`translate(${o.rx.toFixed(2)} ${o.ry.toFixed(2)})`);if(o.icon){const st=Math.min((o.mSpd||0)*0.055,0.22),jg=(o.jig||0)*Math.sin(t*.005)*0.10,sx=1+st+jg,sy=1-st*0.62-jg*0.45,rot=((o.mAng||0)*180/Math.PI)*(st*0.12+jg*0.08),sc=o.vr/50,tf=`rotate(${rot.toFixed(2)}) scale(${(sc*sx).toFixed(4)} ${(sc*sy).toFixed(4)}) translate(-50 -50)`;o.p.setAttribute("transform",tf);o.d.setAttribute("transform",tf);o.ol.setAttribute("transform",tf);}else{o.p.setAttribute("d",mkPath(o,t));}const eyeActive=(o.dragging||t<o.surpriseUntil)||o.defaultEyes;if(eyeActive){o.eyes.innerHTML=mkEyes(o,t);}else if(o.eyes.innerHTML){o.eyes.innerHTML="";}});
     demoLinks.forEach(l=>{
