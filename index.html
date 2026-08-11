@@ -1399,7 +1399,7 @@ const foodIconLight=col=>mixHex(col,'#ffffff',0.04);
 const foodIconDark=col=>mixHex(col,'#000000',0.14);
 const PT=12;
 let nodes={},edges=[],catLabels=[],groupLabels=[];
-const APPVER="v1.261";   // ルール: 実際の出力ごとに必ず +0.001
+const APPVER="v1.262";   // ルール: 実際の出力ごとに必ず +0.001
 let ADJREL={},FOODOF={},NUTOF={},EFFOF={},NUTEFF={},BLKOF={},BLKBY={};
 let NOW=0,active=null,relList=[],relAssign={},relRad={};
 let SEARCH="",matched={},matchN=0,FRONT="nut",switchBoost=0,stage=0,foodHidden=0;
@@ -2161,6 +2161,11 @@ function step(t){
         tx=n.hx;ty=n.hy;
         const fr=(n.kind===FRONT);tr=fr?n.base*0.86:n.base*0.3;op=fr?0.25:0;}
     }else{tx=n.hx;ty=n.hy;const fr=(n.kind===FRONT);tr=fr?n.base:n.base*0.3;op=fr?1:0;}
+    // 完全に非表示で、今回も表示対象にならないノードは待機アニメ計算をしない。
+    // 次に表示対象になったフレームでは通常更新へ戻るため、ノード自体を消すカリングとは異なる。
+    if(n.op<0.02&&op===0&&!n.dragging&&!n.sinking){
+      n.x=tx;n.y=ty;n.px=tx;n.py=ty;n.r=tr;n.op=0;n.mSpd=0;n.jig=0;n.wob=0;n._offscreenIdle=0;return;
+    }
     // 待機中のゆらゆら。放置に入っても急停止させず、徐々に振幅を0へ落とす。
     // 選択中は、中心・まわり以外の背景ノードも止める（描画が軽くなる）。
     const isRel=A&&(n.id===active||relList.indexOf(n.id)>=0);
@@ -2182,6 +2187,11 @@ function step(t){
     n.jig*=JIGD;
     const mx=n.x-n.px,my=n.y-n.py,sp=Math.hypot(mx,my);n.mSpd+=(sp-n.mSpd)*0.12;if(sp>0.1)n.mAng=Math.atan2(my,mx);
     if(sp>maxSp)maxSp=sp;
+    // 画面外の待機ノードは、位置の追従だけ済ませて表情・目線アニメを休ませる。
+    // viewPadぶん余裕を持つので、画面端へ入る前に通常更新へ復帰する。
+    const offscreenIdle=!n.dragging&&!isRel&&(n.x<viewL||n.x>viewR||n.y<viewT||n.y>viewB);
+    n._offscreenIdle=offscreenIdle?1:0;
+    if(offscreenIdle){n.wob+=(0-n.wob)*E2(0.25);return;}
 
     // 放置：ノードごとにバラバラの遅延で目を閉じる（いつのまにか全員 ーー に）
     if(idle){if(t-lastInteract>IDLE_MS+n.sleepDelay)n.eyeBase="sleep";}
@@ -2288,6 +2298,8 @@ function step(t){
       if(E.l&&E.l.getAttribute("opacity")!=="0")E.l.setAttribute("opacity",0);
       if(E.lf&&E.lf.getAttribute("opacity")!=="0")E.lf.setAttribute("opacity",0);}return;}
     const wasHid=n._hid;n._hid=0;
+    // 画面外ではSVG属性の書き換えも休ませる。DOMは消さず、画面内へ戻ったフレームで即更新する。
+    if(n._offscreenIdle)return;
     g.setAttribute("opacity",n.op.toFixed(2));
     const nb=E.nb;
     // 選択中、中心・まわり以外の背景ノードは完全に止める（位置・サイズ・輪郭）。
