@@ -1399,7 +1399,7 @@ const foodIconLight=col=>mixHex(col,'#ffffff',0.04);
 const foodIconDark=col=>mixHex(col,'#000000',0.14);
 const PT=12;
 let nodes={},edges=[],catLabels=[],groupLabels=[];
-const APPVER="v1.262";   // ルール: 実際の出力ごとに必ず +0.001
+const APPVER="v1.265";   // ルール: 実際の出力ごとに必ず +0.001
 let ADJREL={},FOODOF={},NUTOF={},EFFOF={},NUTEFF={},BLKOF={},BLKBY={};
 let NOW=0,active=null,relList=[],relAssign={},relRad={};
 let SEARCH="",matched={},matchN=0,FRONT="nut",switchBoost=0,stage=0,foodHidden=0;
@@ -1556,6 +1556,7 @@ function bringFront(ids){const layer=document.getElementById("nodelayer");
   if(!layer||!layer.appendChild)return;
   ids.forEach(i=>{const g=document.getElementById("g_"+i);if(g&&g.parentNode===layer)layer.appendChild(g);});}
 function selectNode(id,fromNav){if(!nodes[id])return;wake();
+  const prevFocus=new Set(active?[active,...relList]:[]);
   if(id!==active)stage=0;                          // 別のノードを選んだら段階表示は最初から
   Object.values(nodes).forEach(n=>{n.placed=0;});   // 手置きの記憶は選択が変わったら解除
   active=id;relList=[];relAssign={};relRad={};groupLabels=[];
@@ -1919,6 +1920,10 @@ function selectNode(id,fromNav){if(!nodes[id])return;wake();
     });
   }
   Object.keys(seen).forEach(t=>groupLabels.push({abs:seen[t].sum/seen[t].n,text:t,color:seen[t].c,ids:seen[t].ids.slice()}));
+  // 前の選択でドラッグしていたノードが今回の中心・関連から外れたら、
+  // 手置き位置を捨てて本来の初期位置へ戻す。x/yは補間で追従するのでワープしない。
+  const nextFocus=new Set([id,...relList]);
+  prevFocus.forEach(pid=>{if(nextFocus.has(pid))return;const n=nodes[pid];if(!n)return;n.hx=n.ox;n.hy=n.oy;n.placed=0;});
   sinkSurfaced(relList.concat([id]));
   relList.forEach(r=>{const R=nodes[r];
     if(R.kind!==FRONT&&!R.surfaced){ // 隠れているレイヤー＝中心の足元から浮かび上がる
@@ -1945,7 +1950,11 @@ function setEdgeText(el,txt,x,y){
 }
 function sinkSurfaced(keep){const k=keep||[];
   Object.values(nodes).forEach(n=>{if(n.surfaced&&k.indexOf(n.id)<0){n.surfaced=0;n.sinking=1;n.mSpd=0;}});}
-function deselect(){wake();stage=0;sinkSurfaced([]);active=null;relList=[];relAssign={};relRad={};groupLabels=[];
+function deselect(){wake();stage=0;
+  // 選択解除では、その選択中にドラッグした中心・関連ノードを全て初期位置へ返す。
+  const prevFocus=active?[active,...relList]:[];
+  prevFocus.forEach(id=>{const n=nodes[id];if(!n)return;n.hx=n.ox;n.hy=n.oy;n.placed=0;});
+  sinkSurfaced([]);active=null;relList=[];relAssign={};relRad={};groupLabels=[];
   Object.values(nodes).forEach(n=>{n.jig=Math.max(n.jig,0.35);n.placed=0;});renderTrail();}
 
 // ===== 履歴：NAVは全部覚える／パンくずは「腕でつながっている区間」だけを導出 =====
@@ -2187,9 +2196,12 @@ function step(t){
     n.jig*=JIGD;
     const mx=n.x-n.px,my=n.y-n.py,sp=Math.hypot(mx,my);n.mSpd+=(sp-n.mSpd)*0.12;if(sp>0.1)n.mAng=Math.atan2(my,mx);
     if(sp>maxSp)maxSp=sp;
-    // 画面外の待機ノードは、位置の追従だけ済ませて表情・目線アニメを休ませる。
-    // viewPadぶん余裕を持つので、画面端へ入る前に通常更新へ復帰する。
-    const offscreenIdle=!n.dragging&&!isRel&&(n.x<viewL||n.x>viewR||n.y<viewT||n.y>viewB);
+    // 画面外でも「帰宅中」「関連位置へ移動中」のノードは止めない。
+    // 目的位置と見た目がほぼ落ち着いた待機ノードだけを休ませることで、
+    // 画面の縁で半端な位置に凍りつくのを防ぎつつ、省電力化を維持する。
+    const offscreen=(n.x<viewL||n.x>viewR||n.y<viewT||n.y>viewB);
+    const settled=Math.hypot(n.x-tx,n.y-ty)<1.2 && Math.abs(n.r-tr)<0.6 && Math.abs(n.op-op)<0.03;
+    const offscreenIdle=!n.dragging&&!isRel&&offscreen&&settled;
     n._offscreenIdle=offscreenIdle?1:0;
     if(offscreenIdle){n.wob+=(0-n.wob)*E2(0.25);return;}
 
@@ -2298,8 +2310,24 @@ function step(t){
       if(E.l&&E.l.getAttribute("opacity")!=="0")E.l.setAttribute("opacity",0);
       if(E.lf&&E.lf.getAttribute("opacity")!=="0")E.lf.setAttribute("opacity",0);}return;}
     const wasHid=n._hid;n._hid=0;
-    // 画面外ではSVG属性の書き換えも休ませる。DOMは消さず、画面内へ戻ったフレームで即更新する。
-    if(n._offscreenIdle)return;
+    // 画面外では輪郭・目・位置など重いSVG更新は休ませるが、表示状態だけは必ず同期する。
+    // 連鎖で背景へ下がった食材が、画面外にいる間だけ濃いまま残る「残像」を防ぐため。
+    if(n._offscreenIdle){
+      g.setAttribute("opacity",n.op.toFixed(2));
+      const l=E.l,lf=E.lf;
+      const toFront=SEARCH?(matched[n.id]!==undefined):(A?(n.id===active||relList.indexOf(n.id)>=0):true);
+      let dim;
+      if(SEARCH)dim=(matched[n.id]!==undefined?1:(n.kind===FRONT?0.14:0));
+      else if(A)dim=(n.id===active||relList.indexOf(n.id)>=0)?1:(n.kind===FRONT?0.18:0);
+      else dim=(n.kind===FRONT)?1:0;
+      if(n.kind==="nut"&&!nutrientIntroDone)dim*=introReveal;
+      const tgt=toFront?lf:l,off=toFront?l:lf;
+      if(tgt.getAttribute("opacity")!==String(dim))tgt.setAttribute("opacity",dim);
+      if(off.getAttribute("opacity")!=="0")off.setAttribute("opacity",0);
+      const sb=E.sb;
+      if(sb){const so=n.badge?n.op*0.95:0;if(sb.getAttribute("opacity")!==String(so))sb.setAttribute("opacity",so.toFixed(2));}
+      return;
+    }
     g.setAttribute("opacity",n.op.toFixed(2));
     const nb=E.nb;
     // 選択中、中心・まわり以外の背景ノードは完全に止める（位置・サイズ・輪郭）。
