@@ -1399,11 +1399,10 @@ const foodIconLight=col=>mixHex(col,'#ffffff',0.04);
 const foodIconDark=col=>mixHex(col,'#000000',0.14);
 const PT=12;
 let nodes={},edges=[],catLabels=[],groupLabels=[];
-const APPVER="v1.259";   // ルール: 実際の出力ごとに必ず +0.001
+const APPVER="v1.261";   // ルール: 実際の出力ごとに必ず +0.001
 let ADJREL={},FOODOF={},NUTOF={},EFFOF={},NUTEFF={},BLKOF={},BLKBY={};
 let NOW=0,active=null,relList=[],relAssign={},relRad={};
 let SEARCH="",matched={},matchN=0,FRONT="nut",switchBoost=0,stage=0,foodHidden=0;
-let nearestEyeFrontLast=null;
 // 三段階表示：栄養素タップで近い順に段階的に開く。stage0=近12件 / stage1=近24件 / stage2=全部。
 // 数値（距離＝量）は変えず、一度に見せる件数だけを絞って被りを減らす。
 const FOODSTG=[12,24];   // 各段で見せる食材数（近い順）。最終段は全部
@@ -2128,14 +2127,21 @@ function step(t){
   const viewL=(-vtx)/vk-viewPad,viewR=(560-vtx)/vk+viewPad;
   const viewT=(-vty)/vk-viewPad,viewB=(1000-vty)/vk+viewPad;
   const A=active?nodes[active]:null;
-  // 栄養素を選択中だけ、いま表示されている関連食材のうち最も近い1個に目を出す。
-  let nearestEyeFood=null;
+  // 栄養素を選択中：各食材カテゴリで最も近い食材だけに、目・太字・前面表示を与える。
+  // 同じセットを3つの見た目に共用し、カテゴリごとの代表が一貫して見えるようにする。
+  const nearestCatFoods=new Set();
   if(A&&A.kind==="nut"){
-    let best=Infinity;
-    relList.forEach(id=>{const nn=nodes[id],rr=relRad[id];if(nn&&nn.kind==="food"&&rr!=null&&rr<best){best=rr;nearestEyeFood=id;}});
+    const bestByCat=new Map();
+    relList.forEach(id=>{
+      const nn=nodes[id],rr=relRad[id];
+      if(!nn||nn.kind!=="food"||rr==null)return;
+      const cat=FOODCAT[id],prev=bestByCat.get(cat);
+      if(!prev||rr<prev.r){bestByCat.set(cat,{id,r:rr});}
+    });
+    bestByCat.forEach(v=>nearestCatFoods.add(v.id));
   }
-  if(nearestEyeFood&&nearestEyeFood!==nearestEyeFrontLast){bringFront([nearestEyeFood]);nearestEyeFrontLast=nearestEyeFood;}
-  if(!nearestEyeFood)nearestEyeFrontLast=null;
+  const eyeFoods=nearestCatFoods;
+  if(eyeFoods.size)bringFront([...eyeFoods]);
   Object.values(nodes).forEach(n=>{
     if(n.dragging){const mx=n.x-n.px,my=n.y-n.py;n.px=n.x;n.py=n.y;const sp=Math.hypot(mx,my);n.mSpd+=(sp-n.mSpd)*0.3;if(sp>0.1)n.mAng=Math.atan2(my,mx);
       n.r+=(n.base-n.r)*0.1;n.op=1;n.freeze=true;n.jig*=0.9;n.pd.x+=(0-n.pd.x)*0.1;n.pd.y+=(0.3-n.pd.y)*0.1;return;}
@@ -2340,7 +2346,7 @@ function step(t){
           else{nb.setAttribute("stroke","#000");nb.setAttribute("stroke-width","1.2");nb.setAttribute("stroke-dasharray","3 3");}}}
     }
     // === 目は通常6フレームに1回だけ再生成し、表情変化時は即時更新する ===
-    const focusFoodByNearest=(n.id===nearestEyeFood);
+    const focusFoodByNearest=eyeFoods.has(n.id);
     const focusFoodByActive=(A&&A.kind==="food"&&n.id===active);
     const focusFoodBySearch=(SEARCH&&matched[n.id]!==undefined);
     const useEyes=(n.kind!=="food")||n.dragging||focusFoodByNearest||focusFoodByActive||focusFoodBySearch;
@@ -2390,17 +2396,8 @@ function step(t){
     const labelFS=(active&&n.id===active)?16:(n.kind==="food"?11.5:14);
     tgt.dataset.fs=labelFS;
     tgt.setAttribute("font-size",(labelFS*Math.pow(Math.max(vk,0.35),-0.82)).toFixed(2));
-    // 栄養素を選択中：各食材カテゴリで最も近い食材（relRad最小）だけ少し太くする。
-    let nearCatFood=false;
-    if(A&&A.kind==="nut"&&n.kind==="food"&&relList.indexOf(n.id)>=0){
-      const cat=FOODCAT[n.id],myR=relRad[n.id];
-      nearCatFood=true;
-      for(const fid of relList){
-        if(fid===n.id)continue;
-        const fnn=nodes[fid];
-        if(fnn&&fnn.kind==="food"&&FOODCAT[fid]===cat&&relRad[fid]!=null&&relRad[fid]<myR-0.01){nearCatFood=false;break;}
-      }
-    }
+    // 各食材カテゴリの最寄り食材は、目を出す判定と同じセットを使って太字にする。
+    const nearCatFood=(A&&A.kind==="nut"&&n.kind==="food"&&nearestCatFoods.has(n.id));
     tgt.setAttribute("font-weight",nearCatFood?800:((active&&n.id===active)?700:500));
     // GRP（ヘム鉄/非ヘム鉄・飽和/不飽和・動物性/植物性）を食材ラベルの文字色で示す。
     const lgrc=(n.kind==="food"&&A&&A.kind==="nut"&&relList.indexOf(n.id)>=0)?grpColorOf(active,n.id):null;
