@@ -1404,7 +1404,7 @@ const foodIconLight=col=>mixHex(col,'#ffffff',0.04);
 const foodIconDark=col=>mixHex(col,'#000000',0.14);
 const PT=12;
 let nodes={},edges=[],catLabels=[],groupLabels=[];
-const APPVER="v1.344";   // ルール: 実際の出力ごとに必ず +0.001
+const APPVER="v1.345";   // ルール: 実際の出力ごとに必ず +0.001
 let ADJREL={},FOODOF={},NUTOF={},EFFOF={},NUTEFF={},BLKOF={},BLKBY={};
 let NOW=0,active=null,relList=[],relAssign={},relRad={};
 let SEARCH="",matched={},matchN=0,FRONT="nut",switchBoost=0,stage=0,foodHidden=0;
@@ -1416,7 +1416,8 @@ const MOREID="__more__";   // 「＋n」ノードのID
 let running=false,rafId=0,lastInteract=0,IDLE_MS=10000,asleep=false,EFRAME=0,_lastDraw=0;
 // 起動時だけ、栄養素が小さな泡から生まれるように登場する。タブ切替では繰り返さない。
 const NUT_INTRO_STAGGER=14,NUT_INTRO_DURATION=414,NUT_INTRO_REVEAL=80;
-let nutrientIntroStart=0,nutrientIntroDone=false,nutrientIntroEnd=0;
+let nutrientIntroStart=0,nutrientIntroDone=false,nutrientIntroEnd=0,nutrientIntroPending=true;
+function startNutrientIntroOnce(){if(nutrientIntroStart||nutrientIntroDone)return;nutrientIntroPending=false;nutrientIntroStart=performance.now();lastInteract=nutrientIntroStart;schedule();}
 
 function mkWob(o){o.seed=Math.random()*6.28;o.pa=[];o.am=[];for(let i=0;i<PT;i++){o.pa.push(Math.random()*6.28);o.am.push(0.06+Math.random()*0.06);}}
 function mkNode(id,name,col,x,y,base,kind){const rr=Math.random();const oe=rr<0.14?"sleep":(rr<0.28?"dead":"open");const n={id,name,col,kind,hx:x,hy:y,x,y,px:x,py:y,base,r:base,op:1,ph:Math.random()*6.28,pd:{x:0,y:0.3},jig:0,mAng:0,mSpd:0,eyeBase:oe,origEye:oe,sleepDelay:Math.random()*5000,_eslot:(Math.random()*6)|0,_bslot:(Math.random()*6)|0,_pr0:base,moveHappy:Math.random()<0.6,nextBlink:1000+Math.random()*5000,blinkEnd:0,surpriseEnd:0,happyEnd:0,wasMoving:false,gatherTurnT:0,gatherTurnSpin:0,gatherTurnSide:1};mkWob(n);return n;}
@@ -2243,7 +2244,8 @@ function toggleNutHint(id){if(!NUT_HINTS[id])return;const el=document.getElement
 function schedule(){if(running||document.hidden)return;running=true;queueStep();}
 function stopMainLoop(){if(rafId)cancelAnimationFrame(rafId);rafId=0;running=false;}
 function nutrientIntroState(n,t){
-  if(nutrientIntroDone||n.kind!=="nut"||!nutrientIntroStart)return {p:1,scale:1};
+  if(nutrientIntroDone||n.kind!=="nut")return {p:1,scale:1};
+  if(nutrientIntroPending||!nutrientIntroStart)return {p:0,scale:0.10};
   const p=Math.max(0,Math.min(1,(t-nutrientIntroStart-(n.introDelay||0))/NUT_INTRO_DURATION));
   if(p>=1)return {p:1,scale:1};
   // easeOutBack: 少しだけ行き過ぎて戻る「ぽわん」。最小サイズは完全な0にせず泡として見せる。
@@ -2251,7 +2253,8 @@ function nutrientIntroState(n,t){
   return {p,scale:0.10+0.90*back};
 }
 function nutrientIntroReveal(t){
-  if(nutrientIntroDone||!nutrientIntroStart)return 1;
+  if(nutrientIntroDone)return 1;
+  if(nutrientIntroPending||!nutrientIntroStart)return 0;
   const elapsed=t-nutrientIntroStart-nutrientIntroEnd;
   return Math.max(0,Math.min(1,elapsed/NUT_INTRO_REVEAL));
 }
@@ -2278,8 +2281,10 @@ async function checkLatestVersion(){
     if(!m||appVerNumber(m[1])<=appVerNumber(APPVER))return;
     const next=new URL(location.href);next.searchParams.delete("__fresh");next.searchParams.set("appver",m[1]);
     location.replace(next.toString());
+    return true;
   }catch(_){/* オフライン時は現在の版をそのまま使う */}
   finally{latestCheckBusy=false;}
+  return false;
 }
 
 function step(t){
@@ -3173,7 +3178,12 @@ function wireNutHint(){
   });
 }
 document.getElementById("wrap").addEventListener("pointerdown",ev=>{if(!openNutHint)return;for(const id of Object.keys(NUT_HINTS)){const btn=document.getElementById(`nutHintSvg_${id}`);if(btn&&btn.contains(ev.target))return;}openNutHint=null;hideNutSpeech();});
-loadHist();buildWorld();wireNutHint();startFoodFidget();renderTrail();{const h=homeView(FRONT);vk=tvk=h.k;vtx=tvx=h.x;vty=tvy=h.y;}applyView();document.getElementById("ver").textContent="eiyou map "+APPVER;document.title="eiyou map "+APPVER;lastInteract=performance.now();nutrientIntroStart=lastInteract;schedule();setTimeout(openFromHash,0);setTimeout(checkLatestVersion,250);
+loadHist();buildWorld();wireNutHint();startFoodFidget();renderTrail();{const h=homeView(FRONT);vk=tvk=h.k;vtx=tvx=h.x;vty=tvy=h.y;}applyView();document.getElementById("ver").textContent="eiyou map "+APPVER;document.title="eiyou map "+APPVER;lastInteract=performance.now();schedule();setTimeout(openFromHash,0);
+// 公開版で古いキャッシュ→最新版への差し替えが起きる場合、古い版の初回アニメを走らせない。
+// 最新版を使うと確定したページでだけ「ぽわん」を1回開始する。
+const bootAppVer=new URL(location.href).searchParams.get("appver");
+if(bootAppVer===APPVER){startNutrientIntroOnce();}
+else{checkLatestVersion().then(replacing=>{if(!replacing)startNutrientIntroOnce();});}
 </script>
 </body>
 </html>
