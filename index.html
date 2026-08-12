@@ -1404,7 +1404,7 @@ const foodIconLight=col=>mixHex(col,'#ffffff',0.04);
 const foodIconDark=col=>mixHex(col,'#000000',0.14);
 const PT=12;
 let nodes={},edges=[],catLabels=[],groupLabels=[];
-const APPVER="v1.318";   // ルール: 実際の出力ごとに必ず +0.001
+const APPVER="v1.328";   // ルール: 実際の出力ごとに必ず +0.001
 let ADJREL={},FOODOF={},NUTOF={},EFFOF={},NUTEFF={},BLKOF={},BLKBY={};
 let NOW=0,active=null,relList=[],relAssign={},relRad={};
 let SEARCH="",matched={},matchN=0,FRONT="nut",switchBoost=0,stage=0,foodHidden=0;
@@ -1511,7 +1511,7 @@ function buildDOM(){let s=`<g id="view"><rect x="-4000" y="-4000" width="12000" 
     // 分類名の背景はカテゴリ円弧の外側に接する帯。濃色の下線は使わない。
     const HW=24,HR=R+HW/2, hp=a=>[(acx+Math.cos(a)*HR).toFixed(1),(acy+Math.sin(a)*HR).toFixed(1)];
     const hp0=hp(a0-step*0.75),hp1=hp(a1+step*0.75),hiD=`M ${hp0[0]} ${hp0[1]} A ${HR} ${HR} 0 0 1 ${hp1[0]} ${hp1[1]}`;
-    let g=`<g id="cl${i}"><path d="${hiD}" fill="none" stroke="#f0ece4" stroke-width="${HW}" stroke-linecap="butt" opacity="0.72"/>`;
+    let g=`<g id="cl${i}" opacity="0"><path d="${hiD}" fill="none" stroke="#f0ece4" stroke-width="${HW}" stroke-linecap="butt" opacity="0.72"/>`;
     // 文字は背景帯の中心線(HR)上に置く。dominant-baseline=middle で
     // ズーム時に文字サイズが変わっても帯の上下中央を維持する。
     txt.forEach((ch,k)=>{const a=a0+k*step,q=hp(a);g+=`<text x="${q[0]}" y="${q[1]}" data-fs="16.9" font-size="16.9" font-weight="700" fill="#6b6152" text-anchor="middle" dominant-baseline="middle">${ch}</text>`;});
@@ -2002,7 +2002,7 @@ function selectNode(id,fromNav){if(!nodes[id])return;wake();
     });
   }
   bringFront(relList.concat([id]));
-  A.surpriseEnd=NOW+500;A.jig=1;relList.forEach(r=>{
+  A.surpriseEnd=NOW+500;A.jig=(A.kind==="food"?0:1);relList.forEach(r=>{
     const R=nodes[r];
     if(A.kind==="nut"&&R&&R.kind==="food")R.jig=0;
     else R.jig=Math.max(R.jig,0.7);
@@ -2028,8 +2028,15 @@ function deselect(){wake();stage=0;
   // 選択解除では、その選択中にドラッグした中心・関連ノードを全て初期位置へ返す。
   const prevFocus=active?[active,...relList]:[];
   prevFocus.forEach(id=>{const n=nodes[id];if(!n)return;n.hx=n.ox;n.hy=n.oy;n.placed=0;});
-  sinkSurfaced([]);active=null;relList=[];relAssign={};relRad={};groupLabels=[];
-  Object.values(nodes).forEach(n=>{n.jig=Math.max(n.jig,0.35);n.placed=0;});renderTrail();}
+  sinkSurfaced([]);
+  // 食材は「沈んで縮む」演出を使わず、元の大きさ・形のまま初期位置へ戻す。
+  prevFocus.forEach(id=>{
+    const n=nodes[id];if(!n||n.kind!=="food")return;
+    n.surfaced=0;n.sinking=0;n.r=n.base;n.jig=0;n.mSpd=0;
+    n.op=1;
+  });
+  active=null;relList=[];relAssign={};relRad={};groupLabels=[];
+  Object.values(nodes).forEach(n=>{n.jig=(n.kind==="food"?0:Math.max(n.jig,0.35));n.placed=0;});renderTrail();}
 
 // ===== 履歴：NAVは全部覚える／パンくずは「腕でつながっている区間」だけを導出 =====
 let NAV=[],HI=-1;
@@ -2055,7 +2062,7 @@ function renderTrail(){const el=document.getElementById("trail");const r=active?
 }
 function resetAll(){wake();stage=0;sinkSurfaced([]);active=null;relList=[];relAssign={};relRad={};groupLabels=[];
   if(SEARCH)clearSearch(1);
-  Object.values(nodes).forEach(n=>{n.hx=n.ox;n.hy=n.oy;n.x=n.ox;n.y=n.oy;n.px=n.x;n.py=n.y;n.mSpd=0;n.jig=0.4;n.dragging=false;n.surfaced=0;n.sinking=0;n.placed=0;
+  Object.values(nodes).forEach(n=>{n.hx=n.ox;n.hy=n.oy;n.x=n.ox;n.y=n.oy;n.px=n.x;n.py=n.y;n.mSpd=0;n.jig=(n.kind==="food"?0:0.4);n.dragging=false;n.surfaced=0;n.sinking=0;n.placed=0;
     const fr=(n.kind===FRONT);n.op=fr?1:0;n.r=n.base;});
   setFront(FRONT);{const h=homeView(FRONT);tvk=h.k;tvx=h.x;tvy=h.y;}
   renderTrail();}
@@ -2148,7 +2155,7 @@ function queueStep(){rafId=requestAnimationFrame(step);}
 const NUT_HINTS={
   vk:{node:"vk",message:"脂溶性ビタミンは、脂質といっしょに摂ると吸収されやすいよ",dx:59,dy:0},
   b6:{node:"b6",message:"水溶性ビタミンは、余ると排出されやすい。B12は体にためておけるけどね",dx:-59,dy:0},
-  k:{node:"k",message:"ミネラルはサプリの摂り過ぎに注意〜。食品からなら適量だよ",dx:-59,dy:0},
+  k:{node:"k",message:"ミネラルはサプリからの摂りすぎに注意。食品からなら適量だよ",dx:-59,dy:0},
   fe:{node:"fe",message:"微量ミネラルは、必要なのはほんの少しだけど、大事〜",dx:59,dy:0}
 };
 const nutHintPos={};
@@ -2508,8 +2515,10 @@ function step(t){
     if(iconData){
       const sc=(n.r/50)*br*Math.pow(Math.max(vk,0.35),-0.82);
       const gatheringFood=!!(A&&A.kind==="nut"&&n.kind==="food"&&relList.indexOf(n.id)>=0);
-      const st=(freezeFoodMotion||gatheringFood)?0:Math.min((n.mSpd||0)*0.055,0.22);
-      const jg=(freezeFoodMotion||gatheringFood)?0:(n.jig||0)*Math.sin(t*0.005)*0.10;
+      // 食材が初期配置へ戻る移動では、速度による潰れ・伸びを出さない。
+      const returningHome=!!(n.kind==="food"&&!active&&(Math.hypot(n.x-n.hx,n.y-n.hy)>1));
+      const st=(freezeFoodMotion||gatheringFood||returningHome)?0:Math.min((n.mSpd||0)*0.055,0.22);
+      const jg=(freezeFoodMotion||gatheringFood||returningHome)?0:(n.jig||0)*Math.sin(t*0.005)*0.10;
       const sx=1+st+jg,sy=1-st*0.62-jg*0.45;
       const moveRot=((n.mAng||0)*180/Math.PI)*(st*0.12+jg*0.08);
       const gatherRot=gatheringFood?foodGatherAngle(n,t):0;
@@ -3026,6 +3035,7 @@ if(window.visualViewport)window.visualViewport.addEventListener("resize",refresh
 // 「食材から」の初期画面のソワソワは、メイン描画ループから独立させる。
 // 省エネでメインループが休止しても、約6fpsの軽い更新だけで一部の食材を傾ける。
 let foodFidgetTimer=0;
+let foodFidgetClock=0,foodFidgetLastReal=performance.now(),foodFidgetWasEnabled=false;
 
 
 function foodGatherAngle(n,t){
@@ -3063,25 +3073,42 @@ function foodFidgetEase(p,spin){
   return -4 + 4*(0.5-0.5*Math.cos(Math.PI*q));
 }
 
+
+function foodStableHash(s){
+  let h=2166136261>>>0;
+  for(const c of String(s)){h^=c.charCodeAt(0);h=Math.imul(h,16777619)>>>0;}
+  return h>>>0;
+}
+
 function foodFidgetStep(){
-  const now=performance.now();
+  const realNow=performance.now();
   const enabled=FRONT==="food"&&!active&&!SEARCH&&!document.hidden&&!document.getElementById("srcmodal").classList.contains("open");
+  if(enabled){
+    if(foodFidgetWasEnabled)foodFidgetClock+=Math.max(0,realNow-foodFidgetLastReal);
+    foodFidgetWasEnabled=true;
+  }else{
+    foodFidgetWasEnabled=false; // 選択中などは待機アニメの時計も止める
+  }
+  foodFidgetLastReal=realNow;
+  const now=foodFidgetClock;
   Object.values(nodes).forEach(n=>{
     if(n.kind!=="food")return;
     const g=document.getElementById("g_"+n.id);if(!g)return;
     let ang=0;
-    if(enabled&&((n._bslot||0)%3!==2)){
-      const cycle=5000;
-      const shifted=now+n.ph*790+(n._bslot||0)*470;
+    if(enabled&&((n._bslot||0)%3===0)){
+      const fh=foodStableHash(n.id);
+      // 食材ごとに周期を4.6〜5.8秒へ少しずつずらし、待機アニメの同期を崩す。
+      const cycle=7000+(fh%2001); // 食材ごとに7〜9秒
+      const shifted=now+(fh%997)+n.ph*137;
       const phase=shifted%cycle;
       const turn=Math.floor(shifted/cycle);
-      const side=((turn+(n._bslot||0))%2)?1:-1;
-      const doubleTap=((turn+(n._bslot||0))%3===0);
+      const side=((turn+(fh%17))%2)?1:-1;
+      const doubleTap=((turn+(fh%19))%3===0);
       const moveDur=doubleTap?1000:850;
       if(phase<moveDur){
         const p=phase/moveDur;
         // ときどき二峰のカーブにして、クイッ→戻る→クイッ→戻るを1秒ほどで見せる。
-        if(((n._bslot||0)+turn)%10===0){
+        if(((fh%29)+turn)%10===0){
           // 一回転は、その1回の動作全体の進行度 p を使う。
           ang=side*foodFidgetEase(p,true);
         }else{
