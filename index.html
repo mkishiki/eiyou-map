@@ -1404,7 +1404,7 @@ const foodIconLight=col=>mixHex(col,'#ffffff',0.04);
 const foodIconDark=col=>mixHex(col,'#000000',0.14);
 const PT=12;
 let nodes={},edges=[],catLabels=[],groupLabels=[];
-const APPVER="v1.330";   // ルール: 実際の出力ごとに必ず +0.001
+const APPVER="v1.331";   // ルール: 実際の出力ごとに必ず +0.001
 let ADJREL={},FOODOF={},NUTOF={},EFFOF={},NUTEFF={},BLKOF={},BLKBY={};
 let NOW=0,active=null,relList=[],relAssign={},relRad={};
 let SEARCH="",matched={},matchN=0,FRONT="nut",switchBoost=0,stage=0,foodHidden=0;
@@ -2512,11 +2512,13 @@ function step(t){
     const iconData=(n.kind==="food"&&n.icon&&FOODICONS[n.icon])?FOODICONS[n.icon]:null;
     const br=(bgFrozen||iconData||FRONT==="food")?1:1+Math.sin(t*0.0016+n.ph)*0.035;   // 食材タブとアイコンは拡大縮小を止めて軽くする
     const nd=E.nd,ol=E.ol;
+    // 食材が初期配置へ戻る移動では、速度による潰れ・伸びや輪郭変形を出さない。
+    // 連続タップ中は次の active が存在していても、前の食材は関連から外れて帰宅するため、
+    // active の有無ではなく「現在の選択対象でも関連対象でもなく、初期位置へ戻っている食材」で判定する。
+    const returningHome=!!(n.kind==="food"&&n.id!==active&&relList.indexOf(n.id)<0&&(Math.hypot(n.x-n.hx,n.y-n.hy)>1));
     if(iconData){
       const sc=(n.r/50)*br*Math.pow(Math.max(vk,0.35),-0.82);
       const gatheringFood=!!(A&&A.kind==="nut"&&n.kind==="food"&&relList.indexOf(n.id)>=0);
-      // 食材が初期配置へ戻る移動では、速度による潰れ・伸びを出さない。
-      const returningHome=!!(n.kind==="food"&&!active&&(Math.hypot(n.x-n.hx,n.y-n.hy)>1));
       const st=(freezeFoodMotion||gatheringFood||returningHome)?0:Math.min((n.mSpd||0)*0.055,0.22);
       const jg=(freezeFoodMotion||gatheringFood||returningHome)?0:(n.jig||0)*Math.sin(t*0.005)*0.10;
       const sx=1+st+jg,sy=1-st*0.62-jg*0.45;
@@ -2539,7 +2541,7 @@ function step(t){
       if(nd){nd.setAttribute("opacity","0");nd.setAttribute("d","");}
       if(ol){ol.setAttribute("opacity","0");ol.setAttribute("d","");}
       if(E.gr)E.gr.setAttribute("transform",nb.getAttribute("transform"));
-      const freezeThisFood=freezeFoodMotion&&n.kind==="food";
+      const freezeThisFood=(freezeFoodMotion||returningHome)&&n.kind==="food";
       const shapeMoving=!freezeThisFood&&(n.dragging||n.mSpd>0.6||n.jig>0.02||Math.abs(n.r-n._pr0)>0.3);
       if(n.kind==="eff"){n._pr0=n.r;nb.setAttribute("d",circlePath(n.r));}
       else if(n.kind==="nut"&&intro.p<0.46){n._pr0=n.r;nb.setAttribute("d",circlePath(n.r));}
