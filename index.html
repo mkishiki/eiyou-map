@@ -165,17 +165,17 @@
       </div>
       <div class="leghue" style="padding-bottom:8px">
         <b>色</b>
-        <span class="hue" style="--c:#d9d3f2">水溶性ビタミン</span>
-        <span class="hue" style="--c:#f6dfae">脂質・脂溶性ビタミン</span>
-        <span class="hue" style="--c:#d6ecc7">食物繊維</span>
-        <span class="hue" style="--c:#ecd6c6">たんぱく質・微量ミネラル</span>
         <span class="hue" style="--c:#dfe6ee">多量ミネラル</span>
+        <span class="hue" style="--c:#f6dfae">脂質・脂溶性ビタミン</span>
         <span class="hue" style="--c:#f7cec7">糖質・アルコール</span>
+        <span class="hue" style="--c:#d9d3f2">水溶性ビタミン</span>
+        <span class="hue" style="--c:#ecd6c6">たんぱく質・微量ミネラル</span>
+        <span class="hue" style="--c:#d6ecc7">食物繊維</span>
       </div>
       <div class="legline">
         <b>線</b>
-        <span class="linekey"><i class="line-solid"></i>確立した関係</span>
-        <span class="linekey"><i class="line-dash"></i>間接・条件つき</span>
+        <span class="linekey"><i class="line-solid"></i>直接的な関係</span>
+        <span class="linekey"><i class="line-dash"></i>間接的・条件つきの関係</span>
       </div>
       <button id="srcbtn" onclick="openSrc(event)">アプリについて</button>
     </div>
@@ -1404,7 +1404,7 @@ const foodIconLight=col=>mixHex(col,'#ffffff',0.04);
 const foodIconDark=col=>mixHex(col,'#000000',0.14);
 const PT=12;
 let nodes={},edges=[],catLabels=[],groupLabels=[];
-const APPVER="v1.331";   // ルール: 実際の出力ごとに必ず +0.001
+const APPVER="v1.333";   // ルール: 実際の出力ごとに必ず +0.001
 let ADJREL={},FOODOF={},NUTOF={},EFFOF={},NUTEFF={},BLKOF={},BLKBY={};
 let NOW=0,active=null,relList=[],relAssign={},relRad={};
 let SEARCH="",matched={},matchN=0,FRONT="nut",switchBoost=0,stage=0,foodHidden=0;
