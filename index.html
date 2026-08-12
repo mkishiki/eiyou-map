@@ -1404,7 +1404,7 @@ const foodIconLight=col=>mixHex(col,'#ffffff',0.04);
 const foodIconDark=col=>mixHex(col,'#000000',0.14);
 const PT=12;
 let nodes={},edges=[],catLabels=[],groupLabels=[];
-const APPVER="v1.336";   // ルール: 実際の出力ごとに必ず +0.001
+const APPVER="v1.344";   // ルール: 実際の出力ごとに必ず +0.001
 let ADJREL={},FOODOF={},NUTOF={},EFFOF={},NUTEFF={},BLKOF={},BLKBY={};
 let NOW=0,active=null,relList=[],relAssign={},relRad={};
 let SEARCH="",matched={},matchN=0,FRONT="nut",switchBoost=0,stage=0,foodHidden=0;
@@ -1593,6 +1593,7 @@ function bringFront(ids){const layer=document.getElementById("nodelayer");
   if(!layer||!layer.appendChild)return;
   ids.forEach(i=>{const g=document.getElementById("g_"+i);if(g&&g.parentNode===layer)layer.appendChild(g);});}
 function selectNode(id,fromNav){if(!nodes[id])return;wake();
+  if(!fromNav)saveNavView();
   const prevFocus=new Set(active?[active,...relList]:[]);
   if(id!==active)stage=0;                          // 別のノードを選んだら段階表示は最初から
   Object.values(nodes).forEach(n=>{n.placed=0;});   // 手置きの記憶は選択が変わったら解除
@@ -2039,7 +2040,9 @@ function deselect(){wake();stage=0;
   Object.values(nodes).forEach(n=>{n.jig=(n.kind==="food"?0:Math.max(n.jig,0.35));n.placed=0;});renderTrail();}
 
 // ===== 履歴：NAVは全部覚える／パンくずは「腕でつながっている区間」だけを導出 =====
-let NAV=[],HI=-1;
+// 各履歴には、その時の選択ノード自身の中心位置だけを保存する。
+// 左右矢印で戻った時はそのノード位置を復元し、カメラは保存値ではなく復元ノードを画面中央に置く。
+let NAV=[],NAVVIEW=[],HI=-1,navRestoreBoostUntil=0;
 function isNb(a,b){const A=nodes[a],B=nodes[b];if(!A||!B)return false;
   if(A.kind==="nut"&&B.kind==="nut")return (ADJREL[a]||[]).indexOf(b)>=0;
   if(A.kind==="nut"&&B.kind==="food")return (FOODOF[a]||[]).some(f=>f.id===b);
@@ -2047,12 +2050,16 @@ function isNb(a,b){const A=nodes[a],B=nodes[b];if(!A||!B)return false;
   if(A.kind==="nut"&&B.kind==="eff")return (EFFOF[a]||[]).some(f=>f.id===b)||(BLKOF[a]||[]).indexOf(b)>=0;
   if(A.kind==="eff"&&B.kind==="nut")return (NUTEFF[a]||[]).some(f=>f.id===b)||(BLKBY[a]||[]).indexOf(b)>=0;
   return false;}
-function pushNav(id){if(NAV[HI]===id)return;NAV=NAV.slice(0,HI+1);NAV.push(id);
-  if(NAV.length>60){NAV.shift();}HI=NAV.length-1;}
+function saveNavView(i=HI){if(i<0||i>=NAV.length)return;const id=NAV[i],n=nodes[id];NAVVIEW[i]={nx:n?(n.ax??n.x):null,ny:n?(n.ay??n.y):null};}
+function restoreNavView(i){const v=NAVVIEW[i];if(!v)return;const id=NAV[i],n=nodes[id];
+  if(n&&Number.isFinite(v.nx)&&Number.isFinite(v.ny)){n.ax=v.nx;n.ay=v.ny;tvx=280-v.nx*tvk;tvy=500-v.ny*tvk;navRestoreBoostUntil=performance.now()+420;}
+  wake();}
+function pushNav(id){if(NAV[HI]===id){saveNavView();return;}NAV=NAV.slice(0,HI+1);NAVVIEW=NAVVIEW.slice(0,HI+1);NAV.push(id);const n=nodes[id];NAVVIEW.push({nx:n?(n.ax??n.x):null,ny:n?(n.ay??n.y):null});
+  if(NAV.length>60){NAV.shift();NAVVIEW.shift();}HI=NAV.length-1;}
 function trailRange(){if(HI<0)return null;let st=HI;while(st>0&&isNb(NAV[st-1],NAV[st]))st--;return {st,items:NAV.slice(st,HI+1)};}
-function navBack(){if(!active&&HI>=0){selectNode(NAV[HI],true);return;}if(HI>0){HI--;selectNode(NAV[HI],true);}}
-function navFwd(){if(HI<NAV.length-1){HI++;selectNode(NAV[HI],true);}}
-function navGo(i){if(i>=0&&i<NAV.length){HI=i;selectNode(NAV[i],true);}}
+function navBack(){if(!active&&HI>=0){selectNode(NAV[HI],true);restoreNavView(HI);return;}if(HI>0){saveNavView();HI--;selectNode(NAV[HI],true);restoreNavView(HI);}}
+function navFwd(){if(HI<NAV.length-1){saveNavView();HI++;selectNode(NAV[HI],true);restoreNavView(HI);}}
+function navGo(i){if(i>=0&&i<NAV.length){saveNavView();HI=i;selectNode(NAV[i],true);restoreNavView(HI);}}
 function renderTrail(){const el=document.getElementById("trail");const r=active?trailRange():null;
   if(!r||r.items.length<1){el.innerHTML="";}
   else{el.innerHTML=r.items.map((id,i)=>{const last=i===r.items.length-1;return `${i?`<span class="sep">›</span>`:''}<span class="crumb${last?' trail-in':''}${(r.st+i)===HI?' cur':''}" onclick="navGo(${r.st+i})">${nodes[id]?nodes[id].name:id}</span>`;}).join("");
@@ -2111,7 +2118,7 @@ function blob(o,t){const sx=1+(o.jig||0)*Math.sin(t*0.005)*0.2,sy=1-(o.jig||0)*M
   for(let i=0;i<PT;i++){const a=(i/PT)*6.283+o.seed;let rr=o.r*(1+(o.freeze?0:o.am[i])*Math.sin(t*0.0012+o.pa[i]));const al=Math.cos(a-(o.mAng||0));rr*=1+st*al*al;P.push([Math.cos(a)*rr*sx,Math.sin(a)*rr*sy]);}
   const md=(A,B)=>[(A[0]+B[0])/2,(A[1]+B[1])/2];const s=md(P[PT-1],P[0]);let d=`M ${s[0].toFixed(1)} ${s[1].toFixed(1)} `;
   for(let i=0;i<PT;i++){const c=P[i],nx=P[(i+1)%PT],m=md(c,nx);d+=`Q ${c[0].toFixed(1)} ${c[1].toFixed(1)} ${m[0].toFixed(1)} ${m[1].toFixed(1)} `;}return d+"Z";}
-function eyeStr(n,t){const iz=Math.max(vk,0.35),zFollow=Math.pow(iz,0.18),zLocal=Math.pow(iz,-0.82),er0=(n.kind==="food")?((active&&n.id===active)?27.28:22.44):n.r,er=er0*zLocal;const foodEye=(n.kind==="food"),ox=er*(foodEye?0.35:0.4),oy=-er*0.08,s0=er0*(foodEye?0.195:0.225),s=s0*zLocal,lineW=s0*0.5*Math.pow(iz,0.06),lx=n.x-ox,rx=n.x+ox,cy=n.y+oy,dk="#2a2a2a";
+function eyeStr(n,t,forceFlat=false){const iz=Math.max(vk,0.35),zFollow=Math.pow(iz,0.18),zLocal=Math.pow(iz,-0.82),er0=(n.kind==="food")?((active&&n.id===active)?27.28:22.44):n.r,er=er0*zLocal;const foodEye=(n.kind==="food"),ox=er*(foodEye?0.35:0.4),oy=-er*0.08,s0=er0*(foodEye?0.195:0.225),s=s0*zLocal,lineW=s0*0.5*Math.pow(iz,0.06),lx=n.x-ox,rx=n.x+ox,cy=n.y+oy,dk="#2a2a2a";
   const moving=n.mSpd>1.5,isU=active&&n.id!==active&&relList.indexOf(n.id)<0;
   const rnd=cx=>`<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${s.toFixed(1)}" fill="#fff"/><circle cx="${(cx+n.pd.x*s*0.4).toFixed(1)}" cy="${(cy+n.pd.y*s*0.4).toFixed(1)}" r="${(s*0.55).toFixed(1)}" fill="${dk}"/>`;
   const sur=cx=>`<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${(s*1.35).toFixed(1)}" fill="#fff"/><circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${(s*0.42).toFixed(1)}" fill="${dk}"/>`;
@@ -2124,6 +2131,7 @@ function eyeStr(n,t){const iz=Math.max(vk,0.35),zFollow=Math.pow(iz,0.18),zLocal
       +`<path d="M ${x0.toFixed(1)} ${yt.toFixed(1)} L ${x1.toFixed(1)} ${yt.toFixed(1)} A ${w.toFixed(1)} ${h.toFixed(1)} 0 0 1 ${x0.toFixed(1)} ${yt.toFixed(1)} Z" fill="#fff"/>`
       +`<circle clip-path="url(#${cid})" cx="${(cx+n.pd.x*s*0.4).toFixed(1)}" cy="${(cy+s*0.28+Math.max(n.pd.y,0)*s*0.22+Math.min(n.pd.y,0)*s*0.4).toFixed(1)}" r="${(s*0.55).toFixed(1)}" fill="${dk}"/>`;};
   if(n.dragging||t<n.surpriseEnd)return sur(lx)+sur(rx);
+  if(forceFlat)return flat(lx)+flat(rx);
   if(moving&&isU)return flat(lx)+flat(rx);
   if(moving)return n.moveHappy?(up(lx)+up(rx)):(chev(lx,1)+chev(rx,-1));
   if(t<n.happyEnd)return up(lx)+up(rx);
@@ -2195,10 +2203,13 @@ function placeNutSpeech(){
   if(!el)return;
   let visibleOpenBtn=null;
   const disabled=(FRONT!=="nut"||document.hidden||document.getElementById("srcmodal").classList.contains("open"));
+  const hasSelection=!!active;
+  // 未選択時だけ吹き出しをノードより前へ。選択中は背景レイヤーへ移し、薄い背景要素として扱う。
+  const hintParent=document.getElementById(hasSelection?"catanchor-bg":"labels-fg");
+  if(hintParent){Object.keys(NUT_HINTS).forEach(id=>{const btn=document.getElementById(`nutHintSvg_${id}`);if(btn&&btn.parentNode!==hintParent)hintParent.appendChild(btn);});}
   Object.entries(NUT_HINTS).forEach(([id,info])=>{
     const btn=document.getElementById(`nutHintSvg_${id}`),shape=document.getElementById(`nutHintShape_${id}`),pos=ensureNutHintPos(id);
     const show=!!(btn&&pos&&!disabled);
-    const hasSelection=!!active;
     if(show){
       btn.setAttribute("transform",`translate(${pos.x.toFixed(2)} ${pos.y.toFixed(2)})`);
       // 吹き出しは「栄養素から」の未選択ホームだけ前景。何か選択中は薄い背景として固定し、操作も受けない。
@@ -2289,7 +2300,9 @@ function step(t){
   if(!lastInteract)lastInteract=t;
   const idle=t-lastInteract>IDLE_MS;   // 10秒以上放置されたか
   let maxSp=0;                          // 今フレームの最大移動量（静止判定用）
-  vk+=(tvk-vk)*E2(0.12);vtx+=(tvx-vtx)*E2(0.12);vty+=(tvy-vty)*E2(0.12);applyView();placeNutSpeech();
+  const navRestoreBoost=t<navRestoreBoostUntil;
+  const viewEase=navRestoreBoost?0.34:0.12;
+  vk+=(tvk-vk)*E2(viewEase);vtx+=(tvx-vtx)*E2(viewEase);vty+=(tvy-vty)*E2(viewEase);applyView();placeNutSpeech();
   // 現在の画面に見えているワールド座標。少し余白を持たせ、端から入るノードが突然現れないようにする。
   const viewPad=90/Math.max(vk,0.35);
   const viewL=(-vtx)/vk-viewPad,viewR=(560-vtx)/vk+viewPad;
@@ -2321,7 +2334,7 @@ function step(t){
       if(isM){const i=matched[n.id],ang=i*2.399,rad=i===0?0:50+Math.sqrt(i)*28;tx=gatherX+Math.cos(ang)*rad*0.95;ty=gatherY+Math.sin(ang)*rad*1.22;tr=n.base*1.3;op=1;ease=0.05;}
       else{tx=n.hx;ty=n.hy;tr=n.base*0.8;op=n.kind===FRONT?0.2:0;}
     }else if(A){
-      if(n.id===active){tx=A.ax;ty=A.ay;tr=(A.kind==="food")?n.base+6:n.base+4;op=1;}
+      if(n.id===active){tx=A.ax;ty=A.ay;tr=(A.kind==="food")?n.base+6:n.base+4;op=1;if(navRestoreBoost)ease=0.22;}
       else if(relList.indexOf(n.id)>=0){const ang=relAssign[n.id],rad=relRad[n.id];tx=A.ax+Math.cos(ang)*rad;ty=A.ay+Math.sin(ang)*rad;tr=n.base;op=1;
         ease=n.placed?0.5:(n.surfaced?0.18:Math.min(0.15,0.09+Math.hypot(n.hx-tx,n.hy-ty)/30000));}
       else{
@@ -2347,9 +2360,10 @@ function step(t){
     // タップ時の集合・遷移・ドラッグは tx/ty への緩和移動でそのまま残す。
     const isRel=A&&(n.id===active||relList.indexOf(n.id)>=0);
     const bgStill=A&&!isRel;
+    n._bgSettled=0;
     // 通常待機中は位置を止めるが、選択中の関連ノードだけはゆらゆらを残す。
     // 中心ノードは固定し、まわりの関連ノードだけが生きているように動く。
-    const wobT=(A&&isRel&&n.id!==active)?1:0;
+    const wobT=(A&&isRel&&n.id!==active&&!idle)?1:0;
     if(n.wob===undefined)n.wob=0;
     n.wob+=(wobT-n.wob)*E2(wobT?0.06:0.4);
     if(n.wob>0.002){
@@ -2374,9 +2388,17 @@ function step(t){
     const offscreenIdle=!n.dragging&&!isRel&&offscreen&&settled;
     n._offscreenIdle=offscreenIdle?1:0;
     if(offscreenIdle){n.wob+=(0-n.wob)*E2(0.25);return;}
+    // 選択外の背景ノードは、初期位置へ戻りきるまでは移動を続ける。
+    // 位置・大きさ・透明度が落ち着いたら完全静止し、以後は目線・瞬き・輪郭更新も止める。
+    // 「帰宅途中で凍る」ことを避けつつ、選択中の常時負荷を下げる。
+    // 背景ノードは位置だけでなく、移動由来の潰れ・伸びも通常形へ戻りきってから休止する。
+    // mSpd / jig が残ったまま止めると、最後に描いた変形輪郭がそのまま凍るため、形の収束も待つ。
+    const bgShapeSettled=(n.mSpd||0)<0.15&&(n.jig||0)<0.02&&Math.abs(n.r-n._pr0)<0.3;
+    const bgSettled=!!(bgStill&&Math.hypot(n.x-n.hx,n.y-n.hy)<1.2&&Math.abs(n.r-tr)<0.6&&Math.abs(n.op-op)<0.03&&bgShapeSettled);
+    if(bgSettled){n._bgSettled=1;n.mSpd=0;n.jig=0;n.wob=0;return;}
 
     // 放置：ノードごとにバラバラの遅延で目を閉じる（いつのまにか全員 ーー に）
-    if(idle){if(t-lastInteract>IDLE_MS+n.sleepDelay)n.eyeBase="sleep";}
+    if(idle){n.eyeBase="sleep";}
     else if((n.eyeBase==="open"||n.eyeBase==="dead")&&t>n.nextBlink&&t>n.blinkEnd){n.blinkEnd=t+190;n.nextBlink=t+2200+Math.random()*4500;}
     let ldx,ldy;
     if(SEARCH&&matched[n.id]!==undefined){ldx=gatherX-n.x;ldy=gatherY-n.y;}
@@ -2510,6 +2532,7 @@ function step(t){
     // 選択中、中心・まわり以外の背景ノードは完全に止める（位置・サイズ・輪郭）。
     // ザワザワが気になるので、呼吸もうねりも固定する。
     const bgFrozen=active&&n.id!==active&&relList.indexOf(n.id)<0&&!n.dragging;
+    const bgStatic=!!n._bgSettled;
     const intro=nutrientIntroState(n,t);
     // 位置は transform（安い・GPU向き）。サイズのゆらぎも scale なのでパス再生成は不要＝ほぼ無料。
     const iconData=(n.kind==="food"&&n.icon&&FOODICONS[n.icon])?FOODICONS[n.icon]:null;
@@ -2529,7 +2552,7 @@ function step(t){
       const gatherRot=gatheringFood?foodGatherAngle(n,t):0;
       const rot=freezeFoodMotion?0:(moveRot+gatherRot);
       const tf=`translate(${n.x.toFixed(1)} ${n.y.toFixed(1)}) rotate(${rot.toFixed(2)}) scale(${(sc*sx).toFixed(4)} ${(sc*sy).toFixed(4)}) translate(-50 -50)`;
-      [nb,nd,ol,E.gr].forEach(el=>{if(!el)return;el.setAttribute("transform",tf);el.removeAttribute("fill-rule");el.removeAttribute("clip-rule");});
+      if(!bgStatic||wasHid)[nb,nd,ol,E.gr].forEach(el=>{if(!el)return;el.setAttribute("transform",tf);el.removeAttribute("fill-rule");el.removeAttribute("clip-rule");});
       if(n._iconKey!==n.icon){
         n._iconKey=n.icon;
         nb.setAttribute("d",iconData.light||"");
@@ -2546,9 +2569,11 @@ function step(t){
       if(E.gr)E.gr.setAttribute("transform",nb.getAttribute("transform"));
       const freezeThisFood=(freezeFoodMotion||returningHome)&&n.kind==="food";
       const shapeMoving=!freezeThisFood&&(n.dragging||n.mSpd>0.6||n.jig>0.02||Math.abs(n.r-n._pr0)>0.3);
-      if(n.kind==="eff"){n._pr0=n.r;nb.setAttribute("d",circlePath(n.r));}
+      if(n.kind==="eff"){if(!bgStatic||wasHid){n._pr0=n.r;nb.setAttribute("d",circlePath(n.r));}}
       else if(n.kind==="nut"&&intro.p<0.46){n._pr0=n.r;nb.setAttribute("d",circlePath(n.r));}
-      else if(!freezeThisFood&&(wasHid||(!bgFrozen&&(shapeMoving||(EFRAME+(n._bslot||0))%6===0)))){n._pr0=n.r;nb.setAttribute("d",blob(n,t));if(E.gr&&E.gr._on)E.gr.setAttribute("d",nb.getAttribute("d"));}
+      // 背景へ戻る途中も、速度変形が収束するまでは輪郭を更新する。
+      // 完全に通常形へ戻った後は _bgSettled で更新自体を止める。
+      else if(!freezeThisFood&&(wasHid||((!bgFrozen||!bgStatic)&&(shapeMoving||(EFRAME+(n._bslot||0))%6===0)))){n._pr0=n.r;nb.setAttribute("d",blob(n,t));if(E.gr&&E.gr._on)E.gr.setAttribute("d",nb.getAttribute("d"));}
     }
     if(n.kind==="eff"){nb.setAttribute("fill",n.effectFill);nb.setAttribute("stroke","none");if(nd){nd.setAttribute("opacity","0");nd.setAttribute("stroke","none");}if(E.gr)E.gr.setAttribute("opacity","0");}
     else if(n.kind==="nut"){nb.setAttribute("fill",n.col);nb.setAttribute("stroke","#fff");nb.setAttribute("stroke-width","2");if(nd){nd.setAttribute("opacity","0");nd.setAttribute("stroke","none");}if(E.gr)E.gr.setAttribute("opacity","0");}
@@ -2581,8 +2606,9 @@ function step(t){
       // 通常の食材は目なしなので、見た目をほぼ変えず操作中のDOM更新を減らせる。
       const freezeEyeUpdate=(mode==="pan"||mode==="pinch");
       if(!freezeEyeUpdate){
-        const fast=wasHid||n.dragging||t<n.surpriseEnd||t<n.happyEnd||t<n.blinkEnd||n.mSpd>1.5||focusFoodBySearch||focusFoodByNearest||focusFoodByActive;
-        if(fast||(EFRAME+(n._eslot||0))%6===0){const es=eyeStr(n,t);if(es!==n._eyes){n._eyes=es;E.eyes.innerHTML=es;}}
+        if(bgStatic){const es=eyeStr(n,t,true);if(es!==n._eyes){n._eyes=es;E.eyes.innerHTML=es;}}
+        else{const fast=wasHid||n.dragging||t<n.surpriseEnd||t<n.happyEnd||t<n.blinkEnd||n.mSpd>1.5||focusFoodBySearch||focusFoodByNearest||focusFoodByActive;
+          if(fast||(EFRAME+(n._eslot||0))%6===0){const es=eyeStr(n,t);if(es!==n._eyes){n._eyes=es;E.eyes.innerHTML=es;}}}
       }
     }
     const sb=E.sb;
@@ -2687,8 +2713,11 @@ function step(t){
     if(!el||!bg||!gp||!A||A.kind!=="nut"||el.getAttribute("opacity")==="0"){if(bg)bg.setAttribute("opacity",0);continue;}
     try{const b=el.getBBox(),px=6,py=4;bg.setAttribute("x",(b.x-px).toFixed(1));bg.setAttribute("y",(b.y-py).toFixed(1));bg.setAttribute("width",(b.width+px*2).toFixed(1));bg.setAttribute("height",(b.height+py*2).toFixed(1));bg.setAttribute("opacity",0.96);}catch(_){bg.setAttribute("opacity",0);}}
   if(!nutrientIntroDone&&nutrientIntroStart&&t-nutrientIntroStart>nutrientIntroEnd+NUT_INTRO_REVEAL)nutrientIntroDone=true;
-  // 全員が寝る時刻を過ぎ、かつ全ノードがほぼ静止したら描画ループを止める（発熱ゼロ）
-  if(idle&&maxSp<0.15&&t-lastInteract>IDLE_MS+5500){asleep=true;running=false;return;}
+  // 10秒操作がなければ関連ノードの揺れも解除し、帰着・形状・視点が落ち着いた時点で
+  // 描画ループそのものを完全停止する。次の操作は wake() で即時再開する。
+  // 線はノード位置に追従しているため、ノードとループが止まれば線も完全静止する。
+  const viewSettled=Math.abs(tvk-vk)<0.002&&Math.abs(tvx-vtx)<0.15&&Math.abs(tvy-vty)<0.15;
+  if(idle&&maxSp<0.15&&viewSettled){asleep=true;running=false;return;}
   queueStep();}
 
 // ===== 検索 =====
@@ -2743,7 +2772,7 @@ const VOICE_NUT_ALIAS={
 function cleanVoiceQuery(q){let s=(q||"").trim();s=s.replace(/^\s*(栄養マップ|えいようマップ|栄養チェック|えいようチェック|栄養|えいよう)\s*/i,"").trim();return s;}
 function findNutByQuery(q){const raw=cleanVoiceQuery(q),nq=norm(raw),alias=VOICE_NUT_ALIAS[raw]||VOICE_NUT_ALIAS[nq],want=norm(alias||raw);for(const id in NUT){if(norm(NUT[id][0])===want)return id;}return null;}
 function findEffectByQuery(q){const nq=norm(q);if(!nq)return null;const exact=[],partial=[];for(const id in EFFECTS){const nm=norm(EFFECTS[id].name);if(nm===nq)exact.push(id);else if(nm.indexOf(nq)>=0)partial.push(id);}if(exact.length===1)return exact[0];if(partial.length===1)return partial[0];return null;}
-function openVoiceQuery(raw){const q=cleanVoiceQuery(raw);if(!q)return false;wake();NAV=[];HI=-1;const nid=findNutByQuery(q);if(nid){if(SEARCH)clearSearch(1);setFront("nut");selectNode(nid);return true;}const eid=findEffectByQuery(q);if(eid){if(SEARCH)clearSearch(1);setFront("eff");selectNode(eid);return true;}const list=FOODNAMES.filter(nm=>hitName(nm,norm(q)));if(list.length===1){if(SEARCH)clearSearch(1);setFront("food");selectNode(list[0]);return true;}setFront("food");const input=document.getElementById("q");if(input)input.value=q;onSearch(q,1);return list.length>0;}
+function openVoiceQuery(raw){const q=cleanVoiceQuery(raw);if(!q)return false;wake();NAV=[];NAVVIEW=[];HI=-1;const nid=findNutByQuery(q);if(nid){if(SEARCH)clearSearch(1);setFront("nut");selectNode(nid);return true;}const eid=findEffectByQuery(q);if(eid){if(SEARCH)clearSearch(1);setFront("eff");selectNode(eid);return true;}const list=FOODNAMES.filter(nm=>hitName(nm,norm(q)));if(list.length===1){if(SEARCH)clearSearch(1);setFront("food");selectNode(list[0]);return true;}setFront("food");const input=document.getElementById("q");if(input)input.value=q;onSearch(q,1);return list.length>0;}
 function openFromHash(){const q=voiceQueryRaw();if(!q)return false;return openVoiceQuery(q);}
 window.addEventListener("hashchange",()=>openFromHash());
 
@@ -2769,7 +2798,7 @@ function panTo(wx,wy){
   const sx=wx*tvk+tvx,sy=wy*tvk+tvy,mx=210,my=250;
   if(sx<mx)tvx+=mx-sx;else if(sx>560-mx)tvx+=(560-mx)-sx;
   if(sy<my)tvy+=my-sy;else if(sy>1000-my)tvy+=(1000-my)-sy;}
-function tapTab(f){wake();FRONT=f;NAV=[];HI=-1;resetAll();}
+function tapTab(f){wake();FRONT=f;NAV=[];NAVVIEW=[];HI=-1;resetAll();}
 function setFront(f){wake();const changed=(FRONT!==f);FRONT=f;
   document.getElementById("tb-eff").className=f==="eff"?"on":"";
   document.getElementById("tb-nut").className=f==="nut"?"on":"";
