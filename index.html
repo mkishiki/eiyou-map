@@ -442,30 +442,30 @@ const FOODS=[
 ["cu","バナナ",2],
 ["cu","ほうれん草",3],
 ["fat","豚ばら",1,"sat"],
-["fat","さんま",1,"unsat"],
-["fat","うなぎ",2,"unsat"],
+["fat","さんま",1,"n3"],
+["fat","うなぎ",2,"both"],
 ["fat","豚ロース",2,"sat"],
-["fat","ぶり",2,"unsat"],
+["fat","ぶり",2,"n3"],
 ["fat","豚ひき肉",2,"sat"],
-["fat","アーモンド",2,"unsat"],
-["fat","さば",2,"unsat"],
+["fat","アーモンド",2,"n6"],
+["fat","さば",2,"n3"],
 ["fat","ソーセージ",2,"sat"],
-["fat","アボカド",2,"unsat"],
+["fat","アボカド",2,"both"],
 ["fat","鶏もも",2,"sat"],
-["fat","くるみ",2,"unsat"],
-["fat","オリーブ油",2,"unsat"],
-["fat","大豆",2,"unsat"],
-["fat","マヨネーズ",2,"unsat"],
+["fat","くるみ",2,"both"],
+["fat","オリーブ油",2,"both"],
+["fat","大豆",2,"both"],
+["fat","マヨネーズ",2,"n6"],
 ["fat","生クリーム",2,"sat"],
 ["fat","チョコレート",2,"sat"],
 ["fat","豚もも",2,"sat"],
 ["fat","バター",2,"sat"],
 ["fat","ベーコン",2,"sat"],
 ["fat","牛乳",2,"sat"],
-["fat","ピーナッツ",2,"unsat"],
-["fat","カシューナッツ",2,"unsat"],
-["fat","えごま油",3,"unsat"],
-["fat","亜麻仁油",3,"unsat"],
+["fat","ピーナッツ",2,"n6"],
+["fat","カシューナッツ",2,"n6"],
+["fat","えごま油",3,"n3"],
+["fat","亜麻仁油",3,"n3"],
 ["fat","牛脂",3,"sat"],
 ["fe","豚レバー",1,"heme"],
 ["fe","大豆",1,"nonheme"],
@@ -744,7 +744,7 @@ const FOODS=[
 ["protein","ツナ缶",2,"animal"],
 ["protein","厚揚げ",2,"plant"],
 ["protein","木綿豆腐",2,"plant"],
-["fat","木綿豆腐",2,"unsat"],
+["fat","木綿豆腐",2,"both"],
 ["protein","玄米",2,"plant"],
 ["protein","たこ",2,"animal"],
 ["protein","白米",2,"plant"],
@@ -897,7 +897,7 @@ const FOODS=[
 ["b1","そば",1],
 ["b6","そば",2],
 ["cu","そば",1],
-["fe","そば",2],
+["fe","そば",2,"nonheme"],
 ["fiber","そば",2],
 ["mg","そば",2],
 ["na","そば",2],
@@ -917,7 +917,7 @@ const FOODS=[
 ["sugar","うどん",2],
 ["b1","パスタ",2],
 ["cu","パスタ",1],
-["fe","パスタ",2],
+["fe","パスタ",2,"nonheme"],
 ["fiber","パスタ",2],
 ["mg","パスタ",2],
 ["niacin","パスタ",1],
@@ -1018,7 +1018,7 @@ const FOODS=[
 ["b1","ぶり",2],
 ["b12","低脂肪乳",2],
 ["niacin","絹ごし豆腐",2],
-["fat","厚揚げ",2,"unsat"],
+["fat","厚揚げ",2,"both"],
 ["fiber","モロヘイヤ",2],
 ["b12","ツナ缶",2],
 ["b1","豚レバー",2],
@@ -1026,7 +1026,7 @@ const FOODS=[
 ["niacin","ソーセージ",2],
 ["b1","絹ごし豆腐",2],
 ["panto","いわし",2],
-["fat","油揚げ",2,"unsat"],
+["fat","油揚げ",2,"both"],
 ["b12","えび",2],
 ["b12","鶏レバー",1],
 ["b12","あじ",1],
@@ -1097,7 +1097,7 @@ const FOODS=[
 ["va","にら",2],
 ["va","春菊",1],
 ["p","ぶり",2],
-["fat","いわし",2,"unsat"],
+["fat","いわし",2,"n3"],
 ["na","シリアル",2],
 ["na","ちくわ",2],
 ["p","絹ごし豆腐",2],
@@ -1167,7 +1167,7 @@ const FOODS=[
 ["zn","鶏レバー",2],
 ["zn","あじ",3],
 ["fe","水菜",3,"nonheme"],
-["fe","鶏レバー",1],
+["fe","鶏レバー",1,"heme"],
 ["p","ソーセージ",3],
 ["p","鶏レバー",2],
 ["p","あじ",2],
@@ -1253,7 +1253,7 @@ const FOODS=[
 ["folate","抹茶",3],
 ["na","クラッカー",3],
 ["ve","クラッカー",3],
-["fat","ポップコーン",3],
+["fat","ポップコーン",3,"n6"],
 ["fiber","ポップコーン",2],
 ["fe","ポップコーン",3,"nonheme"],
 ["p","ポップコーン",3],
@@ -1278,7 +1278,7 @@ const FOODS=[
 ["folate","たけのこ",2],
 ["panto","たけのこ",3],
 ["vd","きくらげ",1],
-["fe","きくらげ",2],
+["fe","きくらげ",2,"nonheme"],
 ["fiber","きくらげ",2],
 ["b1","粟",2],
 ["cu","粟",2],
@@ -1348,7 +1348,7 @@ const EFF=[["ca","bone","main"],["vd","bone","main"],["mg","bone","sub"],["prote
 const BLOCK=[["na","bp","上げやすい"],["sugar","gluc","上げやすい"],["alc","nerve","はたらきを乱す"],["alc","blood","造血を妨げる"]];
 const NPOS={"k":[280,135],"na":[398,135],"p":[103,237],"ca":[221,237],"mg":[339,237],"vd":[162,339],"va":[280,339],"vk":[398,339],"panto":[103,441],"fat":[221,441],"sugar":[339,441],"fiber":[457,441],"b2":[162,543],"niacin":[280,543],"b1":[398,543],"alc":[457,237],"b6":[221,645],"protein":[339,645],"zn":[457,645],"folate":[162,747],"vc":[280,747],"fe":[398,747],"b12":[103,849],"ve":[221,849],"se":[339,849],"cu":[457,849]};
 
-const GRP={heme:{t:"ヘム鉄",c:"#c0392b"},nonheme:{t:"非ヘム鉄",c:"#3fa35f"},sat:{t:"飽和脂肪酸",c:"#c2701c"},unsat:{t:"不飽和脂肪酸",c:"#2f8f8f"},animal:{t:"動物性",c:"#e8843a"},plant:{t:"植物性",c:"#2f7fd1"}};
+const GRP={heme:{t:"ヘム鉄",c:"#c0392b"},nonheme:{t:"非ヘム鉄",c:"#3fa35f"},sat:{t:"飽和脂肪酸",c:"#c2701c"},n3:{t:"不飽和脂肪酸\n（n-3系）",c:"#2f62b3"},n6:{t:"不飽和脂肪酸\n（n-6系）",c:"#369c55"},both:{t:"不飽和脂肪酸\n（n-3, n-6系）",c:"#28545a"},animal:{t:"動物性",c:"#e8843a"},plant:{t:"植物性",c:"#2f7fd1"}};
 
 // ===== 出典 =====
 const SOURCES=[
@@ -1404,7 +1404,7 @@ const foodIconLight=col=>mixHex(col,'#ffffff',0.04);
 const foodIconDark=col=>mixHex(col,'#000000',0.14);
 const PT=12;
 let nodes={},edges=[],catLabels=[],groupLabels=[];
-const APPVER="v1.328";   // ルール: 実際の出力ごとに必ず +0.001
+const APPVER="v1.330";   // ルール: 実際の出力ごとに必ず +0.001
 let ADJREL={},FOODOF={},NUTOF={},EFFOF={},NUTEFF={},BLKOF={},BLKBY={};
 let NOW=0,active=null,relList=[],relAssign={},relRad={};
 let SEARCH="",matched={},matchN=0,FRONT="nut",switchBoost=0,stage=0,foodHidden=0;
@@ -1489,17 +1489,17 @@ function buildDOM(){let s=`<g id="view"><rect x="-4000" y="-4000" width="12000" 
   for(let i=0;i<6;i++)s+=`<rect id="glbg${i}" rx="7" ry="7" stroke="none" opacity="0"/>`;
   for(let i=0;i<6;i++)s+=`<text id="gl${i}" data-fs="11" font-size="11" font-weight="800" text-anchor="middle" stroke="none" opacity="0"></text>`;
   // 栄養素の特徴メモ用マーク。ノードと同じSVG座標系に置き、パン・ズームでも一緒に動く。
-  s+=`<g id="nutHintSvg_vk" data-hint-id="vk" role="button" aria-label="脂溶性ビタミンのメモをひらく" tabindex="0" style="cursor:pointer" opacity="0" pointer-events="none">`+
-     `<path id="nutHintShape_vk" d="M 2 -8.5 H 10 Q 16 -8.5 16 -2.5 V 2.5 Q 16 8.5 10 8.5 H 2 Q -4 8.5 -4 2.8 L -10 0 L -4 -2.8 Q -4 -8.5 2 -8.5 Z" fill="#f6dfae" stroke="#fff" stroke-width="2" stroke-linejoin="round"/>`+
+  s+=`<g id="nutHintSvg_vk" data-hint-id="vk" role="button" aria-label="脂溶性ビタミンのメモをひらく" tabindex="0" style="cursor:pointer" opacity="0" pointer-events="none">`+`<circle cx="3" cy="0" r="22" fill="transparent" stroke="none" pointer-events="all"/>`+``+
+     `<path id="nutHintShape_vk" d="M 2 -8.5 H 10 Q 16 -8.5 16 -2.5 V 2.5 Q 16 8.5 10 8.5 H 2 Q -4 8.5 -4 2.8 L -10 0 L -4 -2.8 Q -4 -8.5 2 -8.5 Z" transform="scale(1.12)" fill="#f6dfae" stroke="#fff" stroke-width="2" stroke-linejoin="round"/>`+
      `</g>`;
-  s+=`<g id="nutHintSvg_b6" data-hint-id="b6" role="button" aria-label="水溶性ビタミンのメモをひらく" tabindex="0" style="cursor:pointer" opacity="0" pointer-events="none">`+
-     `<path id="nutHintShape_b6" d="M 2 -8.5 H 10 Q 16 -8.5 16 -2.5 V 2.5 Q 16 8.5 10 8.5 H 2 Q -4 8.5 -4 2.8 L -10 0 L -4 -2.8 Q -4 -8.5 2 -8.5 Z" transform="scale(-1 1)" fill="#f6dfae" stroke="#fff" stroke-width="2" stroke-linejoin="round"/>`+
+  s+=`<g id="nutHintSvg_b6" data-hint-id="b6" role="button" aria-label="水溶性ビタミンのメモをひらく" tabindex="0" style="cursor:pointer" opacity="0" pointer-events="none">`+`<circle cx="3" cy="0" r="22" fill="transparent" stroke="none" pointer-events="all"/>`+``+
+     `<path id="nutHintShape_b6" d="M 2 -8.5 H 10 Q 16 -8.5 16 -2.5 V 2.5 Q 16 8.5 10 8.5 H 2 Q -4 8.5 -4 2.8 L -10 0 L -4 -2.8 Q -4 -8.5 2 -8.5 Z" transform="scale(-1.12 1.12)" fill="#f6dfae" stroke="#fff" stroke-width="2" stroke-linejoin="round"/>`+
      `</g>`;
-  s+=`<g id="nutHintSvg_k" data-hint-id="k" role="button" aria-label="ミネラルのメモをひらく" tabindex="0" style="cursor:pointer" opacity="0" pointer-events="none">`+
-     `<path id="nutHintShape_k" d="M 2 -8.5 H 10 Q 16 -8.5 16 -2.5 V 2.5 Q 16 8.5 10 8.5 H 2 Q -4 8.5 -4 2.8 L -10 0 L -4 -2.8 Q -4 -8.5 2 -8.5 Z" transform="scale(-1 1)" fill="#f6dfae" stroke="#fff" stroke-width="2" stroke-linejoin="round"/>`+
+  s+=`<g id="nutHintSvg_k" data-hint-id="k" role="button" aria-label="ミネラルのメモをひらく" tabindex="0" style="cursor:pointer" opacity="0" pointer-events="none">`+`<circle cx="3" cy="0" r="22" fill="transparent" stroke="none" pointer-events="all"/>`+``+
+     `<path id="nutHintShape_k" d="M 2 -8.5 H 10 Q 16 -8.5 16 -2.5 V 2.5 Q 16 8.5 10 8.5 H 2 Q -4 8.5 -4 2.8 L -10 0 L -4 -2.8 Q -4 -8.5 2 -8.5 Z" transform="scale(-1.12 1.12)" fill="#f6dfae" stroke="#fff" stroke-width="2" stroke-linejoin="round"/>`+
      `</g>`;
-  s+=`<g id="nutHintSvg_fe" data-hint-id="fe" role="button" aria-label="微量ミネラルのメモをひらく" tabindex="0" style="cursor:pointer" opacity="0" pointer-events="none">`+
-     `<path id="nutHintShape_fe" d="M 2 -8.5 H 10 Q 16 -8.5 16 -2.5 V 2.5 Q 16 8.5 10 8.5 H 2 Q -4 8.5 -4 2.8 L -10 0 L -4 -2.8 Q -4 -8.5 2 -8.5 Z" fill="#f6dfae" stroke="#fff" stroke-width="2" stroke-linejoin="round"/>`+
+  s+=`<g id="nutHintSvg_fe" data-hint-id="fe" role="button" aria-label="微量ミネラルのメモをひらく" tabindex="0" style="cursor:pointer" opacity="0" pointer-events="none">`+`<circle cx="3" cy="0" r="22" fill="transparent" stroke="none" pointer-events="all"/>`+``+
+     `<path id="nutHintShape_fe" d="M 2 -8.5 H 10 Q 16 -8.5 16 -2.5 V 2.5 Q 16 8.5 10 8.5 H 2 Q -4 8.5 -4 2.8 L -10 0 L -4 -2.8 Q -4 -8.5 2 -8.5 Z" transform="scale(1.12)" fill="#f6dfae" stroke="#fff" stroke-width="2" stroke-linejoin="round"/>`+
      `</g>`;
   s+=`</g>`;
   // --- カテゴリ弧文字の定位置（最前）。ここに置いておき、選択時だけ catanchor-bg へ移す ---
