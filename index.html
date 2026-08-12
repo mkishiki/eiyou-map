@@ -1404,7 +1404,7 @@ const foodIconLight=col=>mixHex(col,'#ffffff',0.04);
 const foodIconDark=col=>mixHex(col,'#000000',0.14);
 const PT=12;
 let nodes={},edges=[],catLabels=[],groupLabels=[];
-const APPVER="v1.333";   // ルール: 実際の出力ごとに必ず +0.001
+const APPVER="v1.334";   // ルール: 実際の出力ごとに必ず +0.001
 let ADJREL={},FOODOF={},NUTOF={},EFFOF={},NUTEFF={},BLKOF={},BLKBY={};
 let NOW=0,active=null,relList=[],relAssign={},relRad={};
 let SEARCH="",matched={},matchN=0,FRONT="nut",switchBoost=0,stage=0,foodHidden=0;
@@ -2198,10 +2198,11 @@ function placeNutSpeech(){
   Object.entries(NUT_HINTS).forEach(([id,info])=>{
     const btn=document.getElementById(`nutHintSvg_${id}`),shape=document.getElementById(`nutHintShape_${id}`),pos=ensureNutHintPos(id);
     const show=!!(btn&&pos&&!disabled);
-    const activeNut=active&&nodes[active]&&nodes[active].kind==="nut";
+    const hasSelection=!!active;
     if(show){
       btn.setAttribute("transform",`translate(${pos.x.toFixed(2)} ${pos.y.toFixed(2)})`);
-      btn.setAttribute("opacity",activeNut?"0.22":"1");btn.setAttribute("pointer-events","auto");
+      // 吹き出しは「栄養素から」の未選択ホームだけ前景。何か選択中は薄い背景として固定し、操作も受けない。
+      btn.setAttribute("opacity",hasSelection?"0.22":"1");btn.setAttribute("pointer-events",hasSelection?"none":"auto");
       const legendColor=NUT[info.node]?NUT[info.node][1]:"#d9d3c7";
       if(shape)shape.setAttribute("fill",legendColor);
       if(openNutHint===id)visibleOpenBtn=btn;
@@ -2209,6 +2210,8 @@ function placeNutSpeech(){
       btn.setAttribute("opacity","0");btn.setAttribute("pointer-events","none");
     }
   });
+  // 選択が始まったら、開いていた吹き出し本文も閉じて背景扱いに戻す。
+  if(active&&openNutHint){openNutHint=null;hideNutSpeech();}
   if(!visibleOpenBtn||!openNutHint||!NUT_HINTS[openNutHint]){
     if(openNutHint){openNutHint=null;hideNutSpeech();}
     else{el.classList.remove("show");el.style.display="none";}
