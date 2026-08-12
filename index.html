@@ -1404,7 +1404,7 @@ const foodIconLight=col=>mixHex(col,'#ffffff',0.04);
 const foodIconDark=col=>mixHex(col,'#000000',0.14);
 const PT=12;
 let nodes={},edges=[],catLabels=[],groupLabels=[];
-const APPVER="v1.334";   // ルール: 実際の出力ごとに必ず +0.001
+const APPVER="v1.336";   // ルール: 実際の出力ごとに必ず +0.001
 let ADJREL={},FOODOF={},NUTOF={},EFFOF={},NUTEFF={},BLKOF={},BLKBY={};
 let NOW=0,active=null,relList=[],relAssign={},relRad={};
 let SEARCH="",matched={},matchN=0,FRONT="nut",switchBoost=0,stage=0,foodHidden=0;
@@ -1577,10 +1577,10 @@ function neighborsOf(id){const n=nodes[id];
   if(n.kind==="nut"){const cross=(FOODOF[id]||[]).slice();
     const effs=[];
     (EFFOF[id]||[]).forEach(o=>effs.push({id:o.id,lv:o.role==="main"?1:3,tag:null}));
-    (BLKOF[id]||[]).forEach(e=>effs.push({id:e,lv:2,tag:null}));
+    (BLKOF[id]||[]).forEach(e=>effs.push({id:e,lv:3,tag:null}));
     return {rels:(ADJREL[id]||[]),foods:cross,effs:effs};}
   if(n.kind==="eff"){const cross=(NUTEFF[id]||[]).map(o=>({id:o.id,lv:o.role==="main"?1:3,tag:null}));
-    (BLKBY[id]||[]).forEach(nid=>{if(!cross.some(c=>c.id===nid))cross.push({id:nid,lv:2,tag:null});});
+    (BLKBY[id]||[]).forEach(nid=>{if(!cross.some(c=>c.id===nid))cross.push({id:nid,lv:3,tag:null});});
     return {rels:[],foods:cross,effs:[]};}
   return {rels:[],foods:(NUTOF[id]||[]).map(o=>({id:o.id,lv:o.lv,tag:o.tag})),effs:[]};}
 function fitRotate(ids,angs,ax,ay,limit){ // 見えている要素の現在角に一番近づく回転量を求める
@@ -1673,7 +1673,7 @@ function selectNode(id,fromNav){if(!nodes[id])return;wake();
   const G={}; groups.forEach(g=>G[g.kind]=g);
   const seen={};
   // はたらき⇔栄養素は含有量%が無いので、専用の3段階距離を使う（両方向で同じ値）
-  const EFFRING={1:212.4,2:118,3:236};  // mainの線距離は118×1.5×1.2（元の1.8倍）
+  const EFFRING={1:212.4,3:236};  // main / sub の通常距離。BLOCKもsubと同じ距離を使い、赤色だけで区別する。
   // v1.130の区画を基本にする。はたらき・関連栄養素は自区画を優先し、
   // 食材ノードと十分離れられる場合だけ、区画境界を少し越えて食材側へ入ってよい。
   const foodOcc=[];
@@ -2432,8 +2432,8 @@ function step(t){
         el2.setAttribute("x",(lp[0]+(-d[1]/eln)*side*20).toFixed(1));el2.setAttribute("y",(lp[1]+(d[0]/eln)*side*20+3).toFixed(1));
         el2.setAttribute("fill",col);el2.setAttribute("opacity",1);const blabel=e.label||"妨げる";if(el2.textContent!==blabel)el2.textContent=blabel;
       }else if(el2.getAttribute("opacity")!=="0"){el2.setAttribute("opacity",0);el2.textContent="";}
-      // 栄養素→はたらきは、ラベルなしなら中央。ラベルありなら発信元側にラベル、発信先側に矢尻。
-      const arrowT=visibleCurveT(a,b,blk?.80:.50);
+      // 栄養素→はたらきの矢尻位置は通常線・赤いBLOCK線とも同じ。赤線は色だけで区別する。
+      const arrowT=visibleCurveT(a,b,.50);
       ah2.setAttribute("d",chevronAt(a.x,a.y,qx,qy,b.x,b.y,arrowT,true));ah2.setAttribute("fill","none");
       ah2.setAttribute("stroke",col);ah2.setAttribute("stroke-width",w);ah2.setAttribute("stroke-linecap","round");
       ah2.setAttribute("stroke-linejoin","round");ah2.setAttribute("opacity",blk?0.9:1);
