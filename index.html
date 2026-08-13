@@ -1405,7 +1405,7 @@ const foodIconLight=col=>mixHex(col,'#ffffff',0.04);
 const foodIconDark=col=>mixHex(col,'#000000',0.14);
 const PT=12;
 let nodes={},edges=[],catLabels=[],groupLabels=[];
-const APPVER="v1.346";   // ルール: 実際の出力ごとに必ず +0.001
+const APPVER="v1.347";   // ルール: 実際の出力ごとに必ず +0.001
 let ADJREL={},FOODOF={},NUTOF={},EFFOF={},NUTEFF={},BLKOF={},BLKBY={};
 let NOW=0,active=null,relList=[],relAssign={},relRad={};
 let SEARCH="",matched={},matchN=0,FRONT="nut",switchBoost=0,stage=0,foodHidden=0;
@@ -2602,6 +2602,16 @@ function step(t){
           else{nb.setAttribute("stroke","#000");nb.setAttribute("stroke-width","1.2");nb.setAttribute("stroke-dasharray","3 3");}}}
     }
     // === 目は通常6フレームに1回だけ再生成し、表情変化時は即時更新する ===
+    // 初回の栄養素登場では、目もノード本体と同じ倍率・同じ進行で育てる。
+    // 本体だけ小さく、目だけ通常サイズで先に見える時間差をなくす。
+    if(n.kind==="nut"&&!nutrientIntroDone){
+      const eyeIntroScale=Math.max(0.10,intro.scale);
+      E.eyes.setAttribute("transform",`translate(${n.x.toFixed(1)} ${n.y.toFixed(1)}) scale(${eyeIntroScale.toFixed(4)}) translate(${(-n.x).toFixed(1)} ${(-n.y).toFixed(1)})`);
+      E.eyes.setAttribute("opacity",Math.max(0,Math.min(1,intro.p*1.35)).toFixed(2));
+    }else{
+      E.eyes.removeAttribute("transform");
+      E.eyes.setAttribute("opacity","1");
+    }
     const focusFoodByNearest=eyeFoods.has(n.id);
     const focusFoodByActive=(A&&A.kind==="food"&&n.id===active);
     const focusFoodBySearch=(SEARCH&&matched[n.id]!==undefined);
