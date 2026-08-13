@@ -1405,7 +1405,7 @@ const foodIconLight=col=>mixHex(col,'#ffffff',0.04);
 const foodIconDark=col=>mixHex(col,'#000000',0.14);
 const PT=12;
 let nodes={},edges=[],catLabels=[],groupLabels=[];
-const APPVER="v1.354";   // ルール: 実際の出力ごとに必ず +0.001
+const APPVER="v1.360";   // ルール: 実際の出力ごとに必ず +0.001
 let ADJREL={},FOODOF={},NUTOF={},EFFOF={},NUTEFF={},BLKOF={},BLKBY={};
 let NOW=0,active=null,relList=[],relAssign={},relRad={};
 let SEARCH="",matched={},matchN=0,FRONT="nut",switchBoost=0,stage=0,foodHidden=0;
@@ -1414,7 +1414,7 @@ let SEARCH="",matched={},matchN=0,FRONT="nut",switchBoost=0,stage=0,foodHidden=0
 const FOODSTG=[12,24];   // 各段で見せる食材数（近い順）。最終段は全部
 const TAU=Math.PI*2;        // 円一周の角度（ラジアン）
 const MOREID="__more__";   // 「＋n」ノードのID
-let running=false,rafId=0,lastInteract=0,IDLE_EYE_START_MS=10000,IDLE_MS=15000,asleep=false,EFRAME=0,_lastDraw=0;
+let running=false,rafId=0,lastInteract=0,IDLE_EYE_START_MS=10000,IDLE_MS=15000,asleep=false,EFRAME=0,_lastDraw=0,_lastNodeMove=0;
 // 起動時だけ、栄養素が小さな泡から生まれるように登場する。タブ切替では繰り返さない。
 const NUT_INTRO_STAGGER=14,NUT_INTRO_DURATION=414,NUT_INTRO_REVEAL=80;
 let nutrientIntroStart=0,nutrientIntroDone=false,nutrientIntroEnd=0,nutrientIntroPending=true;
@@ -2281,7 +2281,7 @@ function nutrientIntroReveal(t){
   return Math.max(0,Math.min(1,elapsed/NUT_INTRO_REVEAL));
 }
 // 何か操作があったら呼ぶ：ループ再開＋みんなを起こす
-function wake(){lastInteract=performance.now();asleep=false;Object.values(nodes).forEach(n=>{if(n.eyeBase!==n.origEye)n.eyeBase=n.origEye;});schedule();}
+function wake(){lastInteract=performance.now();asleep=false;Object.values(nodes).forEach(n=>{if(n.eyeBase!==n.origEye)n.eyeBase=n.origEye;});schedule();startFoodFidget();}
 // 画面外では予約済みの描画も解除する。戻ったときは操作待ちにせず再開する。
 document.addEventListener("visibilitychange",()=>{if(document.hidden){openNutHint=null;hideNutSpeech();stopMainLoop();}else wake();});
 window.addEventListener("pagehide",stopMainLoop);
@@ -2324,6 +2324,12 @@ function step(t){
   const JIGD=Math.pow(0.99,FSTEP);
   _lastDraw=t;
   NOW=t;EFRAME++;
+  // カメラは通常20fpsのまま。ノード位置だけ4描画に1回休ませ、平均15fpsにする。
+  // 操作中は追従を優先して毎フレーム更新する。
+  const nodeMoveDue=!!touching||(EFRAME%4!==0);
+  const nodeFstep=nodeMoveDue?(_lastNodeMove?Math.min(6,Math.max(1,(t-_lastNodeMove)/16.7)):FSTEP):1;
+  const NE2=(nodeFstep>1.05)?(v=>1-Math.pow(1-v,nodeFstep)):(v=>v);
+  if(nodeMoveDue)_lastNodeMove=t;
   if(!lastInteract)lastInteract=t;
   const idleAge=t-lastInteract;
   const idle=idleAge>IDLE_MS;          // 15秒以上放置されたか。ここで全体静止へ入る
@@ -2379,10 +2385,14 @@ function step(t){
       }
       else{
         // 選択中の無関係ノードは元位置に留める。以前の「中心からふわっと離れる」押し出しは停止。
-        tx=n.hx;ty=n.hy;
+        // 初期配置へ戻る背景ノードだけ、通常の約2倍の速さで帰宅させる。
+        tx=n.hx;ty=n.hy;ease=0.056;
         const fr=(n.kind===FRONT);tr=fr?n.base*0.86:n.base*0.3;op=fr?0.25:0;}
     }else{
       tx=n.hx;ty=n.hy;
+      // 背景タップで選択解除し、全体が初期配置へ戻るときも、
+      // 選択中に背景へ戻るノードと同じ約2倍速で帰宅させる。
+      if(Math.hypot(n.x-n.hx,n.y-n.hy)>1.2)ease=0.056;
       const fr=(n.kind===FRONT);
       tr=fr?n.base:n.base*0.3;op=fr?1:0;
       // 「はたらきから」のホーム画面だけ、位置は止めたままごく小さく呼吸させる。
@@ -2416,14 +2426,18 @@ function step(t){
       tx+=Math.sin(t*0.0009+n.ph)*amp*n.wob;
       ty+=Math.cos(t*0.0011+n.ph)*amp*n.wob;
     }
-    n.px=n.x;n.py=n.y;n.x+=(tx-n.x)*E2(ease);n.y+=(ty-n.y)*E2(ease);n.r+=(tr-n.r)*E2((A&&relList.indexOf(n.id)>=0&&n.surfaced)?0.16:0.09);
+    n.px=n.x;n.py=n.y;
+    if(nodeMoveDue){n.x+=(tx-n.x)*NE2(ease);n.y+=(ty-n.y)*NE2(ease);}
+    n.r+=(tr-n.r)*E2((A&&relList.indexOf(n.id)>=0&&n.surfaced)?0.16:0.09);
     // 中心・まわりは透明度を即1にする（緩和の途中で半透明になって背景が透けるのを防ぐ）。
     // ふわっと湧く感じは位置と大きさのアニメで出しているので、透明度は飛ばしてよい。
     const solid=A&&(n.id===active||relList.indexOf(n.id)>=0);
     if(solid)n.op=1;else n.op+=(op-n.op)*E2(t<switchBoost?0.34:0.07);
     n.jig*=JIGD;
-    const mx=n.x-n.px,my=n.y-n.py,sp=Math.hypot(mx,my);n.mSpd+=(sp-n.mSpd)*0.12;if(sp>0.1)n.mAng=Math.atan2(my,mx);
+    const mx=n.x-n.px,my=n.y-n.py,sp=Math.hypot(mx,my);
+    if(nodeMoveDue){n.mSpd+=(sp-n.mSpd)*0.12;if(sp>0.1)n.mAng=Math.atan2(my,mx);}
     if(sp>maxSp)maxSp=sp;
+    if(!nodeMoveDue&&Math.hypot(n.x-tx,n.y-ty)>1.2)maxSp=Math.max(maxSp,1);
     // 画面外でも「帰宅中」「関連位置へ移動中」のノードは止めない。
     // 目的位置と見た目がほぼ落ち着いた待機ノードだけを休ませることで、
     // 画面の縁で半端な位置に凍りつくのを防ぎつつ、省電力化を維持する。
@@ -2612,11 +2626,21 @@ function step(t){
       if(E.gr)E.gr.setAttribute("transform",nb.getAttribute("transform"));
       const freezeThisFood=(freezeFoodMotion||returningHome)&&n.kind==="food";
       const shapeMoving=!freezeThisFood&&(n.dragging||n.mSpd>0.6||n.jig>0.02||Math.abs(n.r-n._pr0)>0.3);
-      if(n.kind==="eff"){if(!bgStatic||wasHid){n._pr0=n.r;nb.setAttribute("d",circlePath(n.r));}}
+      if(n.kind==="eff"){
+        // はたらきノードの呼吸サイズ更新は約10fps。位置移動やカメラ追従は従来頻度のまま。
+        if((!bgStatic||wasHid)&&(wasHid||shapeMoving||(EFRAME+(n._bslot||0))%2===0)){
+          n._pr0=n.r;nb.setAttribute("d",circlePath(n.r));
+        }
+      }
       else if(n.kind==="nut"&&intro.p<0.46){n._pr0=n.r;nb.setAttribute("d",circlePath(n.r));}
       // 背景へ戻る途中も、速度変形が収束するまでは輪郭を更新する。
       // 完全に通常形へ戻った後は _bgSettled で更新自体を止める。
-      else if(!freezeThisFood&&(wasHid||((!bgFrozen||!bgStatic)&&(shapeMoving||(EFRAME+(n._bslot||0))%6===0)))){n._pr0=n.r;nb.setAttribute("d",blob(n,t));if(E.gr&&E.gr._on)E.gr.setAttribute("d",nb.getAttribute("d"));}
+      else{
+        // 栄養素の輪郭は待機中も約10fpsで更新し、低頻度更新による「カクッ」とした形変化を抑える。
+        // 位置計算や他ノードの更新頻度は変えない。食材・more等は従来の6フレーム間引きを維持。
+        const shapeEvery=n.kind==="nut"?2:6;
+        if(!freezeThisFood&&(wasHid||((!bgFrozen||!bgStatic)&&(shapeMoving||(EFRAME+(n._bslot||0))%shapeEvery===0)))){n._pr0=n.r;nb.setAttribute("d",blob(n,t));if(E.gr&&E.gr._on)E.gr.setAttribute("d",nb.getAttribute("d"));}
+      }
     }
     if(n.kind==="eff"){nb.setAttribute("fill",n.effectFill);nb.setAttribute("stroke","none");if(nd){nd.setAttribute("opacity","0");nd.setAttribute("stroke","none");}if(E.gr)E.gr.setAttribute("opacity","0");}
     else if(n.kind==="nut"){nb.setAttribute("fill",n.col);nb.setAttribute("stroke","#fff");nb.setAttribute("stroke-width","2");if(nd){nd.setAttribute("opacity","0");nd.setAttribute("stroke","none");}if(E.gr)E.gr.setAttribute("opacity","0");}
@@ -3177,6 +3201,8 @@ function foodStableHash(s){
 
 function foodFidgetStep(){
   const realNow=performance.now();
+  // 15秒放置で食材ホームの独立タイマーも完全停止。次の操作時は wake() から再開する。
+  if(lastInteract&&realNow-lastInteract>=IDLE_MS){foodFidgetTimer=0;foodFidgetWasEnabled=false;return;}
   const enabled=FRONT==="food"&&!active&&!SEARCH&&!document.hidden&&!document.getElementById("srcmodal").classList.contains("open");
   if(enabled){
     if(foodFidgetWasEnabled)foodFidgetClock+=Math.max(0,realNow-foodFidgetLastReal);
