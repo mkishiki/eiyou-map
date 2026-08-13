@@ -1405,7 +1405,7 @@ const foodIconLight=col=>mixHex(col,'#ffffff',0.04);
 const foodIconDark=col=>mixHex(col,'#000000',0.14);
 const PT=12;
 let nodes={},edges=[],catLabels=[],groupLabels=[];
-const APPVER="v1.349";   // ルール: 実際の出力ごとに必ず +0.001
+const APPVER="v1.354";   // ルール: 実際の出力ごとに必ず +0.001
 let ADJREL={},FOODOF={},NUTOF={},EFFOF={},NUTEFF={},BLKOF={},BLKBY={};
 let NOW=0,active=null,relList=[],relAssign={},relRad={};
 let SEARCH="",matched={},matchN=0,FRONT="nut",switchBoost=0,stage=0,foodHidden=0;
@@ -2043,8 +2043,8 @@ function deselect(){wake();stage=0;
 
 // ===== 履歴：NAVは全部覚える／パンくずは「腕でつながっている区間」だけを導出 =====
 // 各履歴には、その時の選択ノード自身の中心位置だけを保存する。
-// 左右矢印で戻った時はそのノード位置を復元し、カメラは保存値ではなく復元ノードを画面中央に置く。
-let NAV=[],NAVVIEW=[],HI=-1,navRestoreBoostUntil=0;
+// 左右矢印で戻った時はそのノード位置を復元し、カメラは通常タップ同様、安全領域から外れる分だけ追う。
+let NAV=[],NAVVIEW=[],HI=-1,navRestoreBoostUntil=0,navCameraTimer=0,navCameraAnim=null;
 function isNb(a,b){const A=nodes[a],B=nodes[b];if(!A||!B)return false;
   if(A.kind==="nut"&&B.kind==="nut")return (ADJREL[a]||[]).indexOf(b)>=0;
   if(A.kind==="nut"&&B.kind==="food")return (FOODOF[a]||[]).some(f=>f.id===b);
@@ -2053,15 +2053,36 @@ function isNb(a,b){const A=nodes[a],B=nodes[b];if(!A||!B)return false;
   if(A.kind==="eff"&&B.kind==="nut")return (NUTEFF[a]||[]).some(f=>f.id===b)||(BLKBY[a]||[]).indexOf(b)>=0;
   return false;}
 function saveNavView(i=HI){if(i<0||i>=NAV.length)return;const id=NAV[i],n=nodes[id];NAVVIEW[i]={nx:n?(n.ax??n.x):null,ny:n?(n.ay??n.y):null};}
-function restoreNavView(i){const v=NAVVIEW[i];if(!v)return;const id=NAV[i],n=nodes[id];
-  if(n&&Number.isFinite(v.nx)&&Number.isFinite(v.ny)){n.ax=v.nx;n.ay=v.ny;tvx=280-v.nx*tvk;tvy=500-v.ny*tvk;navRestoreBoostUntil=performance.now()+420;}
+function restoreNavView(i,cam){const v=NAVVIEW[i];if(!v)return;const id=NAV[i],n=nodes[id];
+  if(n&&Number.isFinite(v.nx)&&Number.isFinite(v.ny)){
+    n.ax=v.nx;n.ay=v.ny;
+    // selectNode内の一時的なパンを打ち消し、履歴操作直前の視点を基準にする。
+    const bx=cam?.x??tvx,by=cam?.y??tvy,bk=cam?.k??tvk;
+    tvx=bx;tvy=by;tvk=bk;
+    // 履歴復元でも通常タップと同じ安全領域を使い、必要な分だけカメラを追わせる。
+    if(navCameraTimer)clearTimeout(navCameraTimer);
+    navCameraTimer=setTimeout(()=>{
+      navCameraTimer=0;
+      let ex=bx,ey=by;
+      const sx=v.nx*bk+bx,sy=v.ny*bk+by,mx=210,my=250;
+      if(sx<mx)ex+=mx-sx;else if(sx>560-mx)ex+=(560-mx)-sx;
+      if(sy<my)ey+=my-sy;else if(sy>1000-my)ey+=(1000-my)-sy;
+      const now=performance.now();
+      // 必要なパンがあるときだけ、ゆっくり発進→中盤で加速→到着前に減速する。
+      if(Math.abs(ex-bx)>0.1||Math.abs(ey-by)>0.1){
+        navCameraAnim={start:now,dur:520,sx:vtx,sy:vty,sk:vk,ex,ey,ek:bk};
+        tvx=ex;tvy=ey;navRestoreBoostUntil=now+520;
+      }
+      wake();
+    },90);
+  }
   wake();}
 function pushNav(id){if(NAV[HI]===id){saveNavView();return;}NAV=NAV.slice(0,HI+1);NAVVIEW=NAVVIEW.slice(0,HI+1);NAV.push(id);const n=nodes[id];NAVVIEW.push({nx:n?(n.ax??n.x):null,ny:n?(n.ay??n.y):null});
   if(NAV.length>60){NAV.shift();NAVVIEW.shift();}HI=NAV.length-1;}
 function trailRange(){if(HI<0)return null;let st=HI;while(st>0&&isNb(NAV[st-1],NAV[st]))st--;return {st,items:NAV.slice(st,HI+1)};}
-function navBack(){if(!active&&HI>=0){selectNode(NAV[HI],true);restoreNavView(HI);return;}if(HI>0){saveNavView();HI--;selectNode(NAV[HI],true);restoreNavView(HI);}}
-function navFwd(){if(HI<NAV.length-1){saveNavView();HI++;selectNode(NAV[HI],true);restoreNavView(HI);}}
-function navGo(i){if(i>=0&&i<NAV.length){saveNavView();HI=i;selectNode(NAV[i],true);restoreNavView(HI);}}
+function navBack(){const cam={x:tvx,y:tvy,k:tvk};if(!active&&HI>=0){selectNode(NAV[HI],true);restoreNavView(HI,cam);return;}if(HI>0){saveNavView();HI--;selectNode(NAV[HI],true);restoreNavView(HI,cam);}}
+function navFwd(){if(HI<NAV.length-1){const cam={x:tvx,y:tvy,k:tvk};saveNavView();HI++;selectNode(NAV[HI],true);restoreNavView(HI,cam);}}
+function navGo(i){if(i>=0&&i<NAV.length){const cam={x:tvx,y:tvy,k:tvk};saveNavView();HI=i;selectNode(NAV[i],true);restoreNavView(HI,cam);}}
 function renderTrail(){const el=document.getElementById("trail");const r=active?trailRange():null;
   if(!r||r.items.length<1){el.innerHTML="";}
   else{el.innerHTML=r.items.map((id,i)=>{const last=i===r.items.length-1;return `${i?`<span class="sep">›</span>`:''}<span class="crumb${last?' trail-in':''}${(r.st+i)===HI?' cur':''}" onclick="navGo(${r.st+i})">${nodes[id]?nodes[id].name:id}</span>`;}).join("");
@@ -2308,8 +2329,17 @@ function step(t){
   const idle=idleAge>IDLE_MS;          // 15秒以上放置されたか。ここで全体静止へ入る
   let maxSp=0;                          // 今フレームの最大移動量（静止判定用）
   const navRestoreBoost=t<navRestoreBoostUntil;
-  const viewEase=navRestoreBoost?0.34:0.12;
-  vk+=(tvk-vk)*E2(viewEase);vtx+=(tvx-vtx)*E2(viewEase);vty+=(tvy-vty)*E2(viewEase);applyView();placeNutSpeech();
+  if(navCameraAnim){
+    const a=navCameraAnim,u=Math.max(0,Math.min(1,(t-a.start)/a.dur));
+    // smoothstep: 速度0から始まり、中盤で最大、速度0で到着する。
+    const e=u*u*(3-2*u);
+    vk=a.sk+(a.ek-a.sk)*e;vtx=a.sx+(a.ex-a.sx)*e;vty=a.sy+(a.ey-a.sy)*e;
+    if(u>=1){vk=tvk;vtx=tvx;vty=tvy;navCameraAnim=null;}
+  }else{
+    const viewEase=0.12;
+    vk+=(tvk-vk)*E2(viewEase);vtx+=(tvx-vtx)*E2(viewEase);vty+=(tvy-vty)*E2(viewEase);
+  }
+  applyView();placeNutSpeech();
   // 現在の画面に見えているワールド座標。少し余白を持たせ、端から入るノードが突然現れないようにする。
   const viewPad=90/Math.max(vk,0.35);
   const viewL=(-vtx)/vk-viewPad,viewR=(560-vtx)/vk+viewPad;
@@ -2343,7 +2373,10 @@ function step(t){
     }else if(A){
       if(n.id===active){tx=A.ax;ty=A.ay;tr=(A.kind==="food")?n.base+6:n.base+4;op=1;if(navRestoreBoost)ease=0.22;}
       else if(relList.indexOf(n.id)>=0){const ang=relAssign[n.id],rad=relRad[n.id];tx=A.ax+Math.cos(ang)*rad;ty=A.ay+Math.sin(ang)*rad;tr=n.base;op=1;
-        ease=n.placed?0.5:(n.surfaced?0.18:Math.min(0.15,0.09+Math.hypot(n.hx-tx,n.hy-ty)/30000));}
+        ease=n.placed?0.5:(n.surfaced?0.18:Math.min(0.15,0.09+Math.hypot(n.hx-tx,n.hy-ty)/30000));
+        // 履歴復元では中心ノードだけを高速化。周囲は通常タップ時の移動速度にそろえる。
+        if(navRestoreBoost)ease=Math.min(0.15,0.09+Math.hypot(n.hx-tx,n.hy-ty)/30000);
+      }
       else{
         // 選択中の無関係ノードは元位置に留める。以前の「中心からふわっと離れる」押し出しは停止。
         tx=n.hx;ty=n.hy;
@@ -2814,10 +2847,18 @@ function applyView(){
   updateMapTextScale();
 }
 function panTo(wx,wy){
-  // 同一平面なので、はみ出しそうなときだけ最小限だけ寄せる
-  const sx=wx*tvk+tvx,sy=wy*tvk+tvy,mx=210,my=250;
-  if(sx<mx)tvx+=mx-sx;else if(sx>560-mx)tvx+=(560-mx)-sx;
-  if(sy<my)tvy+=my-sy;else if(sy>1000-my)tvy+=(1000-my)-sy;}
+  // 同一平面なので、はみ出しそうなときだけ最小限だけ寄せる。
+  // 通常タップでは待ち時間を入れず、ゆっくり発進→中盤で加速→到着前に減速するパンにする。
+  const bx=tvx,by=tvy,bk=tvk,sx=wx*bk+bx,sy=wy*bk+by,mx=210,my=250;
+  let ex=bx,ey=by;
+  if(sx<mx)ex+=mx-sx;else if(sx>560-mx)ex+=(560-mx)-sx;
+  if(sy<my)ey+=my-sy;else if(sy>1000-my)ey+=(1000-my)-sy;
+  if(Math.abs(ex-bx)>0.1||Math.abs(ey-by)>0.1){
+    const now=performance.now();
+    navCameraAnim={start:now,dur:430,sx:vtx,sy:vty,sk:vk,ex,ey,ek:bk};
+    tvx=ex;tvy=ey;
+  }
+}
 function tapTab(f){wake();FRONT=f;NAV=[];NAVVIEW=[];HI=-1;resetAll();}
 function setFront(f){wake();const changed=(FRONT!==f);FRONT=f;
   document.getElementById("tb-eff").className=f==="eff"?"on":"";
