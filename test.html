@@ -184,9 +184,9 @@
   .legsize b,.leghue b,.legline b{font-size:calc(10px * var(--font-scale));}
   .legsize .sz,.leghue .hue,.legline .linekey{font-size:calc(11px * var(--font-scale));}
   #ibtn,#fontbtn{width:calc(34px * var(--font-scale-button));height:calc(34px * var(--font-scale-button));display:flex;align-items:center;justify-content:center;padding:0;}
-  #fontbtn{position:absolute;left:10px;bottom:10px;z-index:8;border-radius:50%;border:1.5px solid #ddd8ce;background:#fff;color:#9a9284;font:700 calc(15px * var(--font-scale-large))/1 -apple-system,"Hiragino Sans",system-ui,sans-serif;cursor:pointer;box-shadow:0 1px 4px rgba(60,50,30,.1);}
-  #ibtn{bottom:calc(18px + (34px * var(--font-scale-button)));}
-  #info{bottom:calc(24px + (68px * var(--font-scale-button)));max-height:calc(100% - 32px - (68px * var(--font-scale-button)));overflow-y:auto;box-sizing:border-box;}
+  #fontbtn{position:absolute;left:calc(18px + (34px * var(--font-scale-button)));bottom:10px;z-index:8;border-radius:50%;border:1.5px solid #ddd8ce;background:#fff;color:#9a9284;font:700 calc(15px * var(--font-scale-large))/1 -apple-system,"Hiragino Sans",system-ui,sans-serif;cursor:pointer;box-shadow:0 1px 4px rgba(60,50,30,.1);}
+  #ibtn{left:10px;bottom:10px;}
+  #info{bottom:calc(18px + (34px * var(--font-scale-button)));max-height:calc(100% - 28px - (34px * var(--font-scale-button)));overflow-y:auto;box-sizing:border-box;}
 
   #fontmodal{display:none;position:fixed;inset:0;z-index:80;background:#fff;padding:max(12px,env(safe-area-inset-top)) 18px max(12px,env(safe-area-inset-bottom));box-sizing:border-box;overflow:hidden;}
   #fontmodal.open{display:block;}
@@ -199,7 +199,7 @@
   #fontSampleSvg .fs-edge-label{font-weight:600;text-anchor:middle;}
   #fontSampleSvg .fs-group-label{font-weight:800;text-anchor:middle;stroke:none;}
   #fontSampleSvg .fs-group-bg{stroke:none;}
-  .font-sample-html-btn{position:absolute;top:72%;z-index:3;margin:0;transform:translate(-50%,-50%);}
+  .font-sample-html-btn{position:absolute;top:66.5%;z-index:3;margin:0;transform:translate(-50%,-50%);}
   .font-sample-html-next{left:28.57%;}
   .font-sample-html-reset{left:71.43%;font-size:calc(25px * var(--font-scale-button));}
   .fs-buttons{display:flex;align-items:center;justify-content:space-between;gap:0;width:100%;height:100%;padding:0 110px;box-sizing:border-box;}
@@ -209,40 +209,24 @@
   .fs-buttons .glyph{display:block;line-height:1;}
   .fs-buttons .font-sample-next .glyph{transform:translateX(1px);}
   .fs-buttons .font-sample-reset .glyph{transform:translate(-1.1px,-1.2px);}
-  #fontcontrols{--font-thumb-w:9px;padding:2px 0 8px;margin-top:0;position:relative;z-index:5;flex:none;transform:translateY(-30px);}
+  #fontcontrols{--font-thumb-w:9px;padding:2px 0 8px;margin-top:0;position:relative;z-index:5;flex:none;transform:translateY(-46px);}
   #fontrangeRow{display:grid;grid-template-columns:46px minmax(0,1fr) 46px;align-items:center;gap:12px;max-width:432px;margin:0 auto;}
   .font-arrow{width:38px;height:38px;border:0;background:#8a8172;color:#fff;border-radius:50%;font:inherit;font-size:18px;display:flex;align-items:center;justify-content:center;user-select:none;box-shadow:none;line-height:1;cursor:pointer;padding:0;}
-  .font-slider-wrap{position:relative;display:block;height:24px;}
+  .font-slider-wrap{position:relative;display:block;height:44px;}
   .font-arrow .glyph{display:block;line-height:1;}
   .font-arrow .glyph.chev-left{transform:translateX(-1px);}
   .font-arrow .glyph.chev-right{transform:translateX(1px);}
-  #fontsteps{display:none;}
-  #fontsteps span{position:absolute;top:50%;display:block;width:3px;height:10px;margin-left:-1.5px;margin-top:-5px;border-radius:999px;background:currentColor;font-size:0;opacity:.95;}
-  #fontsteps span.on{color:#6e6656;font-weight:800;opacity:1;}
-  #fontsteps span:nth-child(1){left:0%;}
-  #fontsteps span:nth-child(2){left:25%;}
-  #fontsteps span:nth-child(3){left:50%;}
-  #fontsteps span:nth-child(4){left:75%;}
-  #fontsteps span:nth-child(5){left:100%;}
-  #fontRange{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);width:100%;appearance:none;-webkit-appearance:none;background:transparent;z-index:3;pointer-events:auto;touch-action:none;cursor:ew-resize;}
+  #fontRange{position:absolute;left:0;right:0;top:0;width:100%;height:44px;margin:0;appearance:none;-webkit-appearance:none;background:transparent;z-index:3;pointer-events:auto;touch-action:none;cursor:ew-resize;}
   #fontRange:focus{outline:none;}
-  #fontRange::-webkit-slider-runnable-track{height:14px;border-radius:999px;background:
-      radial-gradient(circle at 25% 50%, #9a9284 0 2px, transparent 2.2px),
-      radial-gradient(circle at 50% 50%, #9a9284 0 2px, transparent 2.2px),
-      radial-gradient(circle at 75% 50%, #9a9284 0 2px, transparent 2.2px),
-      #d8d2c8;}
-  #fontRange::-moz-range-track{height:14px;border-radius:999px;border:none;background:
-      radial-gradient(circle at 25% 50%, #9a9284 0 2px, transparent 2.2px),
-      radial-gradient(circle at 50% 50%, #9a9284 0 2px, transparent 2.2px),
-      radial-gradient(circle at 75% 50%, #9a9284 0 2px, transparent 2.2px),
-      #d8d2c8;}
+  #fontRange::-webkit-slider-runnable-track{height:14px;border-radius:999px;background:#d8d2c8;}
+  #fontRange::-moz-range-track{height:14px;border-radius:999px;border:none;background:#d8d2c8;}
   #fontRange::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:var(--font-thumb-w);height:24px;border-radius:999px;background:#8a8172;border:none;margin-top:-5px;box-shadow:0 1px 4px rgba(80,68,48,.18);}
   #fontRange::-moz-range-thumb{width:var(--font-thumb-w);height:24px;border-radius:999px;background:#8a8172;border:none;box-shadow:0 1px 4px rgba(80,68,48,.18);}
   #fontok{margin-top:4px;width:100%;border:0;background:#8a8172;color:#fff;border-radius:12px;padding:12px 0;font:700 14px/1 -apple-system,"Hiragino Sans",system-ui,sans-serif;cursor:pointer;box-shadow:0 3px 10px rgba(80,68,48,.14);flex:none;}
 
   @media (max-height:720px){
     #fonttitle{margin:4px 0 0;}
-    #fontcontrols{padding-top:0;padding-bottom:5px;margin-top:0;transform:translateY(-24px);}
+    #fontcontrols{padding-top:0;padding-bottom:5px;margin-top:0;transform:translateY(-40px);}
     #fontok{margin-top:2px;padding:10px 0;}
   }
 </style>
@@ -380,7 +364,7 @@
         <button class="navb font-sample-html-btn font-sample-html-reset" type="button" tabindex="-1"><span class="glyph refresh">⟲</span></button>
       </div>
       <div id="fontcontrols">
-        <div id="fontrangeRow"><button class="font-arrow" type="button" onclick="stepFontSize(-1,event)" aria-label="文字を一段階小さく"><span class="glyph chev-left">◀</span></button><div class="font-slider-wrap"><div id="fontsteps"><span>●</span><span>●</span><span>●</span><span>●</span><span>●</span></div><input id="fontRange" type="range" min="1" max="5" step="1" value="1" onpointerdown="event.stopPropagation()" oninput="previewFontSize(this.value)"></div><button class="font-arrow" type="button" onclick="stepFontSize(1,event)" aria-label="文字を一段階大きく"><span class="glyph chev-right">▶</span></button></div>
+        <div id="fontrangeRow"><button class="font-arrow" type="button" onclick="stepFontSize(-1,event)" aria-label="文字を少し小さく"><span class="glyph chev-left">◀</span></button><div class="font-slider-wrap"><input id="fontRange" type="range" min="1" max="5" step="0.01" value="1" onpointerdown="event.stopPropagation()" oninput="previewFontPosition(this.value)"></div><button class="font-arrow" type="button" onclick="stepFontSize(1,event)" aria-label="文字を少し大きく"><span class="glyph chev-right">▶</span></button></div>
       </div>
       <button id="fontok" type="button" onclick="saveFontSettings(event)">OK</button>
     </div>
@@ -1531,7 +1515,7 @@ const foodIconLight=col=>mixHex(col,'#ffffff',0.04);
 const foodIconDark=col=>mixHex(col,'#000000',0.14);
 const PT=12;
 let nodes={},edges=[],catLabels=[],groupLabels=[];
-const APPVER="v1.388";   // ルール: 実際の出力ごとに必ず +0.001
+const APPVER="v1.392";   // ルール: 実際の出力ごとに必ず +0.001
 let ADJREL={},FOODOF={},NUTOF={},EFFOF={},NUTEFF={},BLKOF={},BLKBY={};
 let NOW=0,active=null,relList=[],relAssign={},relRad={};
 let SEARCH="",matched={},matchN=0,FRONT="nut",switchBoost=0,stage=0,foodHidden=0;
@@ -2285,6 +2269,9 @@ function eyeStr(n,t,forceFlat=false,viewKOverride=null){const iz=Math.max(viewKO
       +`<path d="M ${x0.toFixed(1)} ${yt.toFixed(1)} L ${x1.toFixed(1)} ${yt.toFixed(1)} A ${w.toFixed(1)} ${h.toFixed(1)} 0 0 1 ${x0.toFixed(1)} ${yt.toFixed(1)} Z" fill="#fff"/>`
       +`<circle clip-path="url(#${cid})" cx="${(cx+n.pd.x*s*0.4).toFixed(1)}" cy="${(cy+s*0.28+Math.max(n.pd.y,0)*s*0.22+Math.min(n.pd.y,0)*s*0.4).toFixed(1)}" r="${(s*0.55).toFixed(1)}" fill="${dk}"/>`;};
   if(n.dragging||t<n.surpriseEnd)return sur(lx)+sur(rx);
+  // 周囲ノードを指で動かしている間は、中心ノードの開いた目を追視状態に固定する。
+  // 瞬き・移動表情・省電力の伏せ目より優先し、pointerup/cancel でだけ解除する。
+  if(n._dragLookActive&&(n.eyeBase==="open"||n.eyeBase==="dead"))return n.eyeBase==="dead"?(dead(lx,0)+dead(rx,1)):(rnd(lx)+rnd(rx));
   if(forceFlat)return flat(lx)+flat(rx);
   if(moving&&isU)return flat(lx)+flat(rx);
   if(moving)return n.moveHappy?(up(lx)+up(rx)):(chev(lx,1)+chev(rx,-1));
@@ -2621,13 +2608,13 @@ function step(t){
     if(bgSettled){n._bgSettled=1;n.mSpd=0;n.jig=0;n.wob=0;return;}
 
     // 眠り始めていないノードだけ瞬きを更新する。
-    if(!eyeSleepNow&&(n.eyeBase==="open"||n.eyeBase==="dead")&&t>n.nextBlink&&t>n.blinkEnd){n.blinkEnd=t+190;n.nextBlink=t+2200+Math.random()*4500;}
+    if(!n._dragLookActive&&!eyeSleepNow&&(n.eyeBase==="open"||n.eyeBase==="dead")&&t>n.nextBlink&&t>n.blinkEnd){n.blinkEnd=t+190;n.nextBlink=t+2200+Math.random()*4500;}
     let ldx,ldy;
     if(SEARCH&&matched[n.id]!==undefined){ldx=gatherX-n.x;ldy=gatherY-n.y;}
     else if(A&&n.id===active){ldx=0;ldy=0.4;}
     else if(A&&relList.indexOf(n.id)>=0){ldx=A.x-n.x;ldy=A.y-n.y;}
     else{ldx=Math.sin(t*0.0007+n.ph);ldy=Math.cos(t*0.0007+n.ph);}
-    const lm=Math.hypot(ldx,ldy)||1;n.pd.x+=((ldx/lm)-n.pd.x)*0.07;n.pd.y+=((ldy/lm)-n.pd.y)*0.07;});
+    if(!n._dragLookActive){const lm=Math.hypot(ldx,ldy)||1;n.pd.x+=((ldx/lm)-n.pd.x)*0.07;n.pd.y+=((ldy/lm)-n.pd.y)*0.07;}});
 
   // 状態に応じて、実際に表示候補になる線だけを更新する。
   // 食材↔栄養素の約1,000本を毎フレーム総当たりしないことで、スマホの負荷を抑える。
@@ -3023,7 +3010,7 @@ const FONT_SETTING_KEY="eiyou-map-font-size-v1";
 const FONT_SCALES=[1,1.2,1.4,1.6,1.8];
 let USER_FONT_LEVEL=1,USER_FONT_SCALE=1,fontSettingFirstRun=false,fontSettingBefore=1;
 function readFontSetting(){
-  try{const v=parseInt(localStorage.getItem(FONT_SETTING_KEY)||"",10);return(v>=1&&v<=5)?v:null;}catch(e){return null;}
+  try{const v=parseFloat(localStorage.getItem(FONT_SETTING_KEY)||"");return(Number.isFinite(v)&&v>=1&&v<=5)?v:null;}catch(e){return null;}
 }
 const FONT_SAMPLE_SAT_LINES=["不飽和脂肪酸","（n-6系）"],FONT_SAMPLE_EDGE_LINES=["エネルギー","利用に関わる"];
 let fontSampleRAF=0,fontSampleOpenedAt=0;
@@ -3051,21 +3038,29 @@ function updateInfoDemoTextScale(){
     el.setAttribute("font-size",(parseFloat(el.dataset.baseFs||"9.5")*USER_FONT_SCALE).toFixed(2));
   });
 }
-function applyFontLevel(level){
-  level=Math.max(1,Math.min(5,parseInt(level,10)||1));USER_FONT_LEVEL=level;USER_FONT_SCALE=FONT_SCALES[level-1];
+function applyFontScaleVisual(scale){
+  USER_FONT_SCALE=scale;
   const largeScale=1+(USER_FONT_SCALE-1)*0.62;
   const buttonScale=1+(USER_FONT_SCALE-1)*0.46;
-  const lineScale=1+(USER_FONT_SCALE-1)*0.34;
-  document.documentElement.style.setProperty("--font-scale",USER_FONT_SCALE);
+  const lineScale=1+(USER_FONT_SCALE-1)*0.25;
+  document.documentElement.style.setProperty("--font-scale",USER_FONT_SCALE.toFixed(3));
   document.documentElement.style.setProperty("--font-scale-large",largeScale.toFixed(3));
   document.documentElement.style.setProperty("--font-scale-button",buttonScale.toFixed(3));
   document.documentElement.style.setProperty("--font-line-scale",lineScale.toFixed(3));
-  document.documentElement.style.setProperty("--font-line-scale",(1+(USER_FONT_SCALE-1)*0.25).toFixed(3));
-  const r=document.getElementById("fontRange");if(r)r.value=level;
-  document.querySelectorAll("#fontsteps span").forEach((el,i)=>el.classList.toggle("on",i===level-1));
   if(typeof updateMapTextScale==="function")updateMapTextScale();
   updateCatLabelLayout();
   updateInfoDemoTextScale();
+}
+function applyFontLevel(level){
+  level=Math.max(1,Math.min(5,parseFloat(level)||1));USER_FONT_LEVEL=level;
+  applyFontScaleVisual(fontScaleAtPosition(level));
+  const r=document.getElementById("fontRange");if(r)r.value=level;
+}
+function fontScaleAtPosition(pos){
+  pos=Math.max(1,Math.min(5,parseFloat(pos)||1));
+  const lo=Math.floor(pos),hi=Math.ceil(pos),t=pos-lo;
+  if(lo===hi)return FONT_SCALES[lo-1];
+  return FONT_SCALES[lo-1]+(FONT_SCALES[hi-1]-FONT_SCALES[lo-1])*t;
 }
 function sampleLabelColor(){
   const el=document.querySelector('#view text[data-fs], #nsvg text, #crumbs');
@@ -3113,8 +3108,13 @@ function renderFontSampleExact(){
   const gt=document.getElementById("fontSampleGroupText"),gb=document.getElementById("fontSampleGroupBg");
   if(gt&&gb){try{const b=gt.getBBox(),px=6,py=5;gb.setAttribute("x",b.x-px);gb.setAttribute("y",b.y-py);gb.setAttribute("width",b.width+px*2);gb.setAttribute("height",b.height+py*2);}catch(_){}}
 }
-function previewFontSize(level){applyFontLevel(level);startFontSampleAnim();}
-function stepFontSize(delta,ev){if(ev){ev.preventDefault();ev.stopPropagation();}applyFontLevel(USER_FONT_LEVEL+delta);startFontSampleAnim();}
+function previewFontPosition(pos){
+  const p=Math.max(1,Math.min(5,parseFloat(pos)||1));
+  USER_FONT_LEVEL=p;
+  applyFontScaleVisual(fontScaleAtPosition(p));
+  startFontSampleAnim();
+}
+function stepFontSize(delta,ev){if(ev){ev.preventDefault();ev.stopPropagation();}applyFontLevel(USER_FONT_LEVEL+delta*0.25);startFontSampleAnim();}
 function openFontSettings(ev,firstRun=false){if(ev)ev.stopPropagation();closeInfo();
   fontSettingFirstRun=!!firstRun;fontSettingBefore=USER_FONT_LEVEL;
   const m=document.getElementById("fontmodal");if(m)m.classList.add("open");
@@ -3123,7 +3123,7 @@ function openFontSettings(ev,firstRun=false){if(ev)ev.stopPropagation();closeInf
   startFontSampleAnim();
 }
 function saveFontSettings(ev){if(ev)ev.stopPropagation();
-  try{localStorage.setItem(FONT_SETTING_KEY,String(USER_FONT_LEVEL));}catch(e){}
+  try{localStorage.setItem(FONT_SETTING_KEY,String(Math.round(USER_FONT_LEVEL*100)/100));}catch(e){}
   stopFontSampleAnim();
   const m=document.getElementById("fontmodal");if(m)m.classList.remove("open");
   const wasFirst=fontSettingFirstRun;fontSettingFirstRun=false;
@@ -3404,6 +3404,22 @@ function persistDrag(){const n=dragId&&nodes[dragId];if(!n||!n.dragging)return;n
     relAssign[n.id]=Math.atan2(dy,dx);
     n.placed=1;   // 手で置かれた：戻るアニメを挟まずその場に留める
   }}
+function updateCenterLookAtDraggedNode(A,n){
+  // 中心・周囲の種類には依存しない。通常の開いた目と半月目は、
+  // 円弧上でドラッグ中の関連ノードへ視線を向ける。
+  if(!A||!n||(A.eyeBase!=="open"&&A.eyeBase!=="dead"))return;
+  if(!A._dragLookPd)A._dragLookPd={x:A.pd.x,y:A.pd.y};
+  A._dragLookActive=true;
+  A.blinkEnd=0;
+  const cx=(A.ax!=null?A.ax:A.x),cy=(A.ay!=null?A.ay:A.y);
+  const dx=n.x-cx,dy=n.y-cy,m=Math.hypot(dx,dy)||1;
+  A.pd.x=dx/m;A.pd.y=dy/m;
+}
+function clearCenterDragLook(){
+  const A=active?nodes[active]:null;
+  if(A&&A._dragLookPd){A.pd.x=A._dragLookPd.x;A.pd.y=A._dragLookPd.y;delete A._dragLookPd;}
+  if(A)delete A._dragLookActive;
+}
 svg.addEventListener("pointerdown",ev=>{wake();closeInfo();const v=toVB(ev);pts.set(ev.pointerId,v);
   if(pts.size===2){persistDrag();dragId=null;mode="pinch";const a=[...pts.values()];lastMid={x:(a[0].x+a[1].x)/2,y:(a[0].y+a[1].y)/2};lastDist=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y);return;}
   downX=v.x;downY=v.y;const hit=hitNode(v);
@@ -3413,17 +3429,20 @@ svg.addEventListener("pointermove",ev=>{if(!pts.has(ev.pointerId))return;const v
     if(lastDist>0){const nk=clamp(vk*(dist/lastDist),0.35,4);vtx=mid.x-(mid.x-vtx)*(nk/vk);vty=mid.y-(mid.y-vty)*(nk/vk);vk=nk;vtx+=mid.x-lastMid.x;vty+=mid.y-lastMid.y;tvk=vk;tvx=vtx;tvy=vty;applyView();}
     lastMid=mid;lastDist=dist;return;}
   if(mode==="drag"&&dragId&&nodes[dragId]){if(Math.hypot(v.x-downX,v.y-downY)>4&&!nodes[dragId].dragging){nodes[dragId].dragging=true;nodes[dragId].surpriseEnd=performance.now()+500;if(nodes[dragId].kind==="food")bringFront([dragId]);}
-    if(nodes[dragId].dragging){const n=nodes[dragId],L=toLocal(v);let nx=L.x-grabX,ny=L.y-grabY;
+    if(nodes[dragId].dragging){lastInteract=performance.now();asleep=false;const n=nodes[dragId],L=toLocal(v);let nx=L.x-grabX,ny=L.y-grabY;
       const A=active?nodes[active]:null;
       if(A&&n.id!==active&&relList.indexOf(n.id)>=0&&relRad[n.id]!=null){
         // 関連ノードは「中心からの距離＝関連度」なので距離は固定。角度だけ動かす（円周上を滑る）
         const dx=nx-A.ax,dy=ny-A.ay,m=Math.hypot(dx,dy)||1,rad=relRad[n.id];
         nx=A.ax+dx/m*rad;ny=A.ay+dy/m*rad;
       }
-      n.x=nx;n.y=ny;}return;}
+      n.x=nx;n.y=ny;
+      if(A&&n.id!==active&&relList.indexOf(n.id)>=0)updateCenterLookAtDraggedNode(A,n);
+    }return;}
   if(mode==="pan"&&lastPan){vtx+=v.x-lastPan.x;vty+=v.y-lastPan.y;tvx=vtx;tvy=vty;lastPan=v;applyView();}});
 function endPointer(ev){const m=mode,dId=dragId;pts.delete(ev.pointerId);
   if(pts.size===0){
+    clearCenterDragLook();
     if(m==="drag"&&dId&&nodes[dId]){
       if(nodes[dId].dragging)persistDrag();
       else if(SEARCH&&matched[dId]===undefined)clearSearch(1);
