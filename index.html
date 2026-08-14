@@ -1419,7 +1419,7 @@ const foodIconLight=col=>mixHex(col,'#ffffff',0.04);
 const foodIconDark=col=>mixHex(col,'#000000',0.14);
 const PT=12;
 let nodes={},edges=[],catLabels=[],groupLabels=[];
-const APPVER="v1.363";   // ルール: 実際の出力ごとに必ず +0.001
+const APPVER="v1.364";   // ルール: 実際の出力ごとに必ず +0.001
 let ADJREL={},FOODOF={},NUTOF={},EFFOF={},NUTEFF={},BLKOF={},BLKBY={};
 let NOW=0,active=null,relList=[],relAssign={},relRad={};
 let SEARCH="",matched={},matchN=0,FRONT="nut",switchBoost=0,stage=0,foodHidden=0;
@@ -2070,6 +2070,11 @@ function saveNavView(i=HI){if(i<0||i>=NAV.length)return;const id=NAV[i],n=nodes[
 function restoreNavView(i,cam){const v=NAVVIEW[i];if(!v)return;const id=NAV[i],n=nodes[id];
   if(n&&Number.isFinite(v.nx)&&Number.isFinite(v.ny)){
     n.ax=v.nx;n.ay=v.ny;
+    // selectNode() は通常タップ用の panTo() を先に呼ぶため、
+    // 履歴復元ではそのカメラアニメをここで必ず破棄する。
+    // 残したままだと、通常パンが一瞬走った後に90ms遅延の履歴パンが始まり、
+    // 条件によってカメラが2回動いて見える。
+    navCameraAnim=null;
     // selectNode内の一時的なパンを打ち消し、履歴操作直前の視点を基準にする。
     const bx=cam?.x??tvx,by=cam?.y??tvy,bk=cam?.k??tvk;
     tvx=bx;tvy=by;tvk=bk;
