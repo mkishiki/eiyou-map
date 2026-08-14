@@ -209,14 +209,14 @@
   .fs-buttons .glyph{display:block;line-height:1;}
   .fs-buttons .font-sample-next .glyph{transform:translateX(1px);}
   .fs-buttons .font-sample-reset .glyph{transform:translate(-1.1px,-1.2px);}
-  #fontcontrols{--font-thumb-w:9px;padding:2px 0 8px;margin-top:0;position:relative;z-index:5;flex:none;transform:translateY(-46px);}
+  #fontcontrols{--font-thumb-w:9px;padding:2px 0 8px;margin-top:0;position:relative;z-index:5;flex:none;transform:translateY(-58px);}
   #fontrangeRow{display:grid;grid-template-columns:46px minmax(0,1fr) 46px;align-items:center;gap:12px;max-width:432px;margin:0 auto;}
   .font-arrow{width:38px;height:38px;border:0;background:#8a8172;color:#fff;border-radius:50%;font:inherit;font-size:18px;display:flex;align-items:center;justify-content:center;user-select:none;box-shadow:none;line-height:1;cursor:pointer;padding:0;}
-  .font-slider-wrap{position:relative;display:block;height:44px;}
+  .font-slider-wrap{position:relative;display:block;height:58px;}
   .font-arrow .glyph{display:block;line-height:1;}
   .font-arrow .glyph.chev-left{transform:translateX(-1px);}
   .font-arrow .glyph.chev-right{transform:translateX(1px);}
-  #fontRange{position:absolute;left:0;right:0;top:0;width:100%;height:44px;margin:0;appearance:none;-webkit-appearance:none;background:transparent;z-index:3;pointer-events:auto;touch-action:none;cursor:ew-resize;}
+  #fontRange{position:absolute;left:0;right:0;top:0;width:100%;height:58px;margin:0;appearance:none;-webkit-appearance:none;background:transparent;z-index:3;pointer-events:auto;touch-action:none;cursor:ew-resize;}
   #fontRange:focus{outline:none;}
   #fontRange::-webkit-slider-runnable-track{height:14px;border-radius:999px;background:#d8d2c8;}
   #fontRange::-moz-range-track{height:14px;border-radius:999px;border:none;background:#d8d2c8;}
@@ -226,7 +226,7 @@
 
   @media (max-height:720px){
     #fonttitle{margin:4px 0 0;}
-    #fontcontrols{padding-top:0;padding-bottom:5px;margin-top:0;transform:translateY(-40px);}
+    #fontcontrols{padding-top:0;padding-bottom:5px;margin-top:0;transform:translateY(-50px);}
     #fontok{margin-top:2px;padding:10px 0;}
   }
 </style>
@@ -364,7 +364,7 @@
         <button class="navb font-sample-html-btn font-sample-html-reset" type="button" tabindex="-1"><span class="glyph refresh">⟲</span></button>
       </div>
       <div id="fontcontrols">
-        <div id="fontrangeRow"><button class="font-arrow" type="button" onclick="stepFontSize(-1,event)" aria-label="文字を少し小さく"><span class="glyph chev-left">◀</span></button><div class="font-slider-wrap"><input id="fontRange" type="range" min="1" max="5" step="0.01" value="1" onpointerdown="event.stopPropagation()" oninput="previewFontPosition(this.value)"></div><button class="font-arrow" type="button" onclick="stepFontSize(1,event)" aria-label="文字を少し大きく"><span class="glyph chev-right">▶</span></button></div>
+        <div id="fontrangeRow"><button class="font-arrow" type="button" onclick="stepFontSize(-1,event)" aria-label="文字を少し小さく"><span class="glyph chev-left">◀</span></button><div class="font-slider-wrap"><input id="fontRange" type="range" min="1" max="5" step="0.01" value="1.8" onpointerdown="beginFontDrag(event)" onpointermove="moveFontDrag(event)" onpointerup="endFontDrag(event)" onpointercancel="endFontDrag(event)" oninput="previewFontPosition(this.value)"></div><button class="font-arrow" type="button" onclick="stepFontSize(1,event)" aria-label="文字を少し大きく"><span class="glyph chev-right">▶</span></button></div>
       </div>
       <button id="fontok" type="button" onclick="saveFontSettings(event)">OK</button>
     </div>
@@ -1396,7 +1396,7 @@ const FOODS=[
 ];
 const WATER={b1:1,b2:1,b6:1,b12:1,vc:1,folate:1,niacin:1,panto:1},FATS={va:1,vd:1,ve:1,vk:1};
 const CATEMOJI={"魚介":"🐟","肉・卵":"🍖","乳製品":"🥛","豆・大豆":"🫘","緑黄色野菜":"🥦","その他の野菜":"🧅","きのこ":"🍄","海藻":"🌿","果物":"🍓","穀類・いも":"🍚","種実・油":"🥜","香味・調味料":"🧂","酒・嗜好品":"🍫"};
-const CATPOS={"穀類・いも":[86,140],"肉・卵":[280,140],"魚介":[474,140],"豆・大豆":[181,319],"乳製品":[389,319],"緑黄色野菜":[86,498],"その他の野菜":[280,498],"きのこ":[474,498],"海藻":[181,677],"果物":[389,677],"種実・油":[86,856],"香味・調味料":[280,856],"酒・嗜好品":[474,856]};
+const CATPOS={"穀類・いも":[86,140],"肉・卵":[280,140],"魚介":[474,140],"豆・大豆":[181,335],"乳製品":[389,335],"緑黄色野菜":[86,530],"その他の野菜":[280,530],"きのこ":[474,530],"海藻":[181,725],"果物":[389,725],"種実・油":[86,920],"香味・調味料":[280,920],"酒・嗜好品":[474,920]};
 const CATLIST={
  "魚介":["鮭","かつお","まぐろ","あさり","うなぎ","さんま","牡蠣","さば","いわし","ぶり","たら","えび","ほたて","いか","たこ","ツナ缶","しらす干し","あじ","ちくわ"],
  "肉・卵":["鶏むね","ハム","ベーコン","卵","牛脂","牛もも","鶏もも","ソーセージ","豚ロース","豚ばら","豚もも","豚ひき肉","豚レバー","ささみ","鶏レバー","鶏ひき肉"],
@@ -1515,7 +1515,7 @@ const foodIconLight=col=>mixHex(col,'#ffffff',0.04);
 const foodIconDark=col=>mixHex(col,'#000000',0.14);
 const PT=12;
 let nodes={},edges=[],catLabels=[],groupLabels=[];
-const APPVER="v1.392";   // ルール: 実際の出力ごとに必ず +0.001
+const APPVER="v1.395";   // ルール: 実際の出力ごとに必ず +0.001
 let ADJREL={},FOODOF={},NUTOF={},EFFOF={},NUTEFF={},BLKOF={},BLKBY={};
 let NOW=0,active=null,relList=[],relAssign={},relRad={};
 let SEARCH="",matched={},matchN=0,FRONT="nut",switchBoost=0,stage=0,foodHidden=0;
@@ -1524,6 +1524,13 @@ let SEARCH="",matched={},matchN=0,FRONT="nut",switchBoost=0,stage=0,foodHidden=0
 const FOODSTG=[12,24];   // 各段で見せる食材数（近い順）。最終段は全部
 const TAU=Math.PI*2;        // 円一周の角度（ラジアン）
 const MOREID="__more__";   // 「＋n」ノードのID
+const EFFECT_LABEL_LINES={
+  "神経のはたらきを支える":["神経のはたらきを","支える"],
+  "筋肉とからだをつくる":["筋肉とからだを","つくる"],
+  "血糖のゆるやかさに関わる":["血糖のゆるやかさに","関わる"],
+  "エネルギーをつくる":["エネルギーを","つくる"],
+  "肌・髪・粘膜を守る":["肌・髪・粘膜を","守る"]
+};
 let running=false,rafId=0,lastInteract=0,IDLE_EYE_START_MS=10000,IDLE_MS=15000,asleep=false,EFRAME=0,_lastDraw=0,_lastNodeMove=0;
 // 起動時だけ、栄養素が小さな泡から生まれるように登場する。タブ切替では繰り返さない。
 const NUT_INTRO_STAGGER=14,NUT_INTRO_DURATION=414,NUT_INTRO_REVEAL=80;
@@ -2206,6 +2213,7 @@ function renderTrail(){const el=document.getElementById("trail");const r=active?
   document.getElementById("fw").disabled=!(HI<NAV.length-1);
 }
 function resetAll(){wake();stage=0;sinkSurfaced([]);active=null;relList=[];relAssign={};relRad={};groupLabels=[];
+  if(FRONT==="nut")resetNutHintPositions();
   if(SEARCH)clearSearch(1);
   Object.values(nodes).forEach(n=>{n.hx=n.ox;n.hy=n.oy;n.x=n.ox;n.y=n.oy;n.px=n.x;n.py=n.y;n.mSpd=0;n.jig=(n.kind==="food"?0:0.4);n.dragging=false;n.surfaced=0;n.sinking=0;n.placed=0;
     const fr=(n.kind===FRONT);n.op=fr?1:0;n.r=n.base;});
@@ -2310,6 +2318,10 @@ const NUT_HINTS={
 const nutHintPos={};
 let nutHintDrag=null;
 let openNutHint=null;
+function resetNutHintPositions(){
+  Object.keys(nutHintPos).forEach(id=>delete nutHintPos[id]);
+  nutHintDrag=null;openNutHint=null;hideNutSpeech();
+}
 function hideNutSpeech(){const el=document.getElementById("nutSpeech");if(!el)return;el.classList.remove("show");setTimeout(()=>{if(!el.classList.contains("show"))el.style.display="none";},180);} 
 function ensureNutHintPos(id){
   const info=NUT_HINTS[id],n=info&&nodes[info.node];
@@ -2503,6 +2515,14 @@ function step(t){
   const viewL=(-vtx)/vk-viewPad,viewR=(560-vtx)/vk+viewPad;
   const viewT=(-vty)/vk-viewPad,viewB=(1000-vty)/vk+viewPad;
   const A=active?nodes[active]:null;
+  // 食材ホームでは初期配置の密度を優先して食材名を隠す。
+  // 初期倍率から少し拡大したら徐々に表示し、約18%拡大で完全表示にする。
+  let foodHomeLabelOpacity=1;
+  if(!A&&!SEARCH&&FRONT==="food"){
+    const base=Math.max(0.35,foodHomeBaseK||1),start=base*1.08,full=base*1.18;
+    if(tvk<=base*1.04)foodHomeLabelOpacity=0;
+    else foodHomeLabelOpacity=Math.max(0,Math.min(1,(vk-start)/Math.max(0.001,full-start)));
+  }
   // 栄養素を選択中：各食材カテゴリで最も近い食材だけに、目・太字・前面表示を与える。
   // 同じセットを3つの見た目に共用し、カテゴリごとの代表が一貫して見えるようにする。
   const nearestCatFoods=new Set();
@@ -2720,7 +2740,7 @@ function step(t){
       let dim;
       if(SEARCH)dim=(matched[n.id]!==undefined?1:(n.kind===FRONT?0.14:0));
       else if(A)dim=(n.id===active||relList.indexOf(n.id)>=0)?1:(n.kind===FRONT?0.18:0);
-      else dim=(n.kind===FRONT)?1:0;
+      else dim=(n.kind===FRONT)?((FRONT==="food"&&n.kind==="food")?foodHomeLabelOpacity:1):0;
       if(n.kind==="nut"&&!nutrientIntroDone)dim*=introReveal;
       const tgt=toFront?lf:l,off=toFront?l:lf;
       if(tgt.getAttribute("opacity")!==String(dim))tgt.setAttribute("opacity",dim);
@@ -2860,9 +2880,10 @@ function step(t){
     let dim;
     if(SEARCH)dim=(matched[n.id]!==undefined?1:(n.kind===FRONT?0.14:0));
     else if(A)dim=(n.id===active||relList.indexOf(n.id)>=0)?1:(n.kind===FRONT?0.18:0);
-    else dim=(n.kind===FRONT)?1:0;
+    else dim=(n.kind===FRONT)?((FRONT==="food"&&n.kind==="food")?foodHomeLabelOpacity:1):0;
     if(n.kind==="nut"&&!nutrientIntroDone)dim*=introReveal;
     const tgt=toFront?lf:l,off=toFront?l:lf;
+    // 指定した長い「はたらき」は読みやすい位置で2行にする。データ上の名称は変えない。
     // 食材ラベルはシルエットの「実際の下端」から一定距離に置く。
     // 緑黄色野菜(carrot)の現行見え方を基準に、下端→文字ベースラインを約13pxで統一。
     const zGap=Math.max(vk,0.35),zLocal=Math.pow(zGap,-0.82);
@@ -2872,10 +2893,16 @@ function step(t){
     const foodBottom=(n.kind==="food"&&n.icon&&FOODICON_BOTTOM[n.icon]!=null)?n.y+renderR*FOODICON_BOTTOM[n.icon]:n.y+renderR;
     const labelY=(n.kind==="food")?foodBottom+FOOD_LABEL_BASE_GAP:n.y+renderR+NODE_LABEL_BASE_GAP;
     tgt.setAttribute("x",n.x.toFixed(1));tgt.setAttribute("y",labelY.toFixed(1));
-    if(tgt.textContent!==n.name)tgt.textContent=n.name;
+    const effectLines=(n.kind==="eff"&&EFFECT_LABEL_LINES[n.name])?EFFECT_LABEL_LINES[n.name]:null;
     const labelFS=(active&&n.id===active)?16:(n.kind==="food"?11.5:14);
+    const labelLocal=Math.pow(Math.max(vk,0.35),-0.82);
     tgt.dataset.fs=labelFS;
-    tgt.setAttribute("font-size",(labelFS*Math.pow(Math.max(vk,0.35),-0.82)*USER_FONT_SCALE).toFixed(2));
+    tgt.setAttribute("font-size",(labelFS*labelLocal*USER_FONT_SCALE).toFixed(2));
+    if(effectLines){
+      const lineScale=1+(fontScaleForBase(labelFS)-1)*0.62,lineGap=labelFS*1.12*labelLocal*lineScale;
+      if(tgt._effectLines!==n.name){tgt._effectLines=n.name;tgt.textContent="";effectLines.forEach(line=>{const sp=document.createElementNS("http://www.w3.org/2000/svg","tspan");sp.textContent=line;tgt.appendChild(sp);});}
+      tgt.querySelectorAll("tspan").forEach((sp,j)=>{sp.setAttribute("x",n.x.toFixed(1));sp.setAttribute("y",(labelY+j*lineGap).toFixed(1));});
+    }else{if(tgt._effectLines){tgt._effectLines=null;tgt.textContent="";}if(tgt.textContent!==n.name)tgt.textContent=n.name;}
     // 各食材カテゴリの最寄り食材は、目を出す判定と同じセットを使って太字にする。
     const nearCatFood=(A&&A.kind==="nut"&&n.kind==="food"&&nearestCatFoods.has(n.id));
     tgt.setAttribute("font-weight",nearCatFood?800:((active&&n.id===active)?700:500));
@@ -3006,11 +3033,25 @@ function openFromHash(){const q=voiceQueryRaw();if(!q)return false;return openVo
 window.addEventListener("hashchange",()=>openFromHash());
 
 // ===== 文字サイズ設定 =====
-const FONT_SETTING_KEY="eiyou-map-font-size-v1";
-const FONT_SCALES=[1,1.2,1.4,1.6,1.8];
-let USER_FONT_LEVEL=1,USER_FONT_SCALE=1,fontSettingFirstRun=false,fontSettingBefore=1;
+const FONT_SETTING_KEY="eiyou-map-font-size-v2",FONT_SETTING_OLD_KEY="eiyou-map-font-size-v1";
+const FONT_STANDARD_POS=1.8; // 標準(1.0倍)はバー左から約20%
+let USER_FONT_LEVEL=FONT_STANDARD_POS,USER_FONT_SCALE=1,fontSettingFirstRun=false,fontSettingBefore=FONT_STANDARD_POS,fontRangePointerId=null;
+function oldFontScaleAtPosition(pos){
+  pos=Math.max(1,Math.min(5,parseFloat(pos)||1));
+  return 1+(pos-1)*0.2;
+}
+function fontPositionForScale(scale){
+  scale=Math.max(.9,Math.min(1.8,parseFloat(scale)||1));
+  return scale<=1 ? 1+(scale-.9)/.1*.8 : FONT_STANDARD_POS+(scale-1)/.8*(5-FONT_STANDARD_POS);
+}
 function readFontSetting(){
-  try{const v=parseFloat(localStorage.getItem(FONT_SETTING_KEY)||"");return(Number.isFinite(v)&&v>=1&&v<=5)?v:null;}catch(e){return null;}
+  try{
+    const cur=parseFloat(localStorage.getItem(FONT_SETTING_KEY)||"");
+    if(Number.isFinite(cur)&&cur>=1&&cur<=5)return cur;
+    const old=parseFloat(localStorage.getItem(FONT_SETTING_OLD_KEY)||"");
+    if(Number.isFinite(old)&&old>=1&&old<=5){const migrated=fontPositionForScale(oldFontScaleAtPosition(old));localStorage.setItem(FONT_SETTING_KEY,String(migrated));return migrated;}
+    return null;
+  }catch(e){return null;}
 }
 const FONT_SAMPLE_SAT_LINES=["不飽和脂肪酸","（n-6系）"],FONT_SAMPLE_EDGE_LINES=["エネルギー","利用に関わる"];
 let fontSampleRAF=0,fontSampleOpenedAt=0;
@@ -3021,7 +3062,8 @@ function startFontSampleAnim(){stopFontSampleAnim();fontSampleOpenedAt=performan
 function wakeFontSample(ev){if(ev)ev.stopPropagation();startFontSampleAnim();}
 function updateCatLabelLayout(){
   if(!catLabels||!catLabels.length)return;
-  const extra=18*(USER_FONT_SCALE-1);
+  // カテゴリ文字の実際の拡大率に合わせて字間を広げ、淡い背景の円弧も同じ長さまで追従させる。
+  const catScale=fontScaleForBase(16.9),extra=18*(catScale-1);
   catLabels.forEach((c,i)=>{
     const g=document.getElementById("cl"+i);if(!g)return;
     const texts=[...g.querySelectorAll("text")];if(!texts.length)return;
@@ -3029,8 +3071,15 @@ function updateCatLabelLayout(){
     const R=118,step=(18+extra)/R,span=(txt.length-1)*step;
     const acx=c.x,acy=c.y+R,HW=24,HR=R+HW/2;
     const hp=a=>[(acx+Math.cos(a)*HR).toFixed(1),(acy+Math.sin(a)*HR).toFixed(1)];
-    const a0=-Math.PI/2-span/2;
+    const a0=-Math.PI/2-span/2,a1=-Math.PI/2+span/2;
     texts.forEach((el,k)=>{const q=hp(a0+k*step);el.setAttribute("x",q[0]);el.setAttribute("y",q[1]);});
+    const bg=g.querySelector("path");
+    if(bg){
+      // 端の文字幅も背景内へ入るよう、最初と最後の文字の外側まで少し余白を持たせる。
+      const endPad=Math.max(step*0.76,(16.9*catScale*0.58)/HR),p0=hp(a0-endPad),p1=hp(a1+endPad);
+      bg.setAttribute("d",`M ${p0[0]} ${p0[1]} A ${HR} ${HR} 0 0 1 ${p1[0]} ${p1[1]}`);
+      bg.setAttribute("stroke-width",(HW*(1+(catScale-1)*0.55)).toFixed(2));
+    }
   });
 }
 function updateInfoDemoTextScale(){
@@ -3057,11 +3106,21 @@ function applyFontLevel(level){
   const r=document.getElementById("fontRange");if(r)r.value=level;
 }
 function fontScaleAtPosition(pos){
-  pos=Math.max(1,Math.min(5,parseFloat(pos)||1));
-  const lo=Math.floor(pos),hi=Math.ceil(pos),t=pos-lo;
-  if(lo===hi)return FONT_SCALES[lo-1];
-  return FONT_SCALES[lo-1]+(FONT_SCALES[hi-1]-FONT_SCALES[lo-1])*t;
+  pos=Math.max(1,Math.min(5,parseFloat(pos)||FONT_STANDARD_POS));
+  // 左端〜標準は0.9→1.0、標準〜右端は1.0→1.8。標準を左から約1/5に置く。
+  return pos<=FONT_STANDARD_POS ? .9+(pos-1)/(FONT_STANDARD_POS-1)*.1 : 1+(pos-FONT_STANDARD_POS)/(5-FONT_STANDARD_POS)*.8;
 }
+function setFontRangeFromPointer(ev){
+  const r=document.getElementById("fontRange");if(!r)return;
+  const b=r.getBoundingClientRect(),x=Math.max(0,Math.min(b.width,ev.clientX-b.left));
+  const pos=1+(x/Math.max(1,b.width))*4;r.value=pos.toFixed(3);previewFontPosition(pos);
+}
+function beginFontDrag(ev){
+  ev.stopPropagation();ev.preventDefault();fontRangePointerId=ev.pointerId;wakeFontSample();setFontRangeFromPointer(ev);
+  try{ev.currentTarget.setPointerCapture(ev.pointerId);}catch(_){}
+}
+function moveFontDrag(ev){if(fontRangePointerId!==ev.pointerId)return;ev.stopPropagation();ev.preventDefault();setFontRangeFromPointer(ev);}
+function endFontDrag(ev){if(fontRangePointerId!==ev.pointerId)return;ev.stopPropagation();ev.preventDefault();setFontRangeFromPointer(ev);fontRangePointerId=null;try{ev.currentTarget.releasePointerCapture(ev.pointerId);}catch(_){}}
 function sampleLabelColor(){
   const el=document.querySelector('#view text[data-fs], #nsvg text, #crumbs');
   if(el){const cs=getComputedStyle(el);return cs.fill&&cs.fill!=='none'?cs.fill:(cs.color||'#3a3226');}
@@ -3129,11 +3188,11 @@ function saveFontSettings(ev){if(ev)ev.stopPropagation();
   const wasFirst=fontSettingFirstRun;fontSettingFirstRun=false;
   if(wasFirst)maybeStartNutrientIntroOnce();
 }
-function initFontSetting(){const saved=readFontSetting();applyFontLevel(saved==null?1:saved);fontSettingFirstRun=false;return saved!=null;}
+function initFontSetting(){const saved=readFontSetting();applyFontLevel(saved==null?FONT_STANDARD_POS:saved);fontSettingFirstRun=false;return saved!=null;}
 function maybeStartNutrientIntroOnce(){if(fontSettingFirstRun)return;startNutrientIntroOnce();}
 
 // ===== 視点 =====
-let vk=1,vtx=0,vty=0,tvk=1,tvx=0,tvy=0;
+let vk=1,vtx=0,vty=0,tvk=1,tvx=0,tvy=0,foodHomeBaseK=1;
 const svg=document.getElementById("nsvg");
 function fontScaleForBase(base){
   const full=USER_FONT_SCALE;
@@ -3211,6 +3270,7 @@ function foodHomeView(){
   const availH=Math.max(1,bottom-top);
   // 横方向は従来の見え方を保ち、iPhoneごとの差が出る縦方向だけで必要な縮小率を決める。
   const k=Math.min(1,availH/Math.max(1,b-t));
+  foodHomeBaseK=k;
   const x=280-280*k;
   const y=top-t*k;
   return {k,x,y};
