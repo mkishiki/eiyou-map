@@ -1509,7 +1509,7 @@ const foodIconLight=col=>mixHex(col,'#ffffff',0.04);
 const foodIconDark=col=>mixHex(col,'#000000',0.14);
 const PT=12;
 let nodes={},edges=[],catLabels=[],groupLabels=[];
-const APPVER="v1.415";   // ルール: 実際の出力ごとに必ず +0.001
+const APPVER="v1.416";   // ルール: 実際の出力ごとに必ず +0.001
 let ADJREL={},FOODOF={},NUTOF={},EFFOF={},NUTEFF={},BLKOF={},BLKBY={};
 let NOW=0,active=null,relList=[],relAssign={},relRad={};
 let SEARCH="",matched={},matchN=0,FRONT="nut",switchBoost=0,stage=0,foodHidden=0;
@@ -1847,7 +1847,7 @@ function selectNode(id,fromNav){if(!nodes[id])return;wake();
     // 近い順に並べたものを黄金角ずつ飛ばして配ると、近いものも遠いものも
     // 円周じゅうに散らばって、方向の偏りも列っぽさも出ない。
     // 食材ごとの位置は毎回同じ（開くたびに変わることはない）。
-    const rOf0=f=>radOf(active,f.id);
+    const rOf0=f=>A.kind==="eff" ? EFFRING[f.lv||3] : radOf(active,f.id);
     // 栄養素ごとに必要量が違うので、絶対距離をまたいで比べても意味がない。
     // その栄養素の食材群の中で min〜max を 52〜260 に張り直す（正規化）。
     // → どの栄養素でも「一番近い＝最内、一番遠い＝最外」に揃う。
