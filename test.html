@@ -1514,7 +1514,7 @@ const foodIconLight=col=>mixHex(col,'#ffffff',0.04);
 const foodIconDark=col=>mixHex(col,'#000000',0.14);
 const PT=12;
 let nodes={},edges=[],catLabels=[],groupLabels=[];
-const APPVER="v1.438";   // ルール: 実際の出力ごとに必ず +0.001
+const APPVER="v1.441";   // ルール: 実際の出力ごとに必ず +0.001
 let ADJREL={},FOODOF={},NUTOF={},EFFOF={},NUTEFF={},BLKOF={},BLKBY={};
 let NOW=0,active=null,relList=[],relAssign={},relRad={};
 let SEARCH="",matched={},matchN=0,FRONT="nut",switchBoost=0,stage=0,foodHidden=0;
@@ -2588,6 +2588,9 @@ function step(t){
     // タップ時の集合・遷移・ドラッグは tx/ty への緩和移動でそのまま残す。
     const isRel=A&&(n.id===active||relList.indexOf(n.id)>=0);
     const bgStill=A&&!isRel;
+    // 背景に回った瞬間から、輪郭のゆらぎ・瞬き・視線など「見た目の生き物感」は止める。
+    // 初期位置へ戻るための x/y の移動だけは続ける。
+    if(bgStill){n.freeze=true;n.wob=0;}
     n._bgSettled=0;
     // 通常待機中は位置を止めるが、選択中の関連ノードだけはゆらゆらを残す。
     // 中心ノードは固定し、まわりの関連ノードだけが生きているように動く。
@@ -2810,18 +2813,16 @@ function step(t){
       const shapeMoving=!freezeThisFood&&(n.dragging||n.mSpd>0.6||n.jig>0.02||Math.abs(n.r-n._pr0)>0.3);
       if(n.kind==="eff"){
         // はたらきノードの呼吸サイズ更新は約10fps。位置移動やカメラ追従は従来頻度のまま。
-        if((!bgStatic||wasHid)&&(wasHid||shapeMoving||(EFRAME+(n._bslot||0))%2===0)){
+        // ただし背景へ回ったら、その瞬間の輪郭で固定する。
+        if(!bgFrozen&&(!bgStatic||wasHid)&&(wasHid||shapeMoving||(EFRAME+(n._bslot||0))%2===0)){
           n._pr0=n.r;nb.setAttribute("d",circlePath(n.r));
         }
       }
-      else if(n.kind==="nut"&&intro.p<0.46){n._pr0=n.r;nb.setAttribute("d",circlePath(n.r));}
-      // 背景へ戻る途中も、速度変形が収束するまでは輪郭を更新する。
-      // 完全に通常形へ戻った後は _bgSettled で更新自体を止める。
+      else if(n.kind==="nut"&&intro.p<0.46){if(!bgFrozen){n._pr0=n.r;nb.setAttribute("d",circlePath(n.r));}}
       else{
-        // 栄養素の輪郭は待機中も約10fpsで更新し、低頻度更新による「カクッ」とした形変化を抑える。
-        // 位置計算や他ノードの更新頻度は変えない。食材・more等は従来の6フレーム間引きを維持。
+        // 背景ノードは位置の帰宅だけ続け、輪郭パスは背景になった時点の形で固定する。
         const shapeEvery=n.kind==="nut"?2:6;
-        if(!freezeThisFood&&(wasHid||((!bgFrozen||!bgStatic)&&(shapeMoving||(EFRAME+(n._bslot||0))%shapeEvery===0)))){n._pr0=n.r;nb.setAttribute("d",blob(n,t));if(E.gr&&E.gr._on)E.gr.setAttribute("d",nb.getAttribute("d"));}
+        if(!bgFrozen&&!freezeThisFood&&(wasHid||(shapeMoving||(EFRAME+(n._bslot||0))%shapeEvery===0))){n._pr0=n.r;nb.setAttribute("d",blob(n,t));if(E.gr&&E.gr._on)E.gr.setAttribute("d",nb.getAttribute("d"));}
       }
     }
     if(n.kind==="eff"){nb.setAttribute("fill",n.effectFill);nb.setAttribute("stroke","none");if(nd){nd.setAttribute("opacity","0");nd.setAttribute("stroke","none");}if(E.gr)E.gr.setAttribute("opacity","0");}
@@ -2864,7 +2865,7 @@ function step(t){
       // 地図をパン・ピンチしている間は、注目ノードの目だけ描画更新を止める。
       // 通常の食材は目なしなので、見た目をほぼ変えず操作中のDOM更新を減らせる。
       const freezeEyeUpdate=(mode==="pan"||mode==="pinch");
-      if(!freezeEyeUpdate){
+      if(!freezeEyeUpdate&&!bgFrozen){
         if(bgStatic){const es=eyeStr(n,t,true);if(es!==n._eyes){n._eyes=es;E.eyes.innerHTML=es;}}
         else{const fast=idle||wasHid||n.dragging||t<n.surpriseEnd||t<n.happyEnd||t<n.blinkEnd||n.mSpd>1.5||focusFoodBySearch||focusFoodByNearest||focusFoodByActive;
           if(fast||(EFRAME+(n._eslot||0))%6===0){const es=eyeStr(n,t);if(es!==n._eyes){n._eyes=es;E.eyes.innerHTML=es;}}}
@@ -3373,7 +3374,7 @@ function startInfoDemos(){
     o.g.addEventListener("pointerup",release);o.g.addEventListener("pointercancel",release);
   });
   const mkPath=(o,t)=>{if(o.effect||o.round)return circlePath(o.vr);const sx=1+(o.jig||0)*Math.sin(t*.005)*.2,sy=1-(o.jig||0)*Math.sin(t*.005)*.2,st=Math.min((o.mSpd||0)*.09,.6),P=[];for(let i=0;i<PT;i++){const a=i/PT*6.283+o.seed;let rr=o.vr*(1+(o.freeze?0:o.am[i])*Math.sin(t*.0012+o.pa[i]));const al=Math.cos(a-(o.mAng||0));rr*=1+st*al*al;P.push([Math.cos(a)*rr*sx,Math.sin(a)*rr*sy]);}const md=(A,B)=>[(A[0]+B[0])/2,(A[1]+B[1])/2],stp=md(P[PT-1],P[0]);let dd=`M ${stp[0].toFixed(1)} ${stp[1].toFixed(1)} `;for(let i=0;i<PT;i++){const m=md(P[i],P[(i+1)%PT]);dd+=`Q ${P[i][0].toFixed(1)} ${P[i][1].toFixed(1)} ${m[0].toFixed(1)} ${m[1].toFixed(1)} `;}return dd+"Z";};
-  const mkEyes=(o,t)=>{const ox=o.r*.35,oy=-o.r*.08,sz=o.r*.195,dk="#2a2a2a",surprised=o.dragging||t<o.surpriseUntil,moving=o.mSpd>1.5||modalWorldClock<o.postMoveUntil,sleeping=!o.dragging&&modalWorldClock-modalWorldLastInteract>10000+o.sleepDelay;let gx=.08,gy=.12;if(o.lookX!==null&&o.lookY!==null){const dx=o.lookX-o.x,dy=o.lookY-o.y,L=Math.hypot(dx,dy)||1;gx=dx/L*.32;gy=dy/L*.32;}const rnd=cx=>`<circle cx="${cx.toFixed(1)}" cy="${oy.toFixed(1)}" r="${sz.toFixed(1)}" fill="#fff"/><circle cx="${(cx+sz*gx).toFixed(1)}" cy="${(oy+sz*gy).toFixed(1)}" r="${(sz*.55).toFixed(1)}" fill="${dk}"/>`;const sur=cx=>`<circle cx="${cx.toFixed(1)}" cy="${oy.toFixed(1)}" r="${(sz*1.28).toFixed(1)}" fill="#fff"/><circle cx="${cx.toFixed(1)}" cy="${oy.toFixed(1)}" r="${(sz*.42).toFixed(1)}" fill="${dk}"/>`;const up=cx=>`<path d="M ${(cx-sz).toFixed(1)} ${(oy+sz*.3).toFixed(1)} A ${sz.toFixed(1)} ${sz.toFixed(1)} 0 0 1 ${(cx+sz).toFixed(1)} ${(oy+sz*.3).toFixed(1)}" fill="none" stroke="${dk}" stroke-width="${(sz*.5).toFixed(1)}" stroke-linecap="round"/>`;const chev=(cx,d)=>`<polyline points="${(cx-d*sz).toFixed(1)},${(oy-sz).toFixed(1)} ${(cx+d*sz*.7).toFixed(1)},${oy.toFixed(1)} ${(cx-d*sz).toFixed(1)},${(oy+sz).toFixed(1)}" fill="none" stroke="${dk}" stroke-width="${(sz*.5).toFixed(1)}" stroke-linecap="round" stroke-linejoin="round"/>`;const flat=cx=>`<line x1="${(cx-sz).toFixed(1)}" y1="${oy.toFixed(1)}" x2="${(cx+sz).toFixed(1)}" y2="${oy.toFixed(1)}" stroke="${dk}" stroke-width="${(sz*.5).toFixed(1)}" stroke-linecap="round"/>`;if(surprised)return sur(-ox)+sur(ox);if(moving)return o.moveHappy?(up(-ox)+up(ox)):(chev(-ox,1)+chev(ox,-1));if(sleeping)return flat(-ox)+flat(ox);return rnd(-ox)+rnd(ox);};
+  const mkEyes=(o,t)=>{const ox=o.r*.35,oy=-o.r*.08,sz=o.r*.195,dk="#2a2a2a",surprised=o.dragging||t<o.surpriseUntil,moving=o.mSpd>1.5||modalWorldClock<o.postMoveUntil,sleeping=!o.dragging&&modalWorldClock-modalWorldLastInteract>10000+o.sleepDelay;let gx=.08,gy=.12;const watched=demo.find(n=>n!==o&&n.dragging&&n.svg===o.svg);if(watched){const dx=watched.cx-o.cx,dy=watched.cy-o.cy,L=Math.hypot(dx,dy)||1;gx=dx/L*.32;gy=dy/L*.32;}else if(o.lookX!==null&&o.lookY!==null){const dx=o.lookX-o.x,dy=o.lookY-o.y,L=Math.hypot(dx,dy)||1;gx=dx/L*.32;gy=dy/L*.32;}const rnd=cx=>`<circle cx="${cx.toFixed(1)}" cy="${oy.toFixed(1)}" r="${sz.toFixed(1)}" fill="#fff"/><circle cx="${(cx+sz*gx).toFixed(1)}" cy="${(oy+sz*gy).toFixed(1)}" r="${(sz*.55).toFixed(1)}" fill="${dk}"/>`;const sur=cx=>`<circle cx="${cx.toFixed(1)}" cy="${oy.toFixed(1)}" r="${(sz*1.28).toFixed(1)}" fill="#fff"/><circle cx="${cx.toFixed(1)}" cy="${oy.toFixed(1)}" r="${(sz*.42).toFixed(1)}" fill="${dk}"/>`;const up=cx=>`<path d="M ${(cx-sz).toFixed(1)} ${(oy+sz*.3).toFixed(1)} A ${sz.toFixed(1)} ${sz.toFixed(1)} 0 0 1 ${(cx+sz).toFixed(1)} ${(oy+sz*.3).toFixed(1)}" fill="none" stroke="${dk}" stroke-width="${(sz*.5).toFixed(1)}" stroke-linecap="round"/>`;const chev=(cx,d)=>`<polyline points="${(cx-d*sz).toFixed(1)},${(oy-sz).toFixed(1)} ${(cx+d*sz*.7).toFixed(1)},${oy.toFixed(1)} ${(cx-d*sz).toFixed(1)},${(oy+sz).toFixed(1)}" fill="none" stroke="${dk}" stroke-width="${(sz*.5).toFixed(1)}" stroke-linecap="round" stroke-linejoin="round"/>`;const flat=cx=>`<line x1="${(cx-sz).toFixed(1)}" y1="${oy.toFixed(1)}" x2="${(cx+sz).toFixed(1)}" y2="${oy.toFixed(1)}" stroke="${dk}" stroke-width="${(sz*.5).toFixed(1)}" stroke-linecap="round"/>`;if(surprised)return sur(-ox)+sur(ox);if(moving)return o.moveHappy?(up(-ox)+up(ox)):(chev(-ox,1)+chev(ox,-1));if(sleeping)return flat(-ox)+flat(ox);return rnd(-ox)+rnd(ox);};
   tick=t=>{modalRafRunning=false;const modalOpen=document.getElementById("srcmodal").classList.contains("open");if(!modalOpen){modalWorldLastTick=null;return;}const modalTouching=modalDemoDragging>0;if(!modalTouching&&t-modalLastDraw<50){scheduleModal();return;}modalLastDraw=t;if(modalWorldLastTick!==null)modalWorldClock+=Math.min(100,t-modalWorldLastTick);modalWorldLastTick=t;if(modalWorldClock-modalWorldLastInteract>15000)modalWorldAwake=false;let modalMaxSp=0;demo.forEach(o=>{if(!o.dragging&&!demoSvgVisible(o.svg))return;if(!o.dragging){const px=o.cx,py=o.cy;o.cx+=(o.x-o.cx)*.13;o.cy+=(o.y-o.cy)*.13;const mx=o.cx-px,my=o.cy-py,sp=Math.hypot(mx,my);modalMaxSp=Math.max(modalMaxSp,sp);o.mSpd+=(sp-o.mSpd)*.12;if(sp>.1)o.mAng=Math.atan2(my,mx);o.jig*=0.9;o.freeze=false;}else{o.jig*=0.9;}/* メインの6px幅・周期に寄せつつ、説明図の関係が崩れないよう4pxに抑える。 */const dx=(o.dragging||!modalWorldAwake)?0:Math.sin(t*.0009+o.seed)*4,dy=(o.dragging||!modalWorldAwake)?0:Math.cos(t*.0011+o.seed*1.7)*4;o.rx=o.cx+dx;o.ry=o.cy+dy;o.g.setAttribute("transform",`translate(${o.rx.toFixed(2)} ${o.ry.toFixed(2)})`);if(o.icon){const st=Math.min((o.mSpd||0)*0.055,0.22),jg=(o.jig||0)*Math.sin(t*.005)*0.10,sx=1+st+jg,sy=1-st*0.62-jg*0.45,rot=((o.mAng||0)*180/Math.PI)*(st*0.12+jg*0.08),sc=o.vr/50,tf=`rotate(${rot.toFixed(2)}) scale(${(sc*sx).toFixed(4)} ${(sc*sy).toFixed(4)}) translate(-50 -50)`;o.p.setAttribute("transform",tf);o.d.setAttribute("transform",tf);o.ol.setAttribute("transform",tf);}else{o.p.setAttribute("d",mkPath(o,t));}const eyeActive=(o.dragging||t<o.surpriseUntil)||o.defaultEyes;if(eyeActive){o.eyes.innerHTML=mkEyes(o,t);}else if(o.eyes.innerHTML){o.eyes.innerHTML="";}});
     demoLinks.forEach(l=>{
       if(!demoSvgVisible(l.svg))return;
@@ -3512,21 +3513,25 @@ function persistDrag(){const n=dragId&&nodes[dragId];if(!n||!n.dragging)return;n
     relAssign[n.id]=Math.atan2(dy,dx);
     n.placed=1;   // 手で置かれた：戻るアニメを挟まずその場に留める
   }}
-function updateCenterLookAtDraggedNode(A,n){
-  // 中心・周囲の種類には依存しない。通常の開いた目と半月目は、
-  // 円弧上でドラッグ中の関連ノードへ視線を向ける。
-  if(!A||!n||(A.eyeBase!=="open"&&A.eyeBase!=="dead"))return;
-  if(!A._dragLookPd)A._dragLookPd={x:A.pd.x,y:A.pd.y};
-  A._dragLookActive=true;
-  A.blinkEnd=0;
-  const cx=(A.ax!=null?A.ax:A.x),cy=(A.ay!=null?A.ay:A.y);
-  const dx=n.x-cx,dy=n.y-cy,m=Math.hypot(dx,dy)||1;
-  A.pd.x=dx/m;A.pd.y=dy/m;
+function updateDragLookAtDraggedNode(dragged){
+  // 説明図と同じく、ドラッグ中は「いま目がある他ノード」が動かしているノードを追視する。
+  // 食材など通常は目を出さないノードに新しく目を生やすことはせず、既存の useEyes 判定に任せる。
+  if(!dragged)return;
+  Object.values(nodes).forEach(n=>{
+    const isBackground=active&&n.id!==active&&relList.indexOf(n.id)<0;
+    if(n===dragged||isBackground||(n.eyeBase!=="open"&&n.eyeBase!=="dead"))return;
+    if(!n._dragLookPd)n._dragLookPd={x:n.pd.x,y:n.pd.y};
+    n._dragLookActive=true;
+    n.blinkEnd=0;
+    const dx=dragged.x-n.x,dy=dragged.y-n.y,m=Math.hypot(dx,dy)||1;
+    n.pd.x=dx/m;n.pd.y=dy/m;
+  });
 }
-function clearCenterDragLook(){
-  const A=active?nodes[active]:null;
-  if(A&&A._dragLookPd){A.pd.x=A._dragLookPd.x;A.pd.y=A._dragLookPd.y;delete A._dragLookPd;}
-  if(A)delete A._dragLookActive;
+function clearDragLook(){
+  Object.values(nodes).forEach(n=>{
+    if(n._dragLookPd){n.pd.x=n._dragLookPd.x;n.pd.y=n._dragLookPd.y;delete n._dragLookPd;}
+    delete n._dragLookActive;
+  });
 }
 svg.addEventListener("pointerdown",ev=>{wake();closeInfo();const v=toVB(ev);pts.set(ev.pointerId,v);
   if(pts.size===2){persistDrag();dragId=null;mode="pinch";const a=[...pts.values()];lastMid={x:(a[0].x+a[1].x)/2,y:(a[0].y+a[1].y)/2};lastDist=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y);return;}
@@ -3545,12 +3550,12 @@ svg.addEventListener("pointermove",ev=>{if(!pts.has(ev.pointerId))return;const v
         nx=A.ax+dx/m*rad;ny=A.ay+dy/m*rad;
       }
       n.x=nx;n.y=ny;
-      if(A&&n.id!==active&&relList.indexOf(n.id)>=0)updateCenterLookAtDraggedNode(A,n);
+      updateDragLookAtDraggedNode(n);
     }return;}
   if(mode==="pan"&&lastPan){vtx+=v.x-lastPan.x;vty+=v.y-lastPan.y;tvx=vtx;tvy=vty;lastPan=v;applyView();}});
 function endPointer(ev){const m=mode,dId=dragId;pts.delete(ev.pointerId);
   if(pts.size===0){
-    clearCenterDragLook();
+    clearDragLook();
     if(m==="drag"&&dId&&nodes[dId]){
       if(nodes[dId].dragging)persistDrag();
       else if(SEARCH&&matched[dId]===undefined)clearSearch(1);
