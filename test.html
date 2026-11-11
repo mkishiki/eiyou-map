@@ -69,7 +69,15 @@
   #howto .chainline{font-size:8.5px;fill:#9a9284;font-weight:600;paint-order:stroke;stroke:#fff;stroke-width:2.4;stroke-linejoin:round;}
   #howto .srcmark{color:#c8452f;font-weight:750;}
   #howto .srcrows{font-size:11.5px;color:#5c5344;line-height:1.9;margin:2px 0 8px;background:#f2f0ec;border-radius:10px;padding:9px 11px;text-align:left;}
-  #howto .srccalc{margin-top:7px;padding-top:7px;border-top:1px solid #ddd8ce;text-align:left;}
+  #howto .srccalc{margin:0 0 9px;padding:9px 0 0;text-align:left;}
+  #howto .calc-label{font-weight:700;color:#4f473b;margin-bottom:11px;}
+  #howto .calc-line{display:flex;align-items:center;flex-wrap:wrap;gap:3px 5px;margin:5px 0;line-height:1.45;}
+  #howto .calc-line + .calc-line{margin-top:14px;}
+  #howto .calc-line.result{font-weight:700;color:#3a3226;}
+  #howto .frac{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;vertical-align:middle;line-height:1.25;text-align:center;flex:none;}
+  #howto .frac-top{display:block;width:100%;padding:0 5px 3px;border-bottom:1px solid currentColor;white-space:nowrap;}
+  #howto .frac-bottom{display:block;padding:3px 5px 0;white-space:nowrap;}
+  #howto .source-key{line-height:1.85;}
   #howto .fig svg{position:relative;width:100%;height:auto;display:block;overflow:visible;touch-action:pan-y;}
   #howto .info-demo-link{pointer-events:none;}
   #howto .cap{font-size:10.5px;color:#9a9284;text-align:center;margin-top:5px;line-height:1.5;}
@@ -333,17 +341,24 @@
           <div class="cap rulecap">栄養素の周りには、その栄養素を一食で一日の目安量の10%以上摂れる食材を表示します。なお、どの栄養素も10%に届かない食材は、もっとも割合の高い栄養素にひもづいて表示します。</div>
           <h4>数字はどこから？</h4>
           <div class="srcrows">
-            食材に含まれる栄養量 → 成分表 <span class="srcmark">*1</span><br>
+            食材100g中の栄養量 → 成分表 <span class="srcmark">*1</span><br>
             一日の栄養量の目安 → 食事摂取基準 <span class="srcmark">*2</span><br>
             一食あたりの食材量の目安 → このアプリ独自 <span class="srcmark">*3</span>
             <div class="srccalc">
-              <b>カルシウムと牛乳の距離の計算</b><br>
-              牛乳 200g <span class="srcmark">*3</span> × 110mg / 100g <span class="srcmark">*1</span> ＝ 220mg<br>
-              <b>220mg ÷ 650mg <span class="srcmark">*2</span> × 100 ＝ 34%</b>
+              <div class="calc-label">カルシウムと牛乳の距離の計算</div>
+              <div class="calc-line">
+                カルシウム 110mg <span class="srcmark">*1</span> ×
+                <span class="frac"><span class="frac-top">牛乳一杯 200g <span class="srcmark">*3</span></span><span class="frac-bottom">100g</span></span>
+                ＝ 220mg
+              </div>
+              <div class="calc-line">
+                <span class="frac"><span class="frac-top">牛乳一杯中のカルシウム 220mg</span><span class="frac-bottom">一日のカルシウム量の目安 650mg <span class="srcmark">*2</span></span></span>
+                × 100 ＝ 34%
+              </div>
             </div>
           </div>
           <h4>このアプリの基準</h4>
-          <div class="target"><b>30〜49歳・女性</b><br>月経あり ／ 身体活動レベル：ふつう<br>一日の目安量 → 食事摂取基準 <span class="srcmark">*2</span></div>
+          <div class="target"><b>30〜49歳・女性</b><br>月経あり ／ 身体活動レベル：ふつう<br>一日の栄養量の目安 → 食事摂取基準 <span class="srcmark">*2</span></div>
         </div>
         <div id="srcsub" style="padding:14px 16px 4px;"><b>出典・補足</b></div>
         <div id="srclist"></div>
@@ -1462,9 +1477,9 @@ const GRP={heme:{t:"ヘム鉄",c:"#c0392b"},nonheme:{t:"非ヘム鉄",c:"#3fa35f
 
 // ===== 出典 =====
 const SOURCES=[
- {t:"日本食品標準成分表（八訂）増補2023年（2026年3月正誤版反映）",o:"文部科学省",n:"食材に含まれる栄養素量（可食部100gあたりの標準成分値）の確認に使用",u:"https://www.mext.go.jp/a_menu/syokuhinseibun/index.htm"},
+ {t:"日本食品標準成分表",o:"（八訂）増補2023年（2026年3月正誤版反映）　文部科学省",n:"食材に含まれる栄養素量（可食部100gあたりの標準成分値）の確認に使用",u:"https://www.mext.go.jp/a_menu/syokuhinseibun/index.htm"},
  {t:"食品成分データベース",o:"文部科学省",n:"上記成分表を検索・閲覧できるデータベース（試験公開）",u:"https://fooddb.mext.go.jp/"},
- {t:"食事による栄養摂取量の基準",o:"厚生労働省　令和6年11月22日改正（令和7年4月1日適用）",n:"一日の栄養量の目安・上限量などの確認に使用",u:"https://www.mhlw.go.jp/web/t_doc?dataId=78ab4652&dataType=0"},
+ {t:"食事による栄養摂取量の基準",o:"令和6年11月22日改正（令和7年4月1日適用）　厚生労働省",n:"一日の栄養量の目安・上限量などの確認に使用",u:"https://www.mhlw.go.jp/web/t_doc?dataId=78ab4652&dataType=0"},
  {t:"Dietary Supplement Fact Sheets",o:"NIH Office of Dietary Supplements (ODS)",n:"栄養素どうしの吸収・代謝・利用、栄養素の特徴やふきだしの補足情報の確認に使用",u:"https://ods.od.nih.gov/factsheets/list-all/"},
  {t:"NIH / NIDDK・NIH News in Health",o:"National Institutes of Health",n:"食物繊維と腸・糖吸収など、ODSに専用ファクトシートがない関係の確認に使用",u:"https://www.nih.gov/"}
 ];
@@ -1514,7 +1529,7 @@ const foodIconLight=col=>mixHex(col,'#ffffff',0.04);
 const foodIconDark=col=>mixHex(col,'#000000',0.14);
 const PT=12;
 let nodes={},edges=[],catLabels=[],groupLabels=[];
-const APPVER="v1.441";   // ルール: 実際の出力ごとに必ず +0.001
+const APPVER="v1.449";   // ルール: 実際の出力ごとに必ず +0.001
 let ADJREL={},FOODOF={},NUTOF={},EFFOF={},NUTEFF={},BLKOF={},BLKBY={};
 let NOW=0,active=null,relList=[],relAssign={},relRad={};
 let SEARCH="",matched={},matchN=0,FRONT="nut",switchBoost=0,stage=0,foodHidden=0;
